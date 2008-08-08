@@ -1,0 +1,10 @@
+<components>
+
+	<component id="connectionFactory" class="springpython.database.factory.PgdbConnectionFactory">
+        <property name="user">"springpython"</property>
+        <property name="password">"springpython"</property>
+        <property name="host">"localhost"</property>
+        <property name="database">"springpython"</property>
+    </component>
+	
+</components>

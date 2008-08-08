@@ -1,0 +1,27 @@
+<components>
+
+	<component id="remoteServiceServer1" class="springpython.test.support.testSupportClasses.RemoteService1">
+	</component>
+	
+	<component id="remoteServiceServer2" class="springpython.test.support.testSupportClasses.RemoteService2">
+	</component>
+	
+	<component id="serviceExporter1" class="springpython.remoting.pyro.PyroServiceExporter">
+		<property name="serviceName">"RemoteService1"</property>
+		<property name="service" local="remoteServiceServer1"/>
+	</component>
+	
+	<component id="serviceExporter2" class="springpython.remoting.pyro.PyroServiceExporter">
+		<property name="serviceName">"RemoteService2"</property>
+		<property name="service" local="remoteServiceServer2"/>
+	</component>
+	
+	<component id="accountServiceClient1" class="springpython.remoting.pyro.PyroProxyFactory">
+		<property name="serviceUrl">"PYROLOC://localhost:7766/RemoteService1"</property>
+	</component>
+
+	<component id="accountServiceClient2" class="springpython.remoting.pyro.PyroProxyFactory">
+		<property name="serviceUrl">"PYROLOC://localhost:7766/RemoteService2"</property>
+	</component>
+
+</components>

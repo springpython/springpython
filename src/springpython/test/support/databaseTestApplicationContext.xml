@@ -1,0 +1,5 @@
+<components>
+
+	<component id="mockConnectionFactory" class="springpython.test.support.testSupportClasses.StubDBFactory"/>
+	
+</components>

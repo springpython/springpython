@@ -1,0 +1,62 @@
+This is everybody's favorite example (at least in the Spring community), the "PetClinic" tutorial.
+
+For details about the application, see cherrypy/html/petclinic.html
+
+== REQUIRED ==
+1. This demo requires that you already have a MySQL database server running on the same machine as this
+demo will be run on.
+	* sudo apt-get install mysql-server (Ubuntu)
+
+2. You obviously need Python. This demo was coded against Python 2.4.
+
+3. You need to have either installed Spring Python, or have a checkedout copy from Subversion.
+   In case of the latter, make sure /path/to/springpython/src is in PYTHONPATH.
+
+4. You need to have CherryPy 2 installed. We don't support CherryPy 3 yet. Again, see the
+   petclinic.html page for more details about this, including installation on Ubuntu/Linux.
+	* sudo apt-get install python-cherrypy (Ubuntu)
+   
+5. To run the distributed version, you must have Pyro installed.
+	* sudo apt-get install pyro (Ubuntu)
+
+6. For additional demo, I have a plugged in paste component. This means you need to have paste installed
+   as well.
+	* sudo apt-get install python-paste (Ubuntu)
+
+== TO SET IT UP AND RUN IT ==
+
+Assuming you have the previous setup, here is how to configure and run the PetClinic app.
+
+1. python configure.py
+
+You will be prompted for MySQL's "root" password. This is NOT the root password for your
+machine!!! PetClinic needs to create a "springpython/springpython" account, and also the
+database "petclinic" in order to configure everything.
+
+(If you just installed the MySQL server package, and did not extra steps, then hit RETURN
+ when prompted for MySQL's root password. You may to do this more than once.)
+
+If you look afterwards, you will find a new database. Everytime you re-run this step, it
+will wipe out any previous copy of "petclinic" database and rebuild it.
+
+2. cd cherrypy
+
+So far, we only have a CherryPy of the PetClinic.
+
+3. python petclinic.py
+   --or--
+   python petclinic-noxml.py
+   --or--
+   In one shell, python petclinic-server.py
+   In another shell, python petclinic-client.py
+
+There are three versions, one demonstrating usage of an IoC container for component "wiring", 
+another version where the wiring is done programmatically, and a third demonstrating remoting.
+
+4. You should get a message showing a server has been launched, including a hyperlink to http://localhost:8001/
+
+5. Go, man!!! What are you waiting for?!? No, seriously. That is it. At this stage, you don't have to
+   play around with any Apache configuration. CherryPy uses Python's batteries-included web server components
+   to run itself. It is possible to integrate this with Apache, but that is when you want to prep for the
+   SlashDot effect on your mega-web site.
+

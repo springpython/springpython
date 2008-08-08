@@ -1,0 +1,27 @@
+Metadata-Version: 1.0
+Name: PyContainer
+Version: 0.4
+Summary: A simple Inversion of Control (Dependency Injection) lightweight container
+Home-page: http://www.iem.pw.edu.pl/~sniezynr/pycontainer/
+Author: Rafal Sniezynski
+Author-email: thirdeye at interia pl
+License: Python (modified BSD style)
+Download-URL: http://www.iem.pw.edu.pl/~sniezynr/pycontainer/PyContainer-0.4.zip
+Description: PyContainer is a simple Python implementation of an
+        Inversion of Control (Dependency Injection) lightweight container.
+        Lightweight containers make it easier to build well-organized, component
+        based applications by managing all dependencies of the components. This
+        makes it unnecessary to include any implementation-specific component
+        object creation code in the components. Applications are more flexible and
+        components more reusable.
+        PyContainer supports container hierarchies, interceptors and lifecycle
+        management. It is configured through XML file. The distribution includes
+        the pxdom module required in some envrionments (license details in
+        license.txt).
+Platform: Python >= 2.2
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Natural Language :: English
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
