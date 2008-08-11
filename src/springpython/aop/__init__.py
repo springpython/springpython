@@ -1,5 +1,5 @@
 """
-   Copyright 2006-2008 Greg L. Turnquist, All Rights Reserved
+   Copyright 2006-2008 SpringSource (http://springsource.com), All Rights Reserved
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.       
-   
+ 
    NOTE: This module contains parts of PyContainer written by Rafal Sniezynski.
    They have been adapted to work outside the container.
 """

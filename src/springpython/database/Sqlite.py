@@ -1,5 +1,5 @@
 """
-   Copyright 2006-2008 Greg L. Turnquist, All Rights Reserved
+   Copyright 2006-2008 SpringSource (http://springsource.com), All Rights Reserved
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -12,9 +12,9 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.       
-    
-    NOTE: This module is named "Sqlite" in order to avoid conflict with the
-    already existing module "sqlite".
+
+   NOTE: This module is named "Sqlite" in order to avoid conflict with the
+   already existing module "sqlite".
 """
 import warnings
 warnings.warn("springpython.database's Sqlite module has moved to the factory module.", DeprecationWarning, 2)

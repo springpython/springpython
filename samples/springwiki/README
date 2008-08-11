@@ -21,7 +21,5 @@ This demos writing a wiki site using Spring Python.
 
 2. You should get a message showing a server has been launched, including a hyperlink to http://localhost:8002/
 
-3. That's it! Spring Wiki has been licensed under LGPL, so you can include it inside
-   another web app pretty easily. However, should you wish to edit Spring Wiki code directly,
-   you will have to distribute your changes to others.
-  
+3. That's it! Spring Wiki has been licensed under ASL, so you can include it inside
+   another web app pretty easily.

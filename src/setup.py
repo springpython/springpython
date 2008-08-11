@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-   Copyright 2006-2008 Greg L. Turnquist, All Rights Reserved
+   Copyright 2006-2008 SpringSource (http://springsource.com), All Rights Reserved
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ if sys.version_info < (2, 3):
     sys.exit(1)
 
 setup(name='springpython',
-      version='0.5.0',
+      version='0.6.0',
       description='Spring Python',
       long_description='Spring Python is an offshoot of the Java-based SpringFramework, targeted for Python. Spring provides many useful features, and I wanted those same features available when working with Python.',
       author='Greg L. Turnquist',
