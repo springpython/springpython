@@ -26,4 +26,4 @@ If you want to develop this product, you may have to install some other tools as
 3. To run the unit tests, you need to install:
    * pmock (apt-get install python-pmock for ubuntu users)
    * Pyro (apt-get install pyro for ubuntu users)
-   * CherryPy (apt-get install python-cherrypy for ubuntu users)
+   * CherryPy (apt-get install python-cherrypy for ubuntu users) (This currently supports version 2, not version 3)
