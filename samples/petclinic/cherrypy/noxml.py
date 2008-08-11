@@ -239,20 +239,6 @@ class PetClinicClientAndServer(DecoratorBasedApplicationContext):
             ])
 
     @component
-    def filterChainProxy2(self):
-        return FilterChainProxy(filterInvocationDefinitionSource = 
-            [
-            ("/images.*", [self.exceptionFilter(), self.root()]),
-            ("/html.*",   [self.exceptionFilter(), self.root()]),
-            ("/login.*",  [self.exceptionFilter(), self.httpContextFilter(), self.root()]),
-            ("/.*",       [self.exceptionFilter(),
-                           self.httpContextFilter(),
-                           self.exceptionTranslationFilter(),
-                           self.authenticationProcessingFilter(),
-                           self.filterSecurityInterceptor(), self.root()])
-            ])
-
-    @component
     def loginForm(self):
         loginForm = view.CherryPyAuthenticationForm()
         loginForm.filter = self.authenticationProcessingFilter()
