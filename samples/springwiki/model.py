@@ -228,13 +228,13 @@ class Page(object):
                     
                     <div id="footer">
                         <div id="f-poweredbyico">
-                            <a href="http://springpython.python-hosting.com">
+                            <a href="http://springpython.webfactional.com">
                                 <img src="images/spring_python_white_89x31.png" alt="Spring Python"/>
                             </a>
                         </div><!-- f-poweredbyico -->
                         <ul id="f-list">
                             <li id="f-about">
-                                SpringWiki :: a <a href="http://springpython.python-hosting.com">Spring Python</a> demonstration (powered by <A HREF="http://www.cherrypy.org">CherryPy</A>)
+                                SpringWiki :: a <a href="http://springpython.webfactional.com">Spring Python</a> demonstration (powered by <A HREF="http://www.cherrypy.org">CherryPy</A>)
                             </li>
                         </ul>
                     </div><!-- footer -->

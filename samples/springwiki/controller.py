@@ -28,7 +28,7 @@ wikiDatabase = {
 Welcome to [[Spring Wiki]]. You can see more rendered wiki at [[Greg's Page]].
 
 == Level 2 Header ==
-This is a demonstration of [http://springpython.python-hosting.com Spring Python].
+This is a demonstration of [http://springpython.webfactional.com Spring Python].
 
 === Level 3 Header ===
 What do you think?
@@ -67,7 +67,7 @@ Single-star entries define boxes in the sidebar. Double-star boxes define the li
 ** [[Springwiki Sidebar|Edit the sidebar]]
 * Spring Python
 ** [[Spring Wiki]]
-** [http://springpython.python-hosting.com Spring Python]
+** [http://springpython.webfactional.com Spring Python]
 """, [("Original", "This is the initial entry", "20:02, 6 October 2006", "User:Gregturn")]]
     }
 
