@@ -1,0 +1,29 @@
+This is Spring Python, used to build solid, well architected applications.
+
+1. You should also have a LICENSE file in this same directory listing all your
+   rights and responsibilities should you decide to use this package.
+2. You should also have a COPYRIGHT file in this same directory that cites what products
+   were used to build this one, and to satisfy the copyrights of those products by
+   giving proper credence to the many developers that helped make this happen.
+
+== BASIS ==
+
+Spring Python is aimed at providing the same well-architected, open source-based solutions
+that Spring is offering. Spring's audience is Java. Mine is Python. If you can do it in 
+Java, well you certainly should be able to do it in Python!
+   
+== SETUP ==
+
+
+== DEVELOPMENT ==
+
+If you want to develop this product, you may have to install some other tools as well.
+
+1. This product was developed using Eclipse (http://eclipse.org). I suggest you download
+   and install that.
+2. The PyDev Eclipse plugin was used in order to manage python development
+   (http://pydev.sourceforge.net/).
+3. To run the unit tests, you need to install:
+   * pmock (apt-get install python-pmock for ubuntu users)
+   * Pyro (apt-get install pyro for ubuntu users)
+   * CherryPy (apt-get install python-cherrypy for ubuntu users) (This currently supports version 2, not version 3)
