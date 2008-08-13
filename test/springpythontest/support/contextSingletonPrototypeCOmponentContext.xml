@@ -1,0 +1,14 @@
+<components>
+    <component id="MovieLister" class="springpythontest.support.testSupportClasses.MovieLister" type="prototype">
+	    <property name="finder" local="MovieFinder"/>
+	    <property name="description" local="SingletonString"/>
+	</component>
+
+	<component id="MovieFinder" class="springpythontest.support.testSupportClasses.ColonMovieFinder" type="singleton">
+		<property name="filename">"support/movies1.txt"</property>
+	</component>
+    
+    <component id="SingletonString" class="springpythontest.support.testSupportClasses.StringHolder">
+    	<property name="str">"There should only be one copy of this string"</property>
+    </component>
+</components>

@@ -1,0 +1,55 @@
+#!/usr/bin/python
+"""
+    Copyright 2006-2008 SpringSource (http://springsource.com), All Rights Reserved
+
+    This script is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+import os
+import sys
+from optparse import OptionParser
+
+def main(argv):
+	"""This script is a shortcut to making the python distribution releases. This should be run from the folder it is in."""
+
+	parser = OptionParser(usage="usage: %prog [-h|--help] [options]")
+	parser.add_option("", "--no-sample", action="store_false", dest="sample", default=True, help="Do NOT include the samples in this release.")
+	parser.add_option("", "--sample-only", action="store_true", dest="sample_only", default=False, help="ONLY build the samples in this release.")
+	parser.add_option("-r", "--register", action="store_true", dest="register", default=False, help="Register this release with http://pypi.python.org/pypi")
+	(options, args) = parser.parse_args()
+
+	if not options.sample and options.sample_only:
+		print "You have requested a conflicting situation. This script cannot build samples and exclude them also."
+		sys.exit(3)
+
+	if not options.sample_only:
+		# Make the main source code distribution
+		os.system("cd src ; python setup.py sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST ")
+
+		if options.register:
+			os.system("cd src ; python setup.py register")
+
+	if options.sample:
+		# Make the sample distribution
+		os.system("cd samples ; python setup.py sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST ")
+
+		if options.register:
+			os.system("cd samples ; python setup.py register")
+	else:
+		print "Samples have been EXCLUDED from this release."
+
+	print "+++ Upload the tarballs using sftp to <user>@frs.sourceforge.net, into dir uploads and create a release."
+
+if __name__ == "__main__":
+	main(sys.argv[1:])

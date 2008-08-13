@@ -1,0 +1,19 @@
+<components>
+
+	<component id="controller" class="controller.SpringWikiController">
+	</component>
+	
+	<component id="read" class="view.Springwiki">
+		<property name="controller" local="controller"/>
+	</component>
+	
+	<component id="filterChainProxy" class="springpython.security.web.FilterChainProxy">
+		<property name="filterInvocationDefinitionSource">
+			[
+			("/.*", [])
+			]
+		</property>
+	</component>
+
+	
+</components>

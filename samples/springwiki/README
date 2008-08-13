@@ -1,0 +1,25 @@
+This demos writing a wiki site using Spring Python.
+
+== REQUIRED ==
+1. You obviously need Python. This demo was coded against Python 2.4 and later tested against Python 2.5.
+
+2. You need to have either installed Spring Python, or have a checkedout copy from Subversion.
+   In case of the latter, make sure /path/to/springpython/src is in PYTHONPATH.
+
+3. You need to have CherryPy 2 installed. We don't support CherryPy 3 yet.
+	* sudo apt-get install python-cherrypy (Ubuntu)
+   
+== TO SET IT UP AND RUN IT ==
+
+1. Type:
+	python springwiki.py
+	-- or --
+	python springwiki-noxml.py
+	
+	One version uses an XML-based application context file to wire things together.
+	The other uses a python class marked up with decorators to do the wiring.
+
+2. You should get a message showing a server has been launched, including a hyperlink to http://localhost:8002/
+
+3. That's it! Spring Wiki has been licensed under ASL, so you can include it inside
+   another web app pretty easily.

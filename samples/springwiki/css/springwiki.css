@@ -1,0 +1,11 @@
+td { padding:3px; }
+div#top {position:absolute; top: 0px; left: 0px; background-color: #E4EFF3; height: 50px; width:100%; padding:0px; border: none;margin: 0;}
+div#image {position:absolute; top: 50px; right: 0%; background-image: url(../images/spring_python_white.png); background-repeat: no-repeat; background-position: right; height: 100px; width:300px }
+div#buttons {width:75%}
+.external {
+    background: url(images/external.png) center right no-repeat;
+    padding-right: 13px;
+}
+a {
+    text-decoration:none
+}

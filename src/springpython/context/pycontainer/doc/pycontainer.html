@@ -1,0 +1,522 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD><TITLE>PyContainer 
+Python lightweight container 
+version 0.4</TITLE>
+
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<META name="GENERATOR" content="hevea 1.07">
+</HEAD>
+<BODY >
+<!--HEVEA command line is: C:\HEVEA\HEVEA.EXE -exec xxdate.exe pycontainer.tex -->
+<!--HTMLHEAD-->
+<!--ENDHTML-->
+<!--PREFIX <ARG ></ARG>-->
+<!--CUT DEF section 1 -->
+
+
+
+
+
+<H1 ALIGN=center>PyContainer<BR>
+<FONT SIZE=4>Python lightweight container<BR>
+version 0.4</FONT></H1>
+
+<H3 ALIGN=center>Rafal Sniezynski</H3>
+<!--TOC section Table of Contents-->
+
+<H2>Table of Contents</H2><!--SEC END -->
+
+<UL><LI>
+<A HREF="#htoc1">1&nbsp;&nbsp;Introduction</A>
+<UL><LI>
+<A HREF="#htoc2">1.1&nbsp;&nbsp;Lightweight containers and Dependency Injection</A>
+<LI><A HREF="#htoc3">1.2&nbsp;&nbsp;PyContainer overview</A>
+</UL>
+<LI><A HREF="#htoc4">2&nbsp;&nbsp;Download and installation</A>
+<LI><A HREF="#htoc5">3&nbsp;&nbsp;Usage</A>
+<UL><LI>
+<A HREF="#htoc6">3.1&nbsp;&nbsp;Basic usage example</A>
+<LI><A HREF="#htoc7">3.2&nbsp;&nbsp;Requirements for the components</A>
+<LI><A HREF="#htoc8">3.3&nbsp;&nbsp;The instantiation process</A>
+<LI><A HREF="#htoc9">3.4&nbsp;&nbsp;Container hierarchies</A>
+<LI><A HREF="#htoc10">3.5&nbsp;&nbsp;Lifecycle management</A>
+<LI><A HREF="#htoc11">3.6&nbsp;&nbsp;Interceptors</A>
+<LI><A HREF="#htoc12">3.7&nbsp;&nbsp;Custom object factories</A>
+<LI><A HREF="#htoc13">3.8&nbsp;&nbsp;Configuration file details</A>
+</UL>
+<LI><A HREF="#htoc14">4&nbsp;&nbsp;License</A>
+<LI><A HREF="#htoc15">5&nbsp;&nbsp;History</A>
+<LI><A HREF="#htoc16">6&nbsp;&nbsp;To do</A>
+<LI><A HREF="#htoc17">7&nbsp;&nbsp;Contact</A>
+<LI><A HREF="#htoc18">8&nbsp;&nbsp;Links</A>
+</UL>
+
+<!--TOC section Introduction-->
+
+<H2><A NAME="htoc1">1</A>&nbsp;&nbsp;Introduction</H2><!--SEC END -->
+
+<!--TOC subsection Lightweight containers and Dependency Injection-->
+
+<H3><A NAME="htoc2">1.1</A>&nbsp;&nbsp;Lightweight containers and Dependency Injection</H3><!--SEC END -->
+
+Lightweight containers are non-invasive application frameworks that simplify the process of building component-based applications. They allow you to wire all the components of the application together without including any implementation-specific object creation code into the components. With a traditional approach, one instantiates a component in a component by explicitly specifying an implementation, or use Singletons. Lightweight containers use the Inversion of Control (IoC) approach, in which you let the container manage any dependencies beetween components of an application. This allows you to create highly modular applications with highly reusable components.<BR>
+<BR>
+Lightweight containers are currently very popular among the Java developers as an alternative to other, heavyweight and complicated solutions. IoC containers, often combined with object-relational mappers, are a core of many modern Java web frameworks such as <A HREF="http://www.springframework.org/">Spring</A> or <A HREF="http://www.opensymphony.com/">Webwork</A>.<BR>
+<BR>
+Inversion of Control is a general term used in many design patterns. In lightweight containers IoC means that the container is responsible for instantiating the components, not the components themselves. The more spceific term is Dependency Injection. There are three common methods of injection: 
+<UL><LI>
+	Constructor Injection 
+	<LI>Setter Injection
+	<LI>Interface Injection
+</UL>
+For more details I recommend reading <A HREF="http://www.martinfowler.com/articles/injection.html">this Martin Fowler's article</A>.<BR>
+<BR>
+<!--TOC subsection PyContainer overview-->
+
+<H3><A NAME="htoc3">1.2</A>&nbsp;&nbsp;PyContainer overview</H3><!--SEC END -->
+
+PyContainer features are inspired by some of the features of different popular Java containers. PyContainer, although quite simple now, is under an active development. I appreciate any feedback from the users (bug reports, feature requests) that will help me make this product better.
+Most important PyContainer features:
+<UL><LI>
+	Dependency Injection through attribute setting -- container binds a component instance to an instance of another component, so it's closest to Setter Injection. If you want to have more control over the injection, you have to define the attribute as a <EM>property</EM> (requires new-style class) or define <CODE>__setattr__</CODE>. The wiring is configured through an XML file.
+	<LI>Container hierarchies -- you can organize your containers in parent-child hierarchies, with children having full access to the parent's components; parents can also have limited access to children when performing lifecycle method calls.
+	<LI>Lifecycle management -- you can control the lifecycle of all the components by a single method call on the container. The container will take care of the correct order of invoking the method on all the components.
+	<LI>Custom object factories -- by default, PyContainer creates component instances from top-level classes of locally avaliable modules. You can create a custom object factory to make the container instantiate components in a more sophisticated way, e.g. from remote data source.
+	<LI>Interceptors -- they are objects, organized in a stack, that sit between the
+implementation of the component and the client (another component), and can add some functionality to the core implementation such as
+logging, security, or transaction management.
+</UL>
+<!--TOC section Download and installation-->
+
+<H2><A NAME="htoc4">2</A>&nbsp;&nbsp;Download and installation</H2><!--SEC END -->
+
+PyContainer can be downloaded from:
+<BLOCKQUOTE>
+	<A HREF="http://www.iem.pw.edu.pl/~sniezynr/pycontainer/PyContainer-0.4.zip"><TT>http://www.iem.pw.edu.pl/~sniezynr/pycontainer/PyContainer-0.4.zip</TT></A>
+</BLOCKQUOTE>
+Unpack the downloaded file into the temporary directory and type in the command line:
+<BLOCKQUOTE>
+	<CODE>python setup.py install</CODE>
+</BLOCKQUOTE>
+If everything goes fine, PyContainer will be installed in the default location for third-party packages. PyContainer requires Python 2.2 or later.<BR>
+<BR>
+<!--TOC section Usage-->
+
+<H2><A NAME="htoc5">3</A>&nbsp;&nbsp;Usage</H2><!--SEC END -->
+
+<!--TOC subsection Basic usage example-->
+
+<H3><A NAME="htoc6">3.1</A>&nbsp;&nbsp;Basic usage example</H3><!--SEC END -->
+
+The idea is very simple -- to inject an object into another object(s) as an attribute to let them cooperate as components, without directly instantiating components into other components or using patterns like Singleton or Service Locator. In a dynamic language like Python, where you can bind an arbitrary attribute to an already instantiated object, it doesn't seem to be such a big advantage and can be easily done programatically. However, software like PyContainer provides a standarized way of doing this (the wiring is configured through a simple XML file) and also other useful features described in later sections.<BR>
+<BR>
+The <A HREF="http://www.martinfowler.com/articles/injection.html">Martin Fowler's article mentioned before</A> (please read it) provides a simple example of a piece of an application that lists the movies of a particular director implemented with a traditional approach and then with the IoC approach. Here's a Python-PyContainer version of this example.<BR>
+<BR>
+So let's assume that we have this naive <CODE>MovieLister</CODE> class: 
+<BLOCKQUOTE>
+<PRE>
+class MovieLister (object):
+    def __init__ (self):
+        self.finder = ColonMovieFinder("movies1.txt")
+    def moviesDirectedBy (self, arg):
+        allMovies = self.finder.findAll()
+        theMovies = []
+        for movie in allMovies:
+            if movie.getDirector() == arg:
+            theMovies.append(movie)
+        return theMovies
+</PRE></BLOCKQUOTE>
+and the <CODE>MovieFinder</CODE> implementation -- <CODE>ColonMovieFinder</CODE>: 
+<BLOCKQUOTE>
+<PRE>
+class ColonMovieFinder (object):
+    def findAll (self):
+        # some code here
+        return allTheMovies
+</PRE></BLOCKQUOTE>
+Now what we want to have is the <CODE>MovieLister</CODE> class independent of the <CODE>MovieFinder</CODE> implementation -- we want <CODE>ColonMovieFinder</CODE> to be interchangeable with any other implementation of <CODE>MovieFinder</CODE>. That's why we remove initialization of <CODE>ColonMovieFinder</CODE> from <CODE>MovieLister</CODE>: 
+<BLOCKQUOTE>
+<PRE>
+class MovieLister (object):
+    def __init__ (self):
+        pass
+    ...
+</PRE></BLOCKQUOTE>
+and create the following PyContainer config file (let's call it <CODE>components.xml</CODE>): 
+<BLOCKQUOTE>
+<PRE>
+&lt;components&gt;
+    &lt;component id="MovieLister" class="somemodule.MovieLister"&gt;
+        &lt;property name="finder" local="MovieFinder" /&gt;
+    &lt;/component&gt;
+    &lt;component id="MovieFinder" class="anothermodule.ColonMovieFinder"&gt;
+        &lt;property name="filename"&gt;"movies1.txt"&lt;/property&gt;
+    &lt;component&gt;
+&lt;/components&gt;
+</PRE></BLOCKQUOTE>
+The <EM>class</EM> attribute of the <EM>component</EM> elements contains "classpath" -- a Python module path followed by dot followed by a top-level class name. Now the most important part -- creation of the container: 
+<BLOCKQUOTE>
+<PRE>
+from pycontainer import PyContainer
+
+movieAppContainer = PyContainer()
+movieAppContainer.configXml("components.xml")
+lister = movieAppContainer.getInstance("MovieLister")
+</PRE></BLOCKQUOTE>
+or: 
+<BLOCKQUOTE>
+<PRE>
+movieAppContainer = PyContainer(config="components.xml")
+lister = movieAppContainer.getInstance("MovieLister")
+</PRE></BLOCKQUOTE>
+You can also access the container like a read-only dictionary: 
+<BLOCKQUOTE>
+<PRE>
+lister = movieAppContainer["MovieLister"]
+</PRE></BLOCKQUOTE>
+What we have in the container now is the <CODE>MovieLister</CODE> instance with attribute <CODE>finder</CODE> bound to <CODE>ColonMovieFinder</CODE> instance, which is the second component in the container. <CODE>ColonMovieFinder</CODE> object has its <CODE>filename</CODE> attribute set to <CODE>"movies1.txt"</CODE>. <CODE>lister</CODE> is bound to the <CODE>MovieLister</CODE> component, so you can call <CODE>moviesDirectedBy()</CODE> method on it. You will probably use <CODE>getInstance()</CODE> or dictionary access to get the entry point to the application.<BR>
+<BR>
+The container can contain any number of components wired in an arbitrary way. The details of the configuration file's syntax are desrcibed in section <A HREF="#sec:config">3.8</A>.<BR>
+<BR>
+<!--TOC subsection Requirements for the components-->
+
+<H3><A NAME="htoc7">3.2</A>&nbsp;&nbsp;Requirements for the components</H3><!--SEC END -->
+
+Component classes are regular classes, without any additional code required. There is just a couple of limitations: 
+<UL><LI>
+	component's <CODE>__init__</CODE> method must not reference any other component from the container 
+	<LI>component's class must be callable without arguments (<CODE>__init__</CODE> must have only <CODE>self</CODE> or all other optional)
+</UL>
+The first limitation is obvious. The second is to preserve simplicity -- you can always pass required parameters in the configuration file's <EM>property</EM> element. 
+<DL COMPACT=compact><DT>
+	<B>Note:</B><DD> These requirements concern the default object factory, a custom factory (see section <A HREF="#sec:factories">3.7</A>) can be written to somehow avoid them.
+</DL>
+<!--TOC subsection The instantiation process-->
+
+<H3><A NAME="htoc8">3.3</A>&nbsp;&nbsp;The instantiation process</H3><!--SEC END -->
+ PyContainer by default will eagerly instantiation all the components. However, you can override that setting for any component so that it performs lazy instantiation. That means that the components are instantiated only when they are required, either if they are referenced as properties of other components that are being instantiated or are accessed through <CODE>getInstance()</CODE>.<BR>
+<BR>
+<!--TOC subsubsection Component types-->
+
+<H4>Component types</H4><!--SEC END -->
+
+PyContainer allows two component types that differ in number of instances:
+<UL><LI>
+	Singleton (default) -- the container holds only one instance which is shared among all the components that depend on this component.
+	<LI>Prototype -- every component that depends on this component gets its own instance; also instantiation through <CODE>getInstance()</CODE> creates new instance every time. Calling lifecycle methods (see section <A HREF="#sec:lifecycle">3.5</A>) causes calling them on every instance of a prototype, one after another (in order of instantiation).
+</UL>
+See section <A HREF="#sec:config">3.8</A> for details of how to define the component type. Singleton is the usual case and the default type, so usually no additional configuration options are necessary.<BR>
+<BR>
+<!--TOC subsubsection Circular dependencies-->
+
+<H4>Circular dependencies</H4><!--SEC END -->
+
+PyContainer allows circular dependencies between components without any complications, because it performs component wiring recursively. However, circular dependencies are often discouraged as they are considered as a sign of a design problem.<BR>
+<BR>
+<!--TOC subsection Container hierarchies-->
+
+<H3><A NAME="htoc9">3.4</A>&nbsp;&nbsp;Container hierarchies</H3><!--SEC END -->
+
+You can create parent-child hierarchies with PyContainer: 
+<BLOCKQUOTE>
+<PRE>
+father = PyContainer(config="parent.xml")
+...
+son = PyContainer(config="child.xml", parent=father)
+</PRE></BLOCKQUOTE>
+Child accesses parent whenever it cannot find apropriate component in itself when it is referenced (through <CODE>getInstance()</CODE> or by another component). Parent container usually doesn't have access to its children (see also section <A HREF="#sec:lifecycle">3.5</A>). <BR>
+<BR>
+<!--TOC subsection Lifecycle management-->
+
+<H3><A NAME="htoc10">3.5</A>&nbsp;&nbsp;Lifecycle management</H3><!--SEC END -->
+
+<A NAME="sec:lifecycle"></A>
+PyContainer supports simple lifecycle management. Calling <CODE>start()</CODE>, <CODE>stop()</CODE> or <CODE>dispose()</CODE> on a container instance will call those methods on all components that have them implemented. If the container is a parent of another container, it can also call those methods on its children under one condition -- a child must be initialized with additional parameter <CODE>register=True</CODE> (or <CODE>register=1</CODE>): 
+<BLOCKQUOTE>
+<PRE>
+mother = PyContainer(config="parent.xml") 
+...
+daughter = PyContainer(config="child.xml", parent=mother, register=True)
+</PRE></BLOCKQUOTE>
+The <CODE>start()</CODE> method is called on current container first, then on its children (to the deepest descendant); <CODE>stop()</CODE> and <CODE>dispose()</CODE> are called in reverse order. The order of calls inside the container: 
+<UL><LI>
+	for <CODE>start()</CODE> method:
+	<OL type=1><LI>
+		components that don't depend on other local components
+		<LI>components that depend on other local components which are already started 
+		<LI>components with circular dependency, specific order of calls is then undetermined 
+	</OL>
+ <LI><CODE>stop()</CODE> and <CODE>dispose()</CODE> are called in exactly reverse order to <CODE>start()</CODE> 
+</UL>
+<!--TOC subsubsection Custom lifecycle methods-->
+
+<H4>Custom lifecycle methods</H4><!--SEC END -->
+
+Methods described above are just examples. They are inspired by similar functionality of PicoContainer for Java. In <B>Py</B>Container, <CODE>start()</CODE>, <CODE>stop()</CODE> and <CODE>dispose()</CODE> are only convenience shortcuts for an universal method invoker. Every container has a method called <CODE>method</CODE> that accepts four arguments, three of them optional. They can be used either as positional or keyword arguments, but the latter is recommended, so I provide the names here:
+<OL type=1><LI>
+	name -- name of the method to be called on components
+	<LI>args -- list of positional arguments of the method call (optional, default is empty)
+	<LI>kwargs -- dictionary of keyword arguments of the method call (optional, default is empty)
+	<LI>order -- a boolean value (optional, default is <CODE>True</CODE> or <CODE>1</CODE>):
+	<UL><LI>
+		<CODE>True</CODE> -- the calls will be performed in order analogical to the <CODE>start()</CODE> method described above
+		<LI><CODE>False</CODE> -- the calls will be performed in order analogical to the <CODE>stop()</CODE> and <CODE>dispose()</CODE> methods described above
+	</UL>
+</OL>
+Example:
+<BLOCKQUOTE>
+<PRE>
+pyco = PyContainer(...)
+...
+pyco.method(name="pay", args=["Rafal", 1000000], order=True)
+</PRE></BLOCKQUOTE>
+It would cause calling <CODE>pay("Rafal", 1000000)</CODE> on every component that has <CODE>pay</CODE> method implemented, in order analogical to the <CODE>start()</CODE> method.<BR>
+<BR>
+<!--TOC subsection Interceptors-->
+
+<H3><A NAME="htoc11">3.6</A>&nbsp;&nbsp;Interceptors</H3><!--SEC END -->
+
+Interceptors are objects that are placed between the component instance and code (ususally of another component) that accesses it through the container. Interceptors can be very useful as they can provide additional functionality with code that is executed before every call of the component's method. Interceptors are organized in a stack, which defines the order of processing.<BR>
+<BR>
+Interceptors are also components and must be defined in the components configuration file. To use interceptors, the component definition in the configuration file must contain one or more <EM>interceptor-ref</EM> elements.
+<BLOCKQUOTE>
+<PRE>
+&lt;components&gt;
+    &lt;component id="component1" class="mycomponents.ComponentClass"&gt;
+        &lt;property ... /&gt;
+        ...
+        &lt;interceptor-ref name="interceptor1" /&gt;
+        &lt;interceptor-ref name="interceptor2" /&gt;
+        ...
+    &lt;/component&gt;
+    &lt;component id="interceptor1" class="myinterceptors.Interceptor1"&gt;
+    ...
+    &lt;/component&gt;
+    &lt;component id="interceptor2" class="myinterceptors.Interceptor2"&gt;
+    ...
+    &lt;/component&gt;
+&lt;/components&gt;
+</PRE></BLOCKQUOTE>
+The order of <EM>interceptor-ref</EM> elements defines the order of interceptors in the interceptor stack. If a component definition contains at least one <EM>interceptor-ref</EM> element, the component is instantiated differently. It is wrapped in a special object that puts the interceptor stack between the client code and the actual implementation:
+<UL><LI>
+	Access to the component's non-callable attributes is fully transparent, the wrapper object returns them directly from the component.
+	<LI>Access to the component's callable attributes (methods) is performed through the interceptors organized in a stack.
+</UL>
+Interceptor components should subclass the <CODE>Interceptor</CODE> class from module <CODE>pycontainer.interceptors</CODE> and override the <CODE>intercept()</CODE> method:
+<BLOCKQUOTE>
+<PRE>
+def intercept (self, invocation):
+    ...
+</PRE></BLOCKQUOTE>
+This method should accept one argument (<CODE>invocation</CODE>) -- an object that has two attributes used in further processing:
+<UL><LI>
+	<CODE>invoke</CODE> -- a method that should be called without arguments to pass the control to the next interceptor on the stack, or, eventually, to execute the method that was called by the client code
+	<LI><CODE>call</CODE> -- a tuple of four elements:
+	<UL><LI>
+		0 -- reference to the actual component instance
+		<LI>1 -- name of method that was called (a string)
+		<LI>2 -- list of positional arguments of the call, if any
+		<LI>3 -- dictionary of keyword arguments of the call, if any
+	</UL>
+</UL>
+A typical <CODE>intercept()</CODE> method should be built like this:
+<BLOCKQUOTE>
+<PRE>
+def intercept (self, invocation):
+    # code executed before the method
+    result = invocation.invoke()
+    # code executed after the method
+    return result
+</PRE></BLOCKQUOTE>
+In order to return the return value of the real implementation of the method that was called on the component, every interceptor should return the result of <CODE>invocation.invoke()</CODE> (of course, this won't be the case if an interceptor performs any changes of the state of the elements of the <CODE>call</CODE> tuple mentioned before, which will affect next interceptors so that the proper method won't be called). You can also short-circuit the metod call by not calling <CODE>invocation.invoke()</CODE>, return something different, alter the real result value, etc. Interceptors seem to be really powerful concept.<BR>
+<BR>
+With a component having two interceptors, as in the configuration above, and a typical <CODE>intercept()</CODE> method, the code will be executed (when some method is called on the component) in the following order:
+<OL type=1><LI>
+	code of <EM>interceptor1</EM> placed before the <CODE>invoke()</CODE> call
+	<LI>code of <EM>interceptor2</EM> placed before the <CODE>invoke()</CODE> call
+	<LI>actual body of the method of <EM>component1</EM>
+	<LI>code of <EM>interceptor2</EM> placed after the <CODE>invoke()</CODE> call
+	<LI>code of <EM>interceptor1</EM> placed after the <CODE>invoke()</CODE> call
+</OL>
+<DL COMPACT=compact><DT>
+	<B>Important note:</B><DD> The wrapper object overshadows number of attributes of the component if they have the same names. Most of those attributes are "private" (in a Python sense), but two are not: <CODE>invoke</CODE> and <CODE>call</CODE>. If the component has any attributes of those names, they won't be available. Also some special methods are used (e.g. <CODE>__getattr__</CODE>).
+</DL>
+<!--TOC subsection Custom object factories-->
+
+<H3><A NAME="htoc12">3.7</A>&nbsp;&nbsp;Custom object factories</H3><!--SEC END -->
+
+<A NAME="sec:factories"></A>
+By default, PyContainer creates component instances from top-level classes of locally avaliable modules. However, it is often convenient to have more control over the instantiation, for example to retrieve the objects from remote data source. To use custom factories, second configuration file is needed, let's call it <CODE>factories.xml</CODE>:
+<BLOCKQUOTE>
+<PRE>
+&lt;factories&gt;
+    &lt;factory id="default" class="pycontainer.factories.LocalFactory" /&gt;
+    &lt;factory id="factory1" class="myfactories.CustomFactory"&gt;
+        &lt;property name="anAttribute"&gt;"a string"&lt;/property&gt;
+        ...
+    &lt;/factory&gt;
+    &lt;factory id="factory2" class="myfactories.CustomFactory"&gt;
+        ...
+    &lt;/factory&gt;
+    &lt;factory id="factory3" class="myfactories.AnotherCustomFactory"&gt;
+        ...
+    &lt;/factory&gt;
+&lt;/factories&gt;
+</PRE></BLOCKQUOTE>
+Each factory is identified by an <EM>id</EM> attribute. The factories are instantiated from locally avaliable modules defined by <EM>class</EM> attribute, just as components. Similarily to components, they may have properties injected (only of built-in types). Hence the presence of diffrent factories of the same class in the example above -- they may have different sets of properties. In the example above the <EM>default</EM> factory is specified -- it is used to instantiate components that don't have their factory specified. It is not necessary to define this factory if you want the regular components to be instantiated in a normal way.<BR>
+<BR>
+A factory class should be a subclass of the <CODE>Factory</CODE> class from the <CODE>pycontainer.factories</CODE> module and override the <CODE>getInstance()</CODE> method:
+<BLOCKQUOTE>
+<PRE>
+def getInstance (self, classpath):
+    ...
+    return aNewInstance
+</PRE></BLOCKQUOTE>
+The <CODE>classpath</CODE> argument is the value of <EM>class</EM> attribute from component definition. The <CODE>getInstance()</CODE> method is supposed to always return a new instance of an object. Of course, the factory object has the attributes injected as defined in the factory configuration file.<BR>
+<BR>
+To use factories, also the component configuration file has to be modified:
+<BLOCKQUOTE>
+<PRE>
+&lt;components factories="factories.xml"&gt;
+    &lt;component id="component1" class="components.Component1" factory="default"&gt;
+        ...
+    &lt;/component&gt;
+    &lt;component id="component2" class="components.Component2" factory="factory1"&gt;
+        ...
+    &lt;/component&gt;
+    &lt;component id="component3" class="components.Component3" factory="factory2"&gt;
+        ...
+    &lt;/component&gt;
+    &lt;component id="component4" class="components.Component4"&gt;
+        ...
+    &lt;/component&gt;
+&lt;/components&gt;
+</PRE></BLOCKQUOTE>
+The <EM>factory</EM> attribute of the <EM>component</EM> element has to match any of the <EM>id</EM> attributes in the factories configuration file. For default factory, the <EM>default</EM> value can be used, but may as well be omitted.
+<DL COMPACT=compact><DT>
+	<B>Note:</B><DD> In future versions the format of the configuration file for components and factories may be somehow unified.
+</DL>
+Future versions may also provide a standard library of useful factories.<BR>
+<BR>
+<!--TOC subsection Configuration file details-->
+
+<H3><A NAME="htoc13">3.8</A>&nbsp;&nbsp;Configuration file details</H3><!--SEC END -->
+
+<A NAME="sec:config"></A>
+<!--TOC subsubsection Components configuration file-->
+
+<H4>Components configuration file</H4><!--SEC END -->
+
+The root of an XML configuration file is the <EM>components</EM> element. It has an (optional) attribute <EM>factories</EM>, which should be a name (or relative path) of the factories configuration file.<BR>
+<BR>
+The <EM>components</EM> element can contain any number of <EM>component</EM> elements. Every <EM>component</EM> element has two mandatory attributes and two optional:
+<UL><LI>
+	id -- identifies the component in the container, allows access without specifying the actual class (it can be thought as "interface") 
+ <LI>class -- it's really a path to class: dot-separated module path followed by dot followed by class name. It's done like this for simplicity, and for the default object factory it implies at least two limitations:
+	<OL type=1><LI>
+		You can't use nested classes as component classes 
+ <LI>You can't directly use module as a component. It's sometimes convenient, and there are modules in standard library that work like that. What you can do is wrap the module into something callable, e.g.: 
+	<BLOCKQUOTE>
+	<PRE>
+ import xml.dom.minidom
+ def mydom():
+     return xml.dom.minidom
+ </PRE>	</BLOCKQUOTE>
+	You can create your own object factory to avoid these limitations.
+	</OL>
+	<LI>type (optional) -- "singleton" or "prototype" (default is singleton)
+	<LI>factory (optional) -- factory to be used for instantiation; the value must match any of the <EM>id</EM> attrbiutes of the <EM>factory</EM> elements in the factories configuration file
+</UL>
+A <EM>component</EM> element can optionally contain any number of <EM>property</EM> elements. Every <EM>property</EM> element has a <EM>name</EM> attribute, which is mapped to an attribute of the component during instantiation. If the <EM>property</EM> element contains <EM>local</EM> attribute, its value is treated as a reference to other component in the container (it must match the <EM>id</EM> attribute of one of the other components defined in config file). If it doesn't, the text between the start and end tag of the <EM>property</EM> element is treated as a value to be injected into the component. PyContainer uses the evil <CODE>eval</CODE> built-in function to do that (yes, I know). Example: 
+<BLOCKQUOTE>
+<PRE>
+&lt;property name="products"&gt;["bread", "butter", "milk"]&lt;/property&gt;
+&lt;property name="addres"&gt;"A string"&lt;/property&gt;
+&lt;property name="number"&gt;6&lt;/property&gt;
+</PRE></BLOCKQUOTE>
+<!--TOC subsubsection Factories configuration file-->
+
+<H4>Factories configuration file</H4><!--SEC END -->
+
+The format of the factories configuration file is similar to the components' file. The root is the <EM>factories</EM> element, which can contain any numer of <EM>factory</EM> elements. Each <EM>factory</EM> element has to have two attributes, <EM>id</EM> and <EM>class</EM>, with the same meaning as for component configuration. A <EM>factory</EM> element can contain any number of <EM>property</EM> elements (like for components, but only simple ones, with the value evaluated from between the start and end tag).
+<DL COMPACT=compact><DT>
+	<B>Note:</B><DD> In future versions the format of the configuration file for components and factories may be somehow unified.
+</DL>
+<!--TOC section License-->
+
+<H2><A NAME="htoc14">4</A>&nbsp;&nbsp;License</H2><!--SEC END -->
+
+<BLOCKQUOTE>
+	Copyright © 2004, Rafal Sniezynski 
+</BLOCKQUOTE>
+PyContainer is distributed under original Python license. Included in the distribution is the pxdom 1.1 module. PyContainer uses it when it has trouble importing the Expat module (happens on older Python distributions). Pxdom is: 
+<BLOCKQUOTE>
+	Copyright © 2004, Andrew Clover. All rights reserved. 
+</BLOCKQUOTE>
+License details for PyContainer and pxdom are in the <CODE>license.txt</CODE> file in the distribution. 
+PyContainer also uses slightly modified version of David Mertz's great gnosis.xml.objectify package (public domain).<BR>
+<BR>
+<!--TOC section History-->
+
+<H2><A NAME="htoc15">5</A>&nbsp;&nbsp;History</H2><!--SEC END -->
+
+<UL><LI>
+	0.4 (2004.09.05)
+	<UL><LI>
+		added support for interceptors
+		<LI>added support for custom object factories
+		<LI>added support for arbitrary lifecycle methods
+	</UL>
+	<LI>0.3 (2004.08.25)
+		<UL><LI>
+				added support for prototype components 
+				<LI>lifecycle management is now performed in a much more reasonable way 
+		</UL>
+	<LI>0.2 (July 2004) -- initial public release 
+</UL>
+<!--TOC section To do-->
+
+<H2><A NAME="htoc16">6</A>&nbsp;&nbsp;To do</H2><!--SEC END -->
+
+<UL><LI>
+	provide a standard library of object factories
+	<LI>investigate the thread safety (or lack thereof)
+	<LI>add more exception handling 
+	<LI>bugfixes, etc.
+	<LI>probably a lot more, any suggestions are welcome
+</UL>
+<!--TOC section Contact-->
+
+<H2><A NAME="htoc17">7</A>&nbsp;&nbsp;Contact</H2><!--SEC END -->
+
+My email address: thirdeye at interia pl <BR>
+<BR>
+Any feedback is welcome. <BR>
+<BR>
+Pycontainer homepage is <A HREF="http://www.pycontainer.glt.pl"><TT>http://www.pycontainer.glt.pl</TT></A> <BR>
+<BR>
+<!--TOC section Links-->
+
+<H2><A NAME="htoc18">8</A>&nbsp;&nbsp;Links</H2><!--SEC END -->
+
+<A HREF="http://www.picocontainer.org/">PicoContainer</A><BR>
+<A HREF="http://jakarta.apache.org/hivemind/">HiveMind</A><BR>
+<A HREF="http://www.springframework.org/">Spring Framework</A><BR>
+<A HREF="http://www.opensymphony.com/">Webwork 2</A><BR>
+<BR>
+<BR>
+<BR>
+<BR>
+
+[Sorry for my English]
+<!--HTMLFOOT-->
+<!--ENDHTML-->
+<!--FOOTER-->
+<HR SIZE=2>
+<BLOCKQUOTE><EM>This document was translated from L<sup>A</sup>T<sub>E</sub>X by
+</EM><A HREF="http://pauillac.inria.fr/~maranget/hevea/index.html"><EM>H<FONT SIZE=2><sup>E</sup></FONT>V<FONT SIZE=2><sup>E</sup></FONT>A</EM></A><EM>.
+</EM></BLOCKQUOTE>
+</BODY>
+</HTML>

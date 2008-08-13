@@ -1,0 +1,28 @@
+<components>
+
+	<component id="connectionFactory" class="springpython.database.factory.MySQLConnectionFactory">
+		<property name="username">"springpython"</property>
+		<property name="password">"springpython"</property>
+		<property name="hostname">"localhost"</property>
+		<property name="db">"petclinic"</property>
+	</component>
+	
+	<component id="remoteController" class="controller.PetClinicController">
+		<property name="connectionFactory" local="connectionFactory"/>
+	</component>
+	
+	<component id="controllerExporter" class="springpython.remoting.pyro.PyroServiceExporter">
+		<property name="serviceName">"Controller"</property>
+		<property name="service" local="remoteController"/>
+	</component>
+	
+	<component id="remoteUserDetailsService" class="springpython.security.userdetails.dao.DatabaseUserDetailsService">
+		<property name="dataSource" local="connectionFactory"/>
+	</component>
+
+	<component id="userDetailsServiceExporter" class="springpython.remoting.pyro.PyroServiceExporter">
+		<property name="serviceName">"UserDetails"</property>
+		<property name="service" local="remoteUserDetailsService"/>
+	</component>
+	
+</components>

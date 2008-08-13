@@ -1,0 +1,7 @@
+<components>
+
+	<component id="personService" class="springpython.remoting.hessian.HessianProxyFactory">
+		<property name="serviceUrl">"http://localhost:8080/"</property>
+	</component>
+
+</components>

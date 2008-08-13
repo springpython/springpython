@@ -1,0 +1,69 @@
+CREATE DATABASE petclinic;
+
+GRANT ALL ON petclinic.* TO springpython@localhost IDENTIFIED BY 'springpython';
+
+USE petclinic;
+
+CREATE TABLE vets (
+  id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(30),
+  last_name VARCHAR(30),
+  INDEX(last_name)
+);
+
+CREATE TABLE specialties (
+  id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(80),
+  INDEX(name)
+);
+
+CREATE TABLE vet_specialties (
+  vet_id INT(4) UNSIGNED NOT NULL REFERENCES vet(id),
+  specialty_id INT(4) UNSIGNED NOT NULL REFERENCES specialties(id)
+);
+
+CREATE TABLE types (
+  id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(80),
+  INDEX(name)
+);
+
+CREATE TABLE owners (
+  id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  first_name VARCHAR(30),
+  last_name VARCHAR(30),
+  address VARCHAR(255),
+  city VARCHAR(80),
+  telephone VARCHAR(20),
+  username VARCHAR(30) NOT NULL REFERENCES users(username),
+  INDEX(last_name)
+);
+
+CREATE TABLE pets (
+  id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(30),
+  birth_date DATE,
+  type_id INT(4) UNSIGNED NOT NULL REFERENCES types(id),
+  owner_id INT(4) UNSIGNED NOT NULL REFERENCES owner(id),
+  INDEX(name)
+);
+
+CREATE TABLE visits (
+  id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  pet_id INT(4) UNSIGNED NOT NULL REFERENCES pets(id),
+  visit_date DATE,
+  description VARCHAR(255),
+  INDEX(pet_id)
+);
+
+CREATE TABLE users (
+	username VARCHAR(30) NOT NULL PRIMARY KEY,
+	password VARCHAR(255) NOT NULL,
+	enabled BOOLEAN NOT NULL
+);
+
+CREATE TABLE authorities (
+	id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+	username VARCHAR(30) NOT NULL REFERENCES users(username),
+	authority VARCHAR(255) NOT NULL
+);

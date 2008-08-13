@@ -1,0 +1,257 @@
+#!/usr/bin/python
+"""
+   Copyright 2006-2008 SpringSource (http://springsource.com), All Rights Reserved
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.       
+"""
+import cherrypy
+import logging
+import os
+import re
+import sys
+from cherrypy._cpserver import Server
+from cherrypy._cpwsgi import wsgiApp
+from cherrypy._cpwsgiserver import CherryPyWSGIServer
+from optparse import OptionParser
+from springbot import DictionaryBot
+from springpython.context import DecoratorBasedApplicationContext
+from springpython.context import component
+from springpython.remoting.pyro import PyroProxyFactory
+from springpython.remoting.pyro import PyroServiceExporter
+from springpython.security.web import FilterChainProxy
+from springpython.security.web import MiddlewareFilter
+
+class WSGIServerWithMiddleware(object):
+    """Server component needed to jumpstart a Spring Python/CherryPy web app."""
+    def __init__(self, middleware):
+        self.middleware = middleware
+    def __call__(self):
+        return CherryPyWSGIServer(("", 9001), self.middleware[0])
+
+class MiddlewareServer(Server):
+    """Server component needed to jumpstart a Spring Python/CherryPy web app."""
+    def start(self, middleware):
+        Server.start(self, initOnly=False, serverClass=WSGIServerWithMiddleware(middleware), blocking=False)
+
+def header():
+    """Standard header used for all pages"""
+    return """
+        <!--
+        
+            Coily :: An IRC bot used to manage the #springpython irc channel (powered by CherryPy/Spring Python)
+        
+        -->
+        
+        <html>
+        <head>
+        <title>Coily :: An IRC bot used to manage the #springpython irc channel (powered by CherryPy/Spring Python)</title>
+            <style type="text/css">
+                    td { padding:3px; }
+                    div#top {position:absolute; top: 0px; left: 0px; background-color: #E4EFF3; height: 50px; width:100%; padding:0px; border: none;margin: 0;}
+                    div#image {position:absolute; top: 50px; right: 0%; background-image: url(images/spring_python_white.png); background-repeat: no-repeat; background-position: right; height: 100px; width:300px }
+            </style>
+        </head>
+        
+        <body>
+            <div id="top">&nbsp;</div>
+            <div id="image">&nbsp;</div>
+            <br clear="all">
+            <p>&nbsp;</p>
+        """
+
+def footer():
+    """Standard footer used for all pages."""
+    return """
+        <hr>
+        <table style="width:100%"><tr>
+                <td><A href="/">Home</A></td>
+                <td style="text-align:right;color:silver">Coily :: a <a href="https://springpython.webfactional.com">Spring Python</a> IRC bot (powered by <A HREF="http://www.cherrypy.org">CherryPy</A>)</td>
+        </tr></table>
+        
+        </body>
+        """
+
+def markup(text):
+    """Convert any http://xyz references into real web links."""
+    httpR = re.compile(r"(http://[\w.:/?-]*\w)")
+    alteredText = httpR.sub(r'<A HREF="\1">\1</A>', text)
+    return alteredText
+    
+class CoilyView:
+    """Presentation layer of the web application."""
+
+    def __init__(self, bot = None):
+        """Inject a controller object in order to fetch live data."""
+        self.bot = bot
+        
+    @cherrypy.expose
+    def index(self):
+        """CherryPy will call this method for the root URI ("/") and send
+        its return value to the client."""
+        
+        return header() + """
+            <H2>Welcome</H2>
+            <P>
+            Hi, I'm Coily! I'm a bot used to manage the IRC channel <a href="irc://irc.ubuntu.com/#springpython">#springpython</a>.
+            <P>
+            If you visit the channel, you may find I have a lot of information to offer while you are there. If I seem to be missing some useful definitions, then you can help grow my knowledge.
+            <small>
+                <TABLE border="1">
+                    <TH>Command</TH>
+                    <TH>Description</TH>
+                    <TR>
+                        <TD>!coily, what is <i>xyz</i>?</TD>
+                        <TD>This is how you ask me for a definition of something.</TD>
+                    </TR>
+                    <TR>
+                        <TD>!<i>xyz</i></TD>
+                        <TD>This is a shortcut way to ask the same question.</TD>
+                    </TR>
+                    <TR>
+                        <TD>!coily, <i>xyz</i> is <i>some definition for xyz</i></TD>
+                        <TD>This is how you feed me a definition.</TD>
+                    </TR>
+                </TABLE>
+            </small>
+            <P>
+            To save you from having to query me for every current definition I have, there is a link on this web site
+            that lists all my current definitions. NOTE: These definitions can be set by other users.
+            <P>
+            <A href="listDefinitions">List current definitions</A>
+            <P>
+            """ + footer()
+
+    @cherrypy.expose
+    def listDefinitions(self):
+        results = header()
+        results += """
+                <small>
+                <TABLE border="1">
+                    <TH>Keyword</TH>
+                    <TH>Definition</TH>
+            """
+        for key, value in self.bot.getDefinitions().items():
+            results += markup("""
+                <TR>
+                    <TD>%s</TD>
+                    <TD>%s</TD>
+                </TR>
+                """ % (value[0], value[1]))
+        results += "</TABLE></small>"
+        results += footer()
+        return results
+
+class CoilyWebClient(DecoratorBasedApplicationContext):
+    """
+    This container represents the context of the web application used to interact with the bot and present a
+    nice frontend to the user community about the channel and the bot.\
+    """
+    def __init__(self):
+        DecoratorBasedApplicationContext.__init__(self)
+
+    @component
+    def root(self):
+        return CoilyView(self.bot())
+
+    @component
+    def bot(self):
+        proxy = PyroProxyFactory()
+        proxy.serviceUrl = "PYROLOC://localhost:7766/bot"
+        return proxy
+
+
+    @component
+    def exceptionFilter(self):
+        filter = MiddlewareFilter()
+        filter.clazz = "paste.evalexception.middleware.EvalException"
+        filter.appAttribute = "application"
+        return filter 
+
+    @component
+    def filterChainProxy(self):
+        return FilterChainProxy(filterInvocationDefinitionSource = 
+            [
+            ("/.*",       [self.exceptionFilter(), ])
+            ])
+
+class CoilyIRCServer(DecoratorBasedApplicationContext):
+    """This container represents the context of the IRC bot. It needs to export information, so the web app can get it."""
+    def __init__(self):
+        DecoratorBasedApplicationContext.__init__(self)
+
+    @component
+    def remoteBot(self):
+        return DictionaryBot([("irc.ubuntu.com", 6667)], "#springpython", ops=["Goldfisch"], nickname="coily", realname="Coily the Spring Python assistant", logfile="springpython.log")
+
+    @component
+    def bot(self):
+        exporter = PyroServiceExporter()
+        exporter.serviceName = "bot"
+        exporter.service = self.remoteBot()
+        return exporter
+
+if __name__ == "__main__":
+    # Parse some launching options.
+    parser = OptionParser(usage="usage: %prog [-h|--help] [options]")
+    parser.add_option("-w", "--web", action="store_true", dest="web", default=False, help="Run the web server component.")
+    parser.add_option("-i", "--irc", action="store_true", dest="irc", default=False, help="Run the IRC-bot component.")
+    parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="Turn up logging level to DEBUG.")
+    (options, args) = parser.parse_args()
+
+    if options.web and options.irc:
+        print "You cannot run both the web server and the IRC-bot at the same time."
+        sys.exit(2)
+
+    if not options.web and not options.irc:
+        print "You must specify one of the components to run."
+        sys.exit(2)
+
+    if options.debug:
+        logger = logging.getLogger("springpython")
+        logger.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler()
+        ch.setLevel(loggingLevel)
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s") 
+        ch.setFormatter(formatter)
+        logger.addHandler(ch)
+
+    if options.web:
+        # This runs the web application context of the application. It allows a nice web-enabled view into
+        # the channel and the bot that supports it.
+        applicationContext = CoilyWebClient()
+
+        cherrypy.root = applicationContext.getComponent(componentId = "root")
+        cherrypy.server = MiddlewareServer()
+
+        # Configure cherrypy programmatically.
+        cherrypy.config.update({
+                                "global": {"server.socket_port": 9001},
+                                "/": {"static_filter.root": os.getcwd()},
+                                "/images": {"static_filter.on": True, "static_filter.dir": "images"},
+                                "/html": {"static_filter.on": True, "static_filter.dir": "html"},
+                                "/styles": {"static_filter.on": True, "static_filter.dir": "css"},
+                                "/scripts": {"static_filter.on": True, "static_filter.dir": "js"}
+                            })
+
+        middleware = applicationContext.getComponent(componentId = "filterChainProxy")
+        middleware.application = wsgiApp
+
+        # Start the CherryPy server.
+        cherrypy.server.start(middleware=[middleware])
+    
+    if options.irc:
+        # This runs the IRC bot that connects to a channel and then responds to various events.
+        applicationContext = CoilyIRCServer()
+        coily = applicationContext.bot()
+        coily.service.start()
+
