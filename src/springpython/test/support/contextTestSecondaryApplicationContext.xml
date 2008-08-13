@@ -1,5 +1,0 @@
-<components>
-    <component id="MovieFinder" class="springpython.test.support.testSupportClasses.TheOtherMovieFinder">
-        <property name="filename">"support/movies2.txt"</property>
-    </component>
-</components>
