@@ -1,7 +1,0 @@
-<components>
-
-	<component id="connectionFactory" class="springpython.database.factory.SqliteConnectionFactory">
-        <property name="db">"/tmp/springpython.db"</property>
-    </component>
-	
-</components>
