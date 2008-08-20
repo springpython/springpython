@@ -6,5 +6,8 @@
 <pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
 <path>/springpython/src</path>
 <path>/springpython/samples/petclinic</path>
+<path>/springpython/samples/springirc</path>
+<path>/springpython/samples/springwiki</path>
+<path>/springpython/test</path>
 </pydev_pathproperty>
 </pydev_project>
