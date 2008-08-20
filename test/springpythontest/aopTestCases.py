@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
+import logging
 import unittest
 from springpython.aop import MethodInterceptor
 from springpython.aop import MethodMatcher
@@ -53,7 +54,7 @@ class AopProxyTestCase(unittest.TestCase):
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
-
+        
     def testCreatingAProxyFactoryAndAddingAnInterceptorIoC(self):
         factory = self.appContext.getComponent("factory")
         service = factory.getProxy()
@@ -61,6 +62,15 @@ class AopProxyTestCase(unittest.TestCase):
         self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
 
+    def testWrappingStringFunctionWithInterceptor(self):
+        service = ProxyFactoryComponent()
+        service.target = SampleService()
+        service.interceptors = [WrappingInterceptor()]
+        self.assertEquals("This is a sample service.", service.target.__str__())
+        self.assertEquals("This is a sample service.", str(service.target))
+        self.assertEquals("<Wrapped>This is a sample service.</Wrapped>", str(service))
+        self.assertEquals("<Wrapped>This is a sample service.</Wrapped>", service.__str__())
+    
     def testCreatingAProxyFactoryComponentAndAddingAnInterceptorProgrammatically(self):
         service = ProxyFactoryComponent()
         service.target = SampleService()
@@ -141,4 +151,13 @@ class AopProxyFactoryCombinedWithPyroTestCase(unittest.TestCase):
     #    self.appContext.dispose()
 
 if __name__ == "__main__":
+    logger = logging.getLogger("springpython")
+    loggingLevel = logging.INFO
+    logger.setLevel(loggingLevel)
+    ch = logging.StreamHandler()
+    ch.setLevel(loggingLevel)
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s") 
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
     unittest.main()

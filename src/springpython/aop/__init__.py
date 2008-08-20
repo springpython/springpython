@@ -210,7 +210,7 @@ class AopProxy(object):
         target object. This allow this object to serve as a proxying agent for the target object."""
         self.logger.debug("Calling AopProxy.%s(%s)" % (self.methodName, args))
         invocation = MethodInvocation(self.target, self.methodName, args, kwargs, self.interceptors)
-        return getattr(invocation, self.methodName)(*args, **kwargs)
+        return invocation.__getattr__(self.methodName)(*args, **kwargs)
 
     def __getattr__(self, name):
         """If any of the parameters are local objects, they are immediately retrieved. Callables cause the dispatch method
@@ -224,7 +224,7 @@ class AopProxy(object):
                return attr
             self.methodName = name
             return self.dispatch
-
+        
 class ProxyFactory(object):
     """This object helps to build AopProxy objects programmatically. It allows configuring advice and target objects.
     Then it will produce an AopProxy when needed. To use similar behavior in an IoC environment, see ProxyFactoryComponent."""
@@ -257,8 +257,11 @@ class ProxyFactoryComponent(ProxyFactory, AopProxy):
     """This class acts as both a ProxyFactory to build and an AopProxy. It makes itself look like the target object.
     Any changes to the target and list of interceptors is immediately seen when using this as a proxy."""
     def __init__(self, target = None, interceptors = None):
-        self.logger = logging.getLogger("springpython.aop.ProxyFactoryComponent")
         ProxyFactory.__init__(self, target, interceptors)
+        self.logger = logging.getLogger("springpython.aop.ProxyFactoryComponent")
+        
+    def __str__(self):
+        return self.__getattr__("__str__")()
 
 class PerformanceMonitorInterceptor(MethodInterceptor):
     def __init__(self, prefix = None, level = logging.DEBUG):
