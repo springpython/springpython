@@ -142,6 +142,8 @@ class SampleService:
         return "You made it!"
     def doSomething(self):
         return "Alright!"
+    def __str__(self):
+        return "This is a sample service."
 
 class RemoteService1(object):
     def getData(self, param):
