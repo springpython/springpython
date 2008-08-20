@@ -92,8 +92,13 @@ class SqliteConnectionFactory(ConnectionFactory):
 
     def connect(self):
         """The import statement is delayed so the library is loaded ONLY if this factory is really used."""
-        import sqlite
-        return sqlite.connect(db=self.db, autocommit=self.autocommit)
+        try:
+            import sqlite3
+            return sqlite3.connect(db=self.db, autocommit=self.autocommit)
+        except:
+            import sqlite
+            return sqlite.connect(db=self.db, autocommit=self.autocommit)
+                
 
     def inTransaction(self):
         return self.getConnection().inTransaction
