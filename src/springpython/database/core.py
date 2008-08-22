@@ -14,7 +14,6 @@
    limitations under the License.       
 """
 import logging
-import re
 import types
 import warnings
 from springpython.database import ArgumentMustBeNamed
@@ -59,16 +58,10 @@ class DatabaseTemplate(object):
         self.__dict__[name] = value
         if name == "connectionFactory" and value:
             self.__db = value.getConnection()
-
-    def convertFromJavaToPythonNotation(self, sqlQuery):
-        """This is to help Java users migrate to Python. Java notation defines binding variables
-        points with '?', while Python uses '%s', and this method will convert from one format
-        to the other."""
-        return re.sub(pattern="\?", repl="%s", string=sqlQuery)
-        
+            
     def execute(self, sqlStatement, args = None):
         """Issue a single SQL execute, typically a DDL statement."""
-        sqlStatement = self.convertFromJavaToPythonNotation(sqlStatement)
+        sqlStatement = self.connectionFactory.convertFromJavaToPythonNotation(sqlStatement)
 
         cursor = self.__db.cursor()
         error = None
@@ -114,7 +107,7 @@ class DatabaseTemplate(object):
         if args and type(args) not in self.connectionFactory.acceptableTypes:
             raise InvalidArgumentType(type(args), self.connectionFactory.acceptableTypes)
 
-        sqlQuery = self.convertFromJavaToPythonNotation(sqlQuery)
+        sqlQuery = self.connectionFactory.convertFromJavaToPythonNotation(sqlQuery)
         
         cursor = self.__db.cursor()
         error = None
@@ -169,8 +162,17 @@ class DatabaseTemplate(object):
         if len(results[0]) != 1:
             raise IncorrectResultSizeDataAccessException("Instead of getting one column, this query returned %s" % len(results[0]))
 
+        equivalentTypes = [
+                           [types.UnicodeType, types.StringType]
+                           ]
         if type(results[0][0]) != requiredType:
-            raise DataAccessException("Expected %s, but instead got %s"% (requiredType, type(results[0][0])))
+            foundEquivType = False
+            for equivType in equivalentTypes:
+                if type(results[0][0]) in equivType and requiredType in equivType:
+                    foundEquivType = True
+                    break
+            if not foundEquivType:
+                raise DataAccessException("Expected %s, but instead got %s"% (requiredType, type(results[0][0])))
 
         return results[0][0]
 

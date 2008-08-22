@@ -17,9 +17,9 @@
    already existing module "sqlite".
 """
 import warnings
-warnings.warn("springpython.database's Sqlite module has moved to the factory module.", DeprecationWarning, 2)
+warnings.warn("springpython.database's Sqlite module has moved to the factory module as Sqllite3ConnectionFactory.", DeprecationWarning, 2)
 
 from springpython.database import factory
 
-class SqliteConnectionFactory(factory.SqliteConnectionFactory):
+class SqliteConnectionFactory(factory.Sqlite3ConnectionFactory):
     pass

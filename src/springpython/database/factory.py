@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
+import re
 import sys
 import types
 
@@ -45,6 +46,12 @@ class ConnectionFactory(object):
 
     def countType(self):
         raise NotImplementedError()
+    
+    def convertFromJavaToPythonNotation(self, sqlQuery):
+        """This is to help Java users migrate to Python. Java notation defines binding variables
+        points with '?', while Python uses '%s', and this method will convert from one format
+        to the other."""
+        return re.sub(pattern="\?", repl="%s", string=sqlQuery)
 
 class MySQLConnectionFactory(ConnectionFactory):
     def __init__(self, username = None, password = None, hostname = None, db = None):
@@ -84,27 +91,25 @@ class PgdbConnectionFactory(ConnectionFactory):
     def countType(self):
         return types.LongType
 
-class SqliteConnectionFactory(ConnectionFactory):
-    def __init__(self, db = None, autocommit=False):
+class Sqlite3ConnectionFactory(ConnectionFactory):
+    def __init__(self, db = None):
         ConnectionFactory.__init__(self, [types.TupleType])
         self.db = db
-        self.autocommit = autocommit
 
     def connect(self):
         """The import statement is delayed so the library is loaded ONLY if this factory is really used."""
-        try:
-            import sqlite3
-            return sqlite3.connect(db=self.db, autocommit=self.autocommit)
-        except:
-            import sqlite
-            return sqlite.connect(db=self.db, autocommit=self.autocommit)
-                
+        import sqlite3
+        return sqlite3.connect(self.db)               
 
     def inTransaction(self):
-        return self.getConnection().inTransaction
+        return True
 
     def countType(self):
-        return types.FloatType
+        return types.IntType
+
+    def convertFromJavaToPythonNotation(self, sqlQuery):
+        """sqlite3 uses the ? notation, like Java's JDBC."""
+        return re.sub(pattern="%s", repl="?", string=sqlQuery)
 
 class cxoraConnectionFactory(ConnectionFactory):
     def __init__(self, username = None, password = None, hostname = None, db = None):

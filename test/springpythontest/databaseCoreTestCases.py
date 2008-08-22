@@ -88,7 +88,7 @@ class ConnectionFactoryTestCase(MockTestCase):
         sys.modules["sqlite"] = self.mock()
         sys.modules["sqlite"].expects(once()).method("connect")
         
-        connectionFactory = factory.SqliteConnectionFactory(db="/tmp/foobar")
+        connectionFactory = factory.Sqlite3ConnectionFactory(db="/tmp/foobar")
         connection = connectionFactory.connect()
 
         del(sys.modules["sqlite"])
@@ -634,7 +634,7 @@ class SqliteDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
                 os.remove("/tmp/springpython.db")
             except OSError:
                 pass
-            self.factory = factory.SqliteConnectionFactory("/tmp/springpython.db")
+            self.factory = factory.Sqlite3ConnectionFactory("/tmp/springpython.db")
             dt = DatabaseTemplate(self.factory)
 
             dt.execute("""
