@@ -491,7 +491,7 @@ class SqliteTransactionTestCase(AbstractTransactionTestCase):
                 os.remove("/tmp/springpython.db")
             except OSError:
                 pass
-            self.factory = factory.SqliteConnectionFactory("/tmp/springpython.db")
+            self.factory = factory.Sqlite3ConnectionFactory("/tmp/springpython.db")
             dt = DatabaseTemplate(self.factory)
 
             dt.execute("""
