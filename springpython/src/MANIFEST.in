@@ -1,1 +1,1 @@
-recursive-include springpython NOTICE README *.txt *.xml *.png *.jpg
+recursive-include springpython COPYRIGHT *.txt *.png *.jpg

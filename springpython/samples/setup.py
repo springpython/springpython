@@ -22,10 +22,10 @@ the stylesheet inside SpringWiki is GPL. Everything else is ASL.
 
 from distutils.core import setup
 
-setup(name='springpython-examples',
+setup(name='springpython-samples',
       version='0.6.0',
-      description='Spring Python examples',
-      long_description='A collection of small examples utilizing the features of Spring Python.',
+      description='Spring Python samples',
+      long_description='A collection of small samples utilizing the features of Spring Python.',
       author='Greg L. Turnquist',
       author_email='gregturn at mindspring dot com',
       url='https://springpython.webfactional.com',
