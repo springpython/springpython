@@ -195,7 +195,7 @@ class TransactionalInterceptor(MethodInterceptor):
         self.txManager = txManager
 
     def invoke(self, invocation):
-        class txWrapper(TransactionCallback):
+        class txDefinition(TransactionCallback):
             def doInTransaction(s, status):
                 return invocation.proceed()
 
@@ -210,7 +210,7 @@ class TransactionalInterceptor(MethodInterceptor):
             
         self.logger.debug("Call TransactionTemplate")
         try:
-            results = txTemplate.execute(txWrapper())
+            results = txTemplate.execute(txDefinition())
         except Exception, e:
             self.logger.debug("Exception => %s" % e)
             raise e
