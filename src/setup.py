@@ -14,15 +14,28 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
+import re
 import sys
 from distutils.core import setup
+from optparse import OptionParser
 
 if sys.version_info < (2, 3):
     print "Spring Python only supports Python 2.3 and higher"
     sys.exit(1)
 
+parser = OptionParser(usage="usage: %prog [-h|--help] [options]")
+parser.add_option("", "--version", action="store", dest="version", help="Define the version of this build.")
+(options, args) = parser.parse_args()
+
+if re.match(r"\d\.\d", options.version):
+    # Remove version argument
+    sys.argv = [sys.argv[0]] + sys.argv[-1:]
+else:
+    print "Version not correctly specified => version = %s Arguments => %s" % (options.version, sys.argv)
+    sys.exit(1)
+
 setup(name='springpython',
-      version='0.6.0',
+      version=options.version,
       description='Spring Python',
       long_description='Spring Python is an offshoot of the Java-based SpringFramework, targeted for Python. Spring provides many useful features, and I wanted those same features available when working with Python.',
       author='Greg L. Turnquist',
