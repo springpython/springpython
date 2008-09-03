@@ -41,9 +41,9 @@ parser.add_option("-r", "--register", action="store_true", dest="register", defa
 completeVersion = version + "-" + options.buildStamp
 
 # NOTE: These options are listed in the order expected to run!!! For example,
-# ./make_release.py --clean --test
+# ./build.py --clean --test
 # and
-# ./make_release.py --test --clean
+# ./build.py --test --clean
 # ...will both run the same options, in the order of clean followed by test.
 
 if options.clean:
