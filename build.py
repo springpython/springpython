@@ -84,7 +84,7 @@ for option in optlist:
     if option[0] in ("--package"):
         os.system("mkdir -p %s" % properties["packageDir"])
         os.system("cd src ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % completeVersion)
-        os.system("cd samples ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % completeVersion)
+        #os.system("cd samples ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % completeVersion)
         os.system("mv *.tar.gz %s" % properties["packageDir"])
 	
     if option[0] in ("--publish"):
@@ -94,5 +94,5 @@ for option in optlist:
     if option[0] in  ("--register"):
         # TODO(8/28/2008 GLT): Test this part when making official release and registering to PyPI.
 	    os.system("cd src ; python setup.py --version %s register" % completeVersion)
-	    os.system("cd samples ; python setup.py --version %s register" % completeVersion)
+	    #os.system("cd samples ; python setup.py --version %s register" % completeVersion)
 
