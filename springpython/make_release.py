@@ -36,29 +36,35 @@ parser.add_option("-t", "--test", action="store_true", dest="test", default=Fals
 parser.add_option("", "--package", action="store_true", dest="package", default=False, help="package everything up into a tarball for release to sourceforge.")
 parser.add_option("", "--publish", action="store_true", dest="publish", default=False, help="publish this release to the deployment server.")
 parser.add_option("-r", "--register", action="store_true", dest="register", default=False, help="register this release with http://pypi.python.org/pypi")
-(options, args) = parser.parse_args()
+(options, args) = parser.parse_args()   # options is a dictionary, meaning we lost the order the commands came in
 
 completeVersion = version + "-" + options.buildStamp
+
+# NOTE: These options are listed in the order expected to run!!! For example,
+# ./make_release.py --clean --test
+# and
+# ./make_release.py --test --clean
+# ...will both run the same options, in the order of clean followed by test.
 
 if options.clean:
     print "Cleaning out the target directory"
     os.system("rm -rf target")
             
-elif options.test:
+if options.test:
     os.system("mkdir -p target/test-results/xml")
     os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=target/test-results/xml")
 
-elif options.package:
+if options.package:
     os.system("mkdir -p target/artifacts")
     os.system("cd src ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % completeVersion)
     os.system("cd samples ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % completeVersion)
     os.system("mv *.tar.gz target/artifacts")
 	
-elif options.publish:
+if options.publish:
     # TODO(8/28/2008 GLT): Implement automated solution for this.
 	print "+++ Upload the tarballs using sftp manually to <user>@frs.sourceforge.net, into dir uploads and create a release."
 
-elif options.register:
+if options.register:
     # TODO(8/28/2008 GLT): Test this part when making official release and registering to PyPI.
 	os.system("cd src ; python setup.py --version %s register" % completeVersion)
 	os.system("cd samples ; python setup.py --version %s register" % completeVersion)
