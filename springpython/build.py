@@ -18,54 +18,81 @@
 from datetime import datetime
 import os
 import sys
-from optparse import OptionParser
+import getopt
 
-# Read in the properties file, and parse it into a dictionary
 properties = {}
+
+# Default settings, before reading the properties file
+properties["targetDir"] = "target"
+properties["testDir"] = "%s/test-results/xml" % properties["targetDir"]
+properties["packageDir"] = "%s/artifacts" % properties["targetDir"]
+
+# Override defaults with a properties file
 inputProperties = [property.split("=") for property in open("springpython.properties").readlines()
                    if not (property.startswith("#") or property.strip() == "")]
 filter(properties.update, map((lambda prop: {prop[0]: prop[1]}), inputProperties))
 
-version = properties["version"]
+def usage():
+    """This function is used to print out help either by request, or if an invalid option is used."""
+    print
+    print "Usage: python build.py [command]"
+    print
+    print "\t--help\t\t\tprint this help message"
+    print "\t--clean\t\t\tclean out this build by deleting the %s directory" % properties["targetDir"]
+    print "\t--test\t\t\trun the test suite, leaving all artifacts in %s" % properties["testDir"]
+    print "\t--package\t\tpackage everything up into a tarball for release to sourceforge in %s" % properties["packageDir"]
+    print "\t--build-stamp [tag]\tfor --package, this specifies a special tag, generating version tag '%s-<tag>'" % properties["version"]
+    print "\t\t\t\tIf this option isn't used, default will be tag will be '%s-<current time>'" % properties["version"]
+    print "\t--publish\t\tpublish this release to the deployment server"
+    print "\t--register\t\tregister this release with http://pypi.python.org/pypi"
+    print
 
-parser = OptionParser(usage="usage: %prog [-h|--help] [options]")
-parser.add_option("-c", "--clean", action="store_true", dest="clean", default=False, help="clean out current target build.")
-parser.add_option("-b", "--build", action="store_true", dest="package", default=False, help="same as the package option.")
-parser.add_option("", "--build-stamp", action="store", dest="buildStamp", default="BUILD-%s" % datetime.now().strftime("%Y%m%d%H%M%S"), help="for --package, this specifies a special tag, generating version tag '%s-<build-stamp>'. Default: '%s-<current time>'." % (version, version))
-parser.add_option("-t", "--test", action="store_true", dest="test", default=False, help="test everything, generating JUnit-style XML outputs.")
-parser.add_option("", "--package", action="store_true", dest="package", default=False, help="package everything up into a tarball for release to sourceforge.")
-parser.add_option("", "--publish", action="store_true", dest="publish", default=False, help="publish this release to the deployment server.")
-parser.add_option("-r", "--register", action="store_true", dest="register", default=False, help="register this release with http://pypi.python.org/pypi")
-(options, args) = parser.parse_args()   # options is a dictionary, meaning we lost the order the commands came in
+try:
+    optlist, args = getopt.getopt(sys.argv[1:], "hct", ["help", "clean", "test", "package", "build-stamp="])
+except getopt.GetoptError:
+    # print help information and exit:
+    print "Invalid command found in %s" % sys.argv
+    usage()
+    sys.exit(2)
 
-completeVersion = version + "-" + options.buildStamp
+# Default build stamp value
+buildStamp = "BUILD-%s" % datetime.now().strftime("%Y%m%d%H%M%S")
 
-# NOTE: These options are listed in the order expected to run!!! For example,
-# ./build.py --clean --test
-# and
-# ./build.py --test --clean
-# ...will both run the same options, in the order of clean followed by test.
+# No matter what order the command are specified in, the build-stamp must be extracted first.
+for option in optlist:
+    if option[0] == "--build-stamp":
+        buildStamp = option[1]   # Override build stamp with user-supplied version
+completeVersion = properties["version"] + "-" + buildStamp
 
-if options.clean:
-    print "Cleaning out the target directory"
-    os.system("rm -rf target")
-            
-if options.test:
-    os.system("mkdir -p target/test-results/xml")
-    os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=target/test-results/xml")
+# Check for help requests, which cause all other options to be ignored. Help can offer version info, which is
+# why it comes as the second check
+for option in optlist:
+    if option[0] in ("--help", "-h"):
+        usage()
+        sys.exit(1)
 
-if options.package:
-    os.system("mkdir -p target/artifacts")
-    os.system("cd src ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % completeVersion)
-    os.system("cd samples ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % completeVersion)
-    os.system("mv *.tar.gz target/artifacts")
+# Parse the arguments, in order
+for option in optlist:
+    if option[0] in ("--clean", "-c"):
+        print "Removing '%s' directory" % properties["targetDir"]
+        os.system("rm -rf %s" % properties["targetDir"])
+                
+    if option[0] in ("--test"):
+        os.system("mkdir -p %s" % properties["testDir"])
+        os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s" % properties["testDir"])
+
+    if option[0] in ("--package"):
+        os.system("mkdir -p %s" % properties["packageDir"])
+        os.system("cd src ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % completeVersion)
+        os.system("cd samples ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % completeVersion)
+        os.system("mv *.tar.gz %s" % properties["packageDir"])
 	
-if options.publish:
-    # TODO(8/28/2008 GLT): Implement automated solution for this.
-	print "+++ Upload the tarballs using sftp manually to <user>@frs.sourceforge.net, into dir uploads and create a release."
+    if option[0] in ("--publish"):
+        # TODO(8/28/2008 GLT): Implement automated solution for this.
+	    print "+++ Upload the tarballs using sftp manually to <user>@frs.sourceforge.net, into dir uploads and create a release."
 
-if options.register:
-    # TODO(8/28/2008 GLT): Test this part when making official release and registering to PyPI.
-	os.system("cd src ; python setup.py --version %s register" % completeVersion)
-	os.system("cd samples ; python setup.py --version %s register" % completeVersion)
+    if option[0] in  ("--register"):
+        # TODO(8/28/2008 GLT): Test this part when making official release and registering to PyPI.
+	    os.system("cd src ; python setup.py --version %s register" % completeVersion)
+	    os.system("cd samples ; python setup.py --version %s register" % completeVersion)
 
