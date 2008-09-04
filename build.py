@@ -58,6 +58,8 @@ except getopt.GetoptError:
 # Default build stamp value
 buildStamp = "BUILD-%s" % datetime.now().strftime("%Y%m%d%H%M%S")
 
+print "Commands: %s" % optlist
+
 # No matter what order the command are specified in, the build-stamp must be extracted first.
 for option in optlist:
     if option[0] == "--build-stamp":
