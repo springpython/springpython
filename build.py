@@ -78,16 +78,17 @@ for option in optlist:
     if option[0] in ("--clean", "-c"):
         print "Removing '%s' directory" % properties["targetDir"]
         #os.system("rm -rf %s" % properties["targetDir"])
-        shutil.rmtree(properties["targetDir"])
+        if os.path.exists(properties["targetDir"]):
+            shutil.rmtree(properties["targetDir"])
 
 # Parse the arguments, in order
 for option in optlist:
     if option[0] in ("--test"):
-        os.system("mkdir -p %s" % properties["testDir"])
+        os.makedirs(properties["testDir"])
         os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s" % properties["testDir"])
 
     if option[0] in ("--package"):
-        os.system("mkdir -p %s" % properties["packageDir"])
+        os.makedirs(properties["packageDir"])
         os.system("cd src ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % completeVersion)
         #os.system("cd samples ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % completeVersion)
         os.system("mv *.tar.gz %s" % properties["packageDir"])
