@@ -21,6 +21,11 @@ import sys
 import getopt
 import shutil
 
+############################################################################
+# Get external properties and load into a dictionary. NOTE: These properties
+# files mimic Java props files.
+############################################################################
+
 properties = {}
 
 # Default settings, before reading the properties file
@@ -32,6 +37,11 @@ properties["packageDir"] = "%s/artifacts" % properties["targetDir"]
 inputProperties = [property.split("=") for property in open("springpython.properties").readlines()
                    if not (property.startswith("#") or property.strip() == "")]
 filter(properties.update, map((lambda prop: {prop[0]: prop[1]}), inputProperties))
+
+############################################################################
+# Read the command-line, and assemble commands. Any invalid command, print
+# usage info, and EXIT.
+############################################################################
 
 def usage():
     """This function is used to print out help either by request, or if an invalid option is used."""
@@ -56,10 +66,46 @@ except getopt.GetoptError:
     usage()
     sys.exit(2)
 
+############################################################################
+# Pre-generate needed values
+############################################################################
+
 # Default build stamp value
 buildStamp = "BUILD-%s" % datetime.now().strftime("%Y%m%d%H%M%S")
-
 print "Commands: %s" % optlist
+
+############################################################################
+# Definition of operations this script can do.
+############################################################################
+
+def clean(dir):
+    print "Removing '%s' directory" % dir
+    if os.path.exists(dir):
+        shutil.rmtree(dir)
+
+def test(dir):
+    os.makedirs(dir)
+    os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s" % dir)
+
+def package(dir, version):
+    os.makedirs(dir)
+    os.system("cd src ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % version)
+    #os.system("cd samples ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % version)
+    os.system("mv *.tar.gz %s" % dir)
+
+def publish():
+    """TODO(8/28/2008 GLT): Implement automated solution for this."""
+    print "+++ Upload the tarballs using sftp manually to <user>@frs.sourceforge.net, into dir uploads and create a release."
+
+def register(version):
+    """TODO(8/28/2008 GLT): Test this part when making official release and registering to PyPI."""
+    os.system("cd src ; python setup.py --version %s register" % version)
+    #os.system("cd samples ; python setup.py --version %s register" % completeVersion)
+
+############################################################################
+# Pre-commands. Skim the options, and pick out commands the MUST be
+# run before others.
+############################################################################
 
 # No matter what order the command are specified in, the build-stamp must be extracted first.
 for option in optlist:
@@ -76,29 +122,25 @@ for option in optlist:
         
 for option in optlist:
     if option[0] in ("--clean", "-c"):
-        print "Removing '%s' directory" % properties["targetDir"]
-        #os.system("rm -rf %s" % properties["targetDir"])
-        if os.path.exists(properties["targetDir"]):
-            shutil.rmtree(properties["targetDir"])
+        clean(properties["targetDir"])
+
+############################################################################
+# Main commands. Skim the options, and run each command as its found.
+# Commands are run in the order found ON THE COMMAND LINE.
+############################################################################
 
 # Parse the arguments, in order
 for option in optlist:
     if option[0] in ("--test"):
-        os.makedirs(properties["testDir"])
-        os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s" % properties["testDir"])
+        test(properties["testDir"])
+        package(properties["packageDir"], completeVersion)
 
     if option[0] in ("--package"):
-        os.makedirs(properties["packageDir"])
-        os.system("cd src ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % completeVersion)
-        #os.system("cd samples ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % completeVersion)
-        os.system("mv *.tar.gz %s" % properties["packageDir"])
+        package(properties["packageDir"], completeVersion)
 	
     if option[0] in ("--publish"):
-        # TODO(8/28/2008 GLT): Implement automated solution for this.
-	    print "+++ Upload the tarballs using sftp manually to <user>@frs.sourceforge.net, into dir uploads and create a release."
+        publish()
 
     if option[0] in  ("--register"):
-        # TODO(8/28/2008 GLT): Test this part when making official release and registering to PyPI.
-	    os.system("cd src ; python setup.py --version %s register" % completeVersion)
-	    #os.system("cd samples ; python setup.py --version %s register" % completeVersion)
+        register(completeVersion)
 
