@@ -19,6 +19,7 @@ from datetime import datetime
 import os
 import sys
 import getopt
+import shutil
 
 properties = {}
 
@@ -77,7 +78,8 @@ for option in optlist:
 for option in optlist:
     if option[0] in ("--clean", "-c"):
         print "Removing '%s' directory" % properties["targetDir"]
-        os.system("rm -rf %s" % properties["targetDir"])
+        #os.system("rm -rf %s" % properties["targetDir"])
+        shutil.rmtree(properties["targetDir"])
                 
     if option[0] in ("--test"):
         os.system("mkdir -p %s" % properties["testDir"])
