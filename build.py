@@ -58,7 +58,7 @@ def usage():
     print
 
 try:
-    optlist, args = getopt.getopt(sys.argv[1:], "hct", ["help", "clean", "test", "package", "build-stamp="])
+    optlist, args = getopt.getopt(sys.argv[1:], "hct", ["help", "clean", "test", "package", "build-stamp=", "publish", "register"])
 except getopt.GetoptError:
     # print help information and exit:
     print "Invalid command found in %s" % sys.argv
