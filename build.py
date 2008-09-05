@@ -122,11 +122,11 @@ for option in optlist:
         usage()
         sys.exit(1)
         
-for option in optlist:
-    if option[0] in ("--clean", "-c"):
-        clean(properties["targetDir"])
-        test(properties["testDir"])
-        package(properties["packageDir"], completeVersion)
+#for option in optlist:
+#    if option[0] in ("--clean", "-c"):
+#        clean(properties["targetDir"])
+#        test(properties["testDir"])
+#        package(properties["packageDir"], completeVersion)
 
 ############################################################################
 # Main commands. Skim the options, and run each command as its found.
@@ -135,12 +135,14 @@ for option in optlist:
 
 # Parse the arguments, in order
 for option in optlist:
-#    if option[0] in ("--test"):
-#        test(properties["testDir"])
-#        package(properties["packageDir"], completeVersion)
-#    if option[0] in ("--package"):
-#
-#        package(properties["packageDir"], completeVersion)
+    if option[0] in ("--clean", "-c"):
+        clean(properties["targetDir"])
+
+    if option[0] in ("--test"):
+        test(properties["testDir"])
+
+    if option[0] in ("--package"):
+        package(properties["packageDir"], completeVersion)
 	
     if option[0] in ("--publish"):
         publish()
