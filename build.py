@@ -71,7 +71,6 @@ except getopt.GetoptError:
 
 # Default build stamp value
 buildStamp = "BUILD-%s" % datetime.now().strftime("%Y%m%d%H%M%S")
-print "Commands: %s" % optlist
 
 ############################################################################
 # Definition of operations this script can do.
@@ -86,13 +85,14 @@ def test(dir):
     os.makedirs(dir)
     os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s" % dir)
     
+    # TODO(9/5/2008 GLT): Capture coverage data that is visible to bamboo. Does coverage have an API to view .coverage file?
     # With coverage... (copied from former bamboo.sh, not yet tested in this configuration)
     #os.system("nosetests --with-nosexunit --with-coverage --xml-report-folder=build --cover-package=springpython")
 
 def package(dir, version):
     os.makedirs(dir)
-    os.system("cd src ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % version)
-    #os.system("cd samples ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % version)
+    os.system("cd src     ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % version)
+    os.system("cd samples ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % version)
     os.system("mv *.tar.gz %s" % dir)
 
 def publish():
@@ -101,8 +101,8 @@ def publish():
 
 def register(version):
     """TODO(8/28/2008 GLT): Test this part when making official release and registering to PyPI."""
-    os.system("cd src ; python setup.py --version %s register" % version)
-    #os.system("cd samples ; python setup.py --version %s register" % completeVersion)
+    os.system("cd src     ; python setup.py --version %s register" % version)
+    os.system("cd samples ; python setup.py --version %s register" % version)
 
 ############################################################################
 # Pre-commands. Skim the options, and pick out commands the MUST be
@@ -122,12 +122,6 @@ for option in optlist:
         usage()
         sys.exit(1)
         
-#for option in optlist:
-#    if option[0] in ("--clean", "-c"):
-#        clean(properties["targetDir"])
-#        test(properties["testDir"])
-#        package(properties["packageDir"], completeVersion)
-
 ############################################################################
 # Main commands. Skim the options, and run each command as its found.
 # Commands are run in the order found ON THE COMMAND LINE.
