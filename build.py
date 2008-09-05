@@ -85,6 +85,9 @@ def clean(dir):
 def test(dir):
     os.makedirs(dir)
     os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s" % dir)
+    
+    # With coverage... (copied from former bamboo.sh, not yet tested in this configuration)
+    #os.system("nosetests --with-nosexunit --with-coverage --xml-report-folder=build --cover-package=springpython")
 
 def package(dir, version):
     os.makedirs(dir)
