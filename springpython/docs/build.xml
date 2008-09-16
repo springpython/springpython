@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+
+<!--
+This is the build file to generate documentation for Spring Python.
+-->
+
+<project name="spring-python-docs" default="doc.all" basedir=".">
+
+	<property file="build.properties"/>
+	<property file="project.properties"/>
+
+	<target name="clean" description="Clean all output dirs (dist, javadocs, classes, test-classes, etc)">
+
+		<delete dir="${basedir}/${dist.ref.dir}/pdf"/>
+		<delete dir="${basedir}/${dist.ref.dir}/html_single"/>
+		<delete dir="${basedir}/${dist.ref.dir}/html"/>
+
+	</target>
+
+
+	<target name="doc.prepare" description="Extra preparation for the documentation">
+
+		<fail message="XSLT supporting lib not installed. Please see '${doc.ref.dir}/readme.txt' for instructions.">
+			<condition>
+				<not>
+					<available file="${basedir}/${doc.ref.dir}/lib"/>
+				</not>
+			</condition>
+		</fail>
+
+	</target>
+
+
+	<target name="doc.pdf" depends="doc.prepare" description="Compile reference documentation to pdf">
+
+		<mkdir dir="${basedir}/${dist.ref.dir}/pdf/images"/>
+
+		<copy todir="${basedir}/${dist.ref.dir}/pdf/images">
+			<fileset dir="${basedir}/${doc.ref.dir}/src/images">
+				<include name="*.gif"/>
+				<include name="*.svg"/>
+				<include name="*.jpg"/>
+				<include name="*.png"/>
+			</fileset>
+		</copy>
+
+		<java classname="com.icl.saxon.StyleSheet" fork="true" dir="${doc.ref.dir}">
+			<classpath>
+				<fileset dir="${basedir}/${doc.ref.dir}/lib">
+					<include name="**/*.jar"/>
+				</fileset>
+			</classpath>
+			<jvmarg value="-Xmx256M"/>
+			<jvmarg value="-XX:MaxPermSize=128m"/>
+			<arg value="-o"/>
+			<arg value="${basedir}/${dist.ref.dir}/pdf/docbook_fop.tmp"/>
+			<arg value="${basedir}/${doc.ref.dir}/src/index.xml"/>
+			<arg value="${basedir}/${doc.ref.dir}/styles/fopdf.xsl"/>
+			<!-- controls the double sided pagination style -->
+			<arg value="double.sided=${double.sided}"/>
+		</java>
+
+		<java classname="org.apache.fop.apps.Fop" fork="true" maxmemory="256m" dir="${doc.ref.dir}">
+			<classpath>
+				<fileset dir="${basedir}/${doc.ref.dir}/lib">
+					<include name="**/*.jar"/>
+				</fileset>
+			</classpath>
+			<arg value="${basedir}/${dist.ref.dir}/pdf/docbook_fop.tmp"/>
+			<arg value="${basedir}/${dist.ref.dir}/pdf/spring-reference.pdf"/>
+		</java>
+
+		<delete file="${dist.ref.dir}/pdf/docbook_fop.tmp"/>
+
+	</target>
+
+	<target name="doc.html" depends="doc.prepare"
+		description="Compile reference documentation to chunked html">
+
+		<mkdir dir="${dist.ref.dir}/html/images"/>
+
+		<copy todir="${basedir}/${dist.ref.dir}/html/images">
+			<fileset dir="${basedir}/${doc.ref.dir}/src/images">
+				<include name="*.gif"/>
+				<include name="*.svg"/>
+				<include name="*.jpg"/>
+				<include name="*.png"/>
+			</fileset>
+		</copy>
+
+		<copy todir="${basedir}/${dist.ref.dir}/html/" failonerror="false">
+			<fileset dir="${basedir}/${doc.ref.dir}/styles/">
+				<include name="*.css"/>
+				<include name="*.js"/>
+			</fileset>
+		</copy>
+
+		<java classname="com.icl.saxon.StyleSheet" fork="true" dir="${dist.ref.dir}/html/">
+			<classpath>
+				<fileset dir="${basedir}/${doc.ref.dir}/lib">
+					<include name="**/*.jar"/>
+				</fileset>
+			</classpath>
+			<jvmarg value="-Xmx256M"/>
+			<jvmarg value="-XX:MaxPermSize=128m"/>
+			<arg value="${basedir}/${doc.ref.dir}/src/index.xml"/>
+			<arg value="${basedir}/${doc.ref.dir}/styles/html_chunk.xsl"/>
+		</java>
+
+	</target>
+
+
+	<target name="doc.htmlsingle" depends="doc.prepare" description="Compile reference documentation to single html">
+
+		<mkdir dir="${dist.ref.dir}/html_single/images"/>
+
+		<copy todir="${basedir}/${dist.ref.dir}/html_single/images">
+			<fileset dir="${basedir}/${doc.ref.dir}/src/images">
+				<include name="*.gif"/>
+				<include name="*.svg"/>
+				<include name="*.jpg"/>
+				<include name="*.png"/>
+			</fileset>
+		</copy>
+		<copy todir="${basedir}/${dist.ref.dir}/html_single/" file="${basedir}/${doc.ref.dir}/styles/html.css" failonerror="false"/>
+
+		<java classname="com.icl.saxon.StyleSheet" fork="true" dir="${doc.ref.dir}">
+			<classpath>
+				<fileset dir="${basedir}/${doc.dir}/reference/lib">
+					<include name="**/*.jar"/>
+				</fileset>
+			</classpath>
+			<jvmarg value="-Xmx256M"/>
+			<jvmarg value="-XX:MaxPermSize=128m"/>
+			<arg value="-o"/>
+			<arg value="${basedir}/${dist.ref.dir}/html_single/index.html"/>
+			<arg value="${basedir}/${doc.ref.dir}/src/index.xml"/>
+			<arg value="${basedir}/${doc.ref.dir}/styles/html.xsl"/>
+		</java>
+
+	</target>
+
+
+	<target name="doc.all" depends="doc.html,doc.htmlsingle,doc.pdf" description="Generate reference documentation"/>
+
+</project>

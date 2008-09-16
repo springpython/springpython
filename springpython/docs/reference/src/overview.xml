@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="overview">
+  <title>Overview</title>
+
+	<section id="overview-introduction">
+	  	<title>Introduction</title>
+  	
+			<para><quote>Spring Python is an offshoot of the Java-based Spring Framework and Spring Security Framework,
+		 	targeted for <ulink url="http://python.org">Python</ulink>. Spring provides many useful features, and
+		 	I wanted those same features available when working with Python.</quote> -- Greg Turnquist, Spring Python project lead</para>
+  	
+	</section>
+
+	<section id="overview-key-features">
+	 	<title>Key Features</title>
+ 	
+		<para>The following features have been implemented:</para>
+
+		<itemizedlist>
+		
+			<listitem>
+				<para><link linkend="dao">DatabaseTemplate</link> - Reading from the database
+				requires a monotonous cycle of opening cursors, reading rows, and closing cursors,
+				along with exception handlers. With this template class, all you need is the SQL
+				query and row-handling function. Spring Python does the rest.</para>
+			</listitem>
+		
+			<listitem>
+				<para><link linkend="transaction">Database Transactions</link> - Wrapping multiple
+				database calls with transactions can make your code hard to read. This module
+				provides multiple ways to define transactions without making things complicated.</para>
+			</listitem>
+		
+			<listitem>
+				<para><link linkend="components">Inversion Of Control</link> - The idea is to
+				decouple two classes at the interface level. This lets you build many reusable
+				parts in your software, and your whole application becomes more pluggable. You
+				can use either the XmlApplicationContext or the DecoratorBasedApplicationContext.</para>
+			</listitem>
+		
+			<listitem>
+				<para><link linkend="aop">Aspect-oriented Programming</link> - Spring Python
+				provides great ways to wrap advice around objects. It is utilized for remoting.
+				Another use is for debug tracers and performance tracing.</para>
+			</listitem>
+		
+			<listitem>
+				<para><link linkend="remoting">Remoting</link> - It is easy to convert your local
+				application into a distributed one. If you have already built your client and
+				server pieces using the IoC container, then going from local to distributed is
+				just a configuration change.</para>
+			</listitem>
+		
+			<listitem>
+				<para><link linkend="security">Security</link>  - Plugin security interceptors to
+				lock down access to your methods, utilizing both authentication and domain
+				authorization.</para>
+			</listitem>
+		
+			<listitem>
+				<para><link linkend="samples-petclinic">PetClinic</link> - Everybody's favorite
+				Spring sample application has been rebuilt from the ground up using various web
+				containers including: <ulink url="http://cherrypy.org">CherryPy</ulink>.
+				Go check it out for an example of how to use this framework.</para>
+			</listitem>
+			
+			<listitem>
+				<para><link linkend="samples-petclinic">SpringWiki</link> - Wikis are powerful
+				ways to store and manage content, so we created a simple one as a demo!</para>
+			</listitem>
+			
+			<listitem>
+				<para><link linked="samples-springobt">Spring Bot</link> - Use Spring Python
+				to build a tiny bot to manage the IRC channel of your open source prooject.</para>
+			</listitem>
+			
+		</itemizedlist>
+
+	</section>
+  
+	<section id="overview-what-springpython-is-not">
+  		<title>What Spring Python is NOT</title>
+  		
+  		<para>Spring Python is NOT another web framework. I think there are plenty that are fine to
+  		use, like Zope, CherryPy, Quixote, and more. Spring Python is meant to provide utilities to
+  		support any python application, including a web-based one.</para>
+
+		<para>So far, the demos have been based on CherryPy, but the idea is that these features
+		should work with any WSGI framework. The web components have been developed against CherryPy,
+		but the Spring Python team has made the parts WSGI-compatible, so they are reusable with any
+		WSGI-based framework. In the future, it would be nice to expand PetClinic to other frameworks
+		as well, so see how it is used.</para>
+  
+  	</section>
+  	
+  	<section id="overview-support">
+  		<title>Support</title>
+  		
+		<section id="overview-support-forums">
+			<title>Forums</title>
+	
+				<itemizedlist>
+					<listitem><para>You can read the messages on <ulink
+					url="http://forum.springframework.org/forumdisplay.php?f=45">
+					Spring Python's forums</ulink> at the official Spring forum site.</para></listitem>
+					
+					<listitem><para>If you are interested, you can sign up for the <ulink
+					url="http://lists.springsource.com/listmanager/listinfo/springpython-users">
+					springpython-developer</ulink> mailing list.</para></listitem>
+					
+					<listitem><para>You can also read the <ulink
+					url="http://sourceforge.net/mailarchive/forum.php?forum=springpython-developer">
+					old archives of the spring-developer mailing list</ulink>.</para></listitem>
+					
+					<listitem><para>If you want to join this project, reporting bugs, opening
+					tickets, etc., please subscribe to the mailing list. To avoid spam clogging this
+					site, '''login is required'''. Drop me a message on the mailing list, then I'll
+					consider granting you access.</para></listitem>
+				</itemizedlist>
+		</section>
+		
+		<section id="overview-support-irc">
+			<title>IRC</title>
+				<para>Sorry, I can't seem to get a long-term running IRC bot working
+				for me. You'll have to resort to email to reach me for questions or
+				issues. -- Greg</para>
+		</section>
+  	</section>
+  	
+  	<section id="overview-downloads">
+  		<title>Downloads</title>
+  		
+  		<para>If you want a release, check out
+  		<ulink url="http://sourceforge.net/project/showfiles.php?group_id=184275">sourceforge.net</ulink>.</para>
+
+		<para>If you want the latest source code type:
+		<programlisting>
+		svn co https://src.springframework.org/svn/se-springpython-py/trunk springpython
+		</programlisting>
+		</para>
+		
+		<para>That will create a new '''springpython''' folder. This includes both the source code and
+		the demo applications (PetClinic and SpringWiki).</para>
+		
+		<para>You can browse the code at <ulink url="https://fisheye.springframework.org/browse/se-springpython-py"/>.</para>
+		
+		<para>NOTE: Steps to upload a new release are found
+		<ulink url="https://sourceforge.net/docman/display_doc.php?docid=6445&amp;group_id=1#upload">here</ulink>.</para>
+  	</section>
+  	
+  	<section id="overview-license">
+  		<title>Licensing</title>
+  		
+  		<para>Spring Python is released under the <ulink url="http://www.apache.org/licenses/LICENSE-2.0">
+  		Apache Server License 2.0</ulink> and the copyright is held by SpringSource.</para>
+  	</section>
+  	
+  	<section id="overview-team">
+  		<title>Spring Python's team</title>
+  		
+  		<para>Spring Python's official team (those with committer rights):</para>
+
+		<itemizedlist>
+			<listitem><para>Project Lead: Greg L. Turnquist</para></listitem>
+			<listitem><para>Spring Source Sponsor: Russ Miles</para></listitem>
+		</itemizedlist>
+		
+		<para>Many others have also contributed through reporting issues, raising questions, and even
+		sending patches. If you wish to become an official member of the team, leave a note at
+		<ulink url="http://forum.springframework.org/forumdisplay.php?f=45">our
+		Spring Python forum</ulink>, and we can discuss the process to becoming an official member.</para>
+	</section>
+</chapter>
