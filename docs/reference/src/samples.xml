@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="samples">
+	<title>Samples</title>
+
+	<section id="samples-petclinic">
+		<title>PetClinic</title>
+	</section>
+	
+	<section id="samples-springwiki">
+		<title>Spring Wiki</title>
+	</section>
+	
+	<section id="samples-springbot">
+		<title>Spring Bot</title>
+	</section>
+	
+</chapter>

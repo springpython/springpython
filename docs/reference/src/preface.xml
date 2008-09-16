@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<preface id="preface">
+  <title>Preface</title>
+
+  <para><ulink url="https://springpython.webfactional.com">Spring Python</ulink>
+  is an extension of the Java-based Spring Framework and
+  Spring Security Framework, targeted for Python. It is not a straight port,
+  but instead an extension of the same concepts that need solutions applied
+  in <ulink url="http://python.org">Python</ulink>.</para>
+  
+  <para>This document provides a reference guide to Spring's features. Since
+  this document is still to be considered very much work-in-progress, if you
+  have any requests or comments, please post them on the <ulink
+  url="http://lists.springsource.com/listmanager/listinfo/springpython-users">user mailing list</ulink>
+  or on the <ulink
+  url="http://forum.springframework.org/forumdisplay.php?f=45">Spring Python
+  support forums</ulink>.</para>
+
+  <para>Before we go on, a few words of gratitude are due to the SpringSource
+  team for putting together a framework for writing reference documentation.</para>
+  
+</preface>

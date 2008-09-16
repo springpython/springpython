@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="remoting">
+	<title>Remoting</title>
+	
+	<section id="remoting-pyro">
+		<title>Remoting with PYRO (Python Remote Objects)</title>
+	</section>
+	
+	<section id="remoting-hessian">
+		<title>Remoting with Hessian</title>
+	</section>
+</chapter>
