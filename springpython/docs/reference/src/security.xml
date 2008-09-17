@@ -1,4 +1,451 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter id="security">
 	<title>Security</title>
+	
+	<para>Spring Python's Security module is based on <ulink url="http://acegisecurity.org/">
+	Acegi Security's</ulink> architecture. You can read <ulink url="http://acegisecurity.org/guide/springsecurity.html">
+	Acegi's detailed reference manual</ulink> for a background on this module. NOTE: At the time this module
+	was implemented, Spring Security was still Acegi Security. Links included reference documentation that
+	was used at the time to implement this security module.</para>
+
+	<section id="security-components">
+		<title>Shared Components</title>
+		
+		<para>The major building blocks of Spring Python Security are</para>
+		<itemizedlist>
+			<listitem><para>SecurityContextHolder, to provide any type access to the SecurityContext.</para></listitem>
+			<listitem><para>SecurityContext, to hold the Authentication and possibly request-specific security information.</para></listitem>
+			<listitem><para>HttpSessionContextIntegrationFilter, to store the SecurityContext in the HTTP session between web requests.</para></listitem>
+			<listitem><para>Authentication, to represent the principal in an Acegi Security-specific manner.</para></listitem>
+			<listitem><para>GrantedAuthority, to reflect the application-wide permissions granted to a principal.</para></listitem>
+ 		</itemizedlist>
+
+		<para>These components are needed for both authentication and authorization.</para>
+
+	</section>
+	
+	<section id="security-authentication">
+		<title>Authentication</title>
+		
+		<para>The first level of security involves verifying your credentials. Most systems today use some
+		type of username/password check. To configure Spring Python, you will need to configure one or more
+		AuthenticationProvider's. All Authentication implementations are required to store an array of GrantedAuthority 
+		objects. These represent the authorities that have been granted to the principal. The GrantedAuthority objects
+		are inserted into the Authentication object by the AuthenticationManager and are later read by AccessDecisionManager's
+		when making authorization decisions. These are chained together inside an AuthenticationManager.</para>
+
+		<section id="security-authentication-providers">
+			<title>AuthenticationProviders</title>
+			
+			<section id="security-authentication-inmemory-provider">
+				<title>InMemoryAuthenticationProvider</title>
+				
+				<para>This AuthenticationProvider allows you to build a dictionary of user accounts, and is very handy
+				for integration testing without resorting to complex configuration of 3rd party systems.</para>
+
+				<para>To configure this using a pythonic, decorator-based IoC container...</para>
+				
+<programlisting><![CDATA[
+class SampleContainer(DecoratorBasedApplicationContext):
+    ...
+    @component
+    def authenticationProvider(self):
+        provider = InMemoryAuthenticationProvider()
+        provider.userMap = {
+           "vet1": ("password1", ["VET_ANY"], False),
+           "bdavis": ("password2", ["CUSTOMER_ANY"], False),
+           "jblack": ("password3", ["CUSTOMER_ANY"], False),
+           "disableduser": ("password4", ["VET_ANY"], True),
+           "emptyuser": ("", [], False) }
+        return provider
+]]></programlisting>
+
+				<para>XML-based configuration...</para>
+
+<programlisting><![CDATA[
+<component id="authenticationProvider" class="springpython.security.providers.InMemoryAuthenticationProvider">
+    <property name="userMap">
+       {
+           "vet1": ("password1", ["VET_ANY"], False),
+           "bdavis": ("password2", ["CUSTOMER_ANY"], False),
+           "jblack": ("password3", ["CUSTOMER_ANY"], False),
+           "disableduser": ("password4", ["VET_ANY"], True),
+           "emptyuser": ("", [], False)
+       }
+   </property>
+</component>
+]]></programlisting>
+
+				<para>This is the user map defined for the Petclinic sample application. The first user, vet1, has
+				a password of password1, a list of granted authorities (VET_ANY), and is not disabled. The fourth
+				user, disabled user, has a password and a list of granted authorities, but is disabled. The last user 
+				has no password, which will cause authentication to fail.</para>
+				
+			</section>
+			
+			<section id="security-authentication-future-providers">
+				<title>Future AuthenticationProviders</title>
+				
+				<para>So far, we have the bare minimum in AuthenticationProvider's (including DaoAuthenticationProvider).
+				This was so the initial release of ApplicationSecurity could be made. Future releases should include:</para>
+				
+				<itemizedlist>
+					<listitem><para>LdapAuthenticationProvider</para></listitem>
+					<listitem>
+						<para>Anonymous authentication provider - allows you to tag anonymous users, and constrain 
+						what they can access, even if they don't provide a password</para>
+					</listitem>
+				</itemizedlist>
+			</section>
+			
+		</section>
+		
+		<section id="security-authentication-manager">
+			<title>AuthenticationManager</title>
+			
+			<para>An AuthenticationManager holds a list of one or more AuthenticationProvider's, and will go through the
+			list when attempting to authenticate. PetClinic configures it like this:</para>
+			
+<programlisting><![CDATA[
+class SampleContainer(DecoratorBasedApplicationContext):
+    ...
+    @component
+    def authenticationManager(self):
+        return AuthenticationManager(authenticationProviderList = [self.authenticationProvider()])
+]]></programlisting>
+
+			<para>XML-based configuration...</para>
+			
+<programlisting><![CDATA[
+<component id="authenticationManager" class="springpython.security.providers.AuthenticationManager">
+    <property name="authenticationProviderList">
+        <list local="authenticationProvider"/>
+    </property>
+</component>
+]]></programlisting>
+
+			<para>This AuthenticationManager has a list referencing one component already defined in the ApplicationContext,
+			authenticationProvider. The authentication manager is supplied as an argument to the security interceptor,
+			so it can perform checks as needed.</para>
+
+		</section>
+		
+	</section>
+	
+	<section id="security-authorization">
+		<title>Authorization</title>
+		
+		<para>After successful authentication, you may be granted various roles. The next step of security is to determine
+		if you are authorized to conduct a given operation or access a particular web page. The AccessDecisionManager is
+		called by the AbstractSecurityInterceptor and is responsible for making final access control decisions. The
+		AccessDecisionManager interface contains two methods:</para>
+		
+<programlisting><![CDATA[
+def decide(self, authentication, object, config)
+def supports(self, clazzOrAttribute)
+]]></programlisting>
+
+		<para>As can be seen from the first method, the AccessDecisionManager is passed via method parameters all information
+		that is likely to be of value in assessing an authorization decision. In particular, passing the secure Object enables
+		those arguments contained in the actual secure object invocation to be inspected. For example, let's assume the secure
+		object was a MethodInvocation. It would be easy to query the MethodInvocation for any Customer argument, and then
+		implement some sort of security logic in the AccessDecisionManager to ensure the principal is permitted to operate on
+		that customer. Implementations are expected to throw an AccessDeniedException if access is denied.</para>
+
+		<para>Whilst users can implement their own AccessDecisionManager to control all aspects of authorization, Spring Python
+		Security includes several AccessDecisionManager implementations that are based on voting. Using this approach, a series
+		of AccessDecisionVoter implementations are polled on an authorization decision. The AccessDecisionManager then decides
+		whether or not to throw an AccessDeniedException based on its assessment of the votes.</para>
+
+		<para>The AccessDecisionVoter interface has two methods:</para>
+		
+<programlisting><![CDATA[
+def supports(self, clazzOrConfigAttribute)
+def vote(self, authentication, object, config)
+]]></programlisting>
+
+		<para>Concrete implementations return an integer, with possible values being reflected in the AccessDecisionVoter static
+		fields <emphasis>ACCESS_ABSTAIN</emphasis>, <emphasis>ACCESS_DENIED</emphasis>  and <emphasis>ACCESS_GRANTED</emphasis>.
+		A voting implementation will return ACCESS_ABSTAIN if it has no opinion on an authorization decision. If it does have an
+		opinion, it must return either ACCESS_DENIED or ACCESS_GRANTED.</para>
+
+		<para>There are three concrete AccessDecisionManager's provided with Spring Python Security that tally the votes. The
+		ConsensusBased  implementation will grant or deny access based on the consensus of non-abstain votes. Properties are provided
+		to control behavior in the event of an equality of votes or if all votes are abstain. The AffirmativeBased implementation
+		will grant access if one or more ACCESS_GRANTED votes were received (ie a deny vote will be ignored, provided there was at 
+		least one grant vote). Like the ConsensusBased implementation, there is a parameter that controls the behavior if all voters
+		abstain. The UnanimousBased provider expects unanimous ACCESS_GRANTED votes in order to grant access, ignoring abstains. It will
+		deny access if there is any ACCESS_DENIED vote. Like the other implementations, there is a parameter that controls the behavior
+		if all voters abstain.</para>
+
+		<para>It is possible to implement a custom AccessDecisionManager that tallies votes differently. For example, votes from a
+		particular AccessDecisionVoter might receive additional weighting, whilst a deny vote from a particular voter may have a
+		veto effect.</para>
+
+		<para>There are two concrete AccessDecisionVoter implementations provided with Spring Python Security. The RoleVoter class
+		will vote if any config attribute begins with <emphasis>ROLE_</emphasis>. It will vote to grant access if there is a
+		GrantedAuthority which returns a String representation exactly equal to one or more config attributes starting with
+		<emphasis>ROLE_</emphasis>. If there is no exact match of any config attribute starting with <emphasis>ROLE_</emphasis>,
+		the RoleVoter will vote to deny access. If no config attribute begins with <emphasis>ROLE_</emphasis>, the voter will abstain.
+		RoleVoter is case sensitive on comparisons as well as the <emphasis>ROLE_</emphasis> prefix.</para>
+
+		<para>PetClinic has two RoleVoter's in its configuration:</para>
+		
+<programlisting><![CDATA[
+class SampleContainer(DecoratorBasedApplicationContext):
+    ...
+    @component
+    def vetRoleVoter(self):
+        return RoleVoter(rolePrefix="VET")
+
+    @component
+    def customerRoleVoter(self):
+        return RoleVoter(rolePrefix="CUSTOMER")
+]]></programlisting>
+
+		<para>XML-based configuration...</para>
+		
+<programlisting><![CDATA[
+<component id="vetRoleVoter" class="springpython.security.vote.RoleVoter">
+	<property name="rolePrefix">"VET"</property>
+</component>
+
+<component id="customerRoleVoter" class="springpython.security.vote.RoleVoter">
+	<property name="rolePrefix">"CUSTOMER"</property>
+</component>
+]]></programlisting>
+
+		<para>The first one votes on VET authorities, and the second one votes on CUSTOMER authorities.</para>
+
+		<para>The other concrete AccessDecisionVoter is the LabelBasedAclVoter. It can be seen in the test cases. Maybe later
+		it will be incorporated into a demo.</para>
+
+		<para>Petclinic has a custom AccessDecisionVoter, which votes on whether a user "owns" a record.</para>
+		
+<programlisting><![CDATA[
+class SampleContainer(DecoratorBasedApplicationContext):
+    ...
+    @component
+    def ownerVoter(self):
+        return OwnerVoter(controller = self.controller())
+]]></programlisting>
+
+		<para>XML-based configuration...</para>
+		
+<programlisting><![CDATA[
+<component id="ownerVoter" class="controller.OwnerVoter">
+	<property name="controller" local="controller"/>
+</component>
+]]></programlisting>
+
+		<para>This class is wired in the PetClinic controller module as part of the sample, which demonstrates how easy
+		it is to plugin your own custom security handler to this module.</para>
+
+		<para>PetClinic wires together these AccessDecisionVoter's into an AccessDecisionManager:</para>
+		
+<programlisting><![CDATA[
+class SampleContainer(DecoratorBasedApplicationContext):
+    ...
+    @component
+    def accessDecisionManager(self):
+        manager = AffirmativeBased()
+        manager.allowIfAllAbstainDecisions = False
+        manager.accessDecisionVoterList = [self.vetRoleVoter(), self.customerRoleVoter(), self.ownerVoter()]
+        return manager
+]]></programlisting>
+
+		<para>XML-based configuration...</para>
+		
+<programlisting><![CDATA[
+<component id="accessDecisionManager" class="springpython.security.vote.AffirmativeBased">
+	<property name="allowIfAllAbstainDecisions">False</property>
+	<property name="accessDecisionVoterList">
+		<list local="vetRoleVoter"/>
+		<list local="customerRoleVoter"/>
+		<list local="ownerVoter"/>
+	</property>
+</component>
+]]></programlisting>
+
+		<para>In this case, the AccessDecisionManager is configured to deny access if all voters abstain.</para>
+
+		<para>Finally, this all comes together with the configuration of the FilterSecurityInterceptor and the CherryPyFilterChainProxy.
+		These are components that plugin to web framework where a hook has been written, and delegate access decisions to the
+		AccessDecisionManager based on URL request patterns.</para>
+		
+		<para>PetClinic has the following configuration:</para>
+		
+<programlisting><![CDATA[
+class SampleContainer(DecoratorBasedApplicationContext):
+    ...
+    @component
+    def filterSecurityInterceptor(self):
+        interceptor = FilterSecurityInterceptor()
+        interceptor.validateConfigAttributes = False
+        interceptor.authenticationManager = self.authenticationManager()
+        interceptor.accessDecisionManager = self.accessDecisionManager()
+        interceptor.sessionStrategy = self.cherrypySessionStrategy()
+        interceptor.objectDefinitionSource = [
+			("/login.*", []),
+			("/vets.*", ["VET_ANY"]),
+			("/editOwner.*", ["VET_ANY", "OWNER"]),
+			("/.*", ["VET_ANY", "CUSTOMER_ANY"])
+	      	]
+        return interceptor
+
+    @component
+    def filterChainProxy(self):
+        return CherryPyFilterChainProxy(filterInvocationDefinitionSource = 
+		[
+		("/images.*", []),
+		("/html.*", []),
+		("/.*", ["httpContextFilter", "authenticationProcessingFilter", "filterSecurityInterceptor"])
+
+		])
+]]></programlisting>
+
+		<para>XML-based configuration...</para>
+		
+<programlisting><![CDATA[
+<component id="filterSecurityInterceptor" class="springpython.security.web.FilterSecurityInterceptor">
+	<property name="validateConfigAttributes">False</property>
+	<property name="authenticationManager" local="authenticationManager"/>
+	<property name="accessDecisionManager" local="accessDecisionManager"/>
+	<property name="sessionStrategy" local="cherrypySessionStrategy"/>
+	<property name="objectDefinitionSource">
+	    	[
+			("/login.*", []),
+			("/vets.*", ["VET_ANY"]),
+			("/editOwner.*", ["VET_ANY", "OWNER"]),
+			("/.*", ["VET_ANY", "CUSTOMER_ANY"])
+	      	]
+	</property>
+</component>
+
+<component id="filterChainProxy" class="springpython.security.web.CherryPyFilterChainProxy">
+	<property name="filterInvocationDefinitionSource">
+		[
+		("/images.*", []),
+		("/html.*", []),
+		("/.*", ["httpContextFilter", "authenticationProcessingFilter", "filterSecurityInterceptor"])
+		]
+	</property>
+</component>
+]]></programlisting>
+
+		<para>The CherryPyFilterChainProxy is called on every URI request. The list is scanned until a match is found, and
+		then the list of filters is scanned. The first two filters involve the HttpSessionContextIntegrationFilter and the
+		AuthenticationProcessingFilter. The third one if the FilterSecurityInterceptor listed above.</para>
+
+		<para>The FilterSecurityInterceptor then inspects the requested URI and uses the AccessDecisionManager to evaluate
+		if the principal has the right credentials to grant or deny access.</para>
+		
+	</section>
+
+	<section id="security-xml">
+		<title>Do I have to use XML?</title>
+
+		<para>Spring Python offers you the freedom to use what you want, when you want, and this applies to XML as well.
+		You have the option to wire things programmatically.</para>
+
+		<para>PetClinic has an alternative version (petclinic-noxml.py) that has the security parts wired up like this:</para>
+		
+<programlisting><![CDATA[
+authenticationProvider = InMemoryAuthenticationProvider()
+authenticationProvider.userMap = {
+                                    "vet1": ("password1", ["VET_ANY"], False),
+                                    "bdavis": ("password2", ["CUSTOMER_ANY"], False),
+                                    "jblack": ("password3", ["CUSTOMER_ANY"], False),
+                                    "disableduser": ("password4", ["VET_ANY"], True),
+                                    "emptyuser": ("", [], False)
+                                    }
+
+authenticationManager = AuthenticationManager([authenticationProvider])
+]]></programlisting>
+
+		<para>This is a simple listing of user accounts, useful for demo applications and also for integration testing
+		without complicated setups of 3rd party products.</para>
+
+<programlisting><![CDATA[
+vetRoleVoter = RoleVoter("VET")
+
+customerRoleVoter = RoleVoter("CUSTOMER")
+
+ownerVoter = OwnerVoter(controller)
+
+accessDecisionManager = AffirmativeBased()
+accessDecisionManager.allowIfAllAbstainDecisions = False
+accessDecisionManager.accessDecisionVoterList = [vetRoleVoter, customerRoleVoter, ownerVoter]
+]]></programlisting>
+
+		<para>This is the AffirmativeBased accessDecisionManager, based on three voters.</para>
+
+<programlisting><![CDATA[
+cherrypySessionStrategy = CherryPySessionStrategy()
+
+redirectStrategy = RedirectStrategy()
+]]></programlisting>
+
+		<para>PetClinic needs a session strategy to handle persistent information and also a mechanism to command redirects.</para>
+
+<programlisting><![CDATA[
+httpContextFilter = HttpSessionContextIntegrationFilter(cherrypySessionStrategy)
+
+authenticationProcessingFilter = AuthenticationProcessingFilter()
+authenticationProcessingFilter.authenticationManager = authenticationManager
+authenticationProcessingFilter.alwaysReauthenticate = False
+
+filterSecurityInterceptor = FilterSecurityInterceptor()
+filterSecurityInterceptor.validateConfigAttributes = False
+filterSecurityInterceptor.authenticationManager = authenticationManager
+filterSecurityInterceptor.accessDecisionManager = accessDecisionManager
+filterSecurityInterceptor.sessionStrategy = cherrypySessionStrategy
+filterSecurityInterceptor.objectDefinitionSource = [
+                                                    ("/vets.*", ["VET_ANY"]), 
+                                                    ("/editOwner.*", ["VET_ANY", "OWNER"]), 
+                                                    ("/.*", ["VET_ANY", "CUSTOMER_ANY"])
+                                                    ]
+
+exceptionFilter = MiddlewareFilter()
+exceptionFilter.clazz = "paste.evalexception.middleware.EvalException"
+exceptionFilter.appAttribute = "application"
+
+authenticationProcessingFilterEntryPoint = AuthenticationProcessingFilterEntryPoint()
+authenticationProcessingFilterEntryPoint.loginFormUrl = "/login"
+authenticationProcessingFilterEntryPoint.redirectStrategy = redirectStrategy
+
+accessDeniedHandler = SimpleAccessDeniedHandler()
+accessDeniedHandler.errorPage = "/accessDenied"
+accessDeniedHandler.redirectStrategy = redirectStrategy
+
+exceptionTranslationFilter = ExceptionTranslationFilter()
+exceptionTranslationFilter.authenticationEntryPoint = authenticationProcessingFilterEntryPoint
+exceptionTranslationFilter.accessDeniedHandler = accessDeniedHandler
+]]></programlisting>
+
+		<para>These are the filters that can be chained together based on the URLs. The filters are WSGI-compliant.
+		However, they aren't assembled in traditional WSGI-style. Most WSGI middleware is statically wrapped. That
+		means you have a fixed stack. Spring Python provides the FilterChainProxy, that utilizes a dynamic stack, allowing
+		different combinations of filters to be used based on the URL request.</para>
+
+<programlisting><![CDATA[
+filterChainProxy = FilterChainProxy()
+filterChainProxy.filterInvocationDefinitionSource = [
+                                                        ("/images.*", [exceptionFilter]), 
+                                                        ("/html.*", [exceptionFilter]), 
+                                                        ("/login.*", [exceptionFilter, httpContextFilter]), 
+                                                        ("/.*", [
+                                                                exceptionFilter, 
+                                                                httpContextFilter, 
+                                                                exceptionTranslationFilter, 
+                                                                authenticationProcessingFilter, 
+                                                                filterSecurityInterceptor
+                                                                ])
+                                                        ]
+]]></programlisting>
+
+		<para>The FilterChainProxy picks a set of filters based on the URL request. It starts at the top of the list,
+		and compares patterns until it finds a match. Then it applies the filter chain.</para>
+		
+	</section>	
 </chapter>
