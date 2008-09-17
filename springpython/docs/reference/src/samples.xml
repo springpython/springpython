@@ -4,6 +4,62 @@
 
 	<section id="samples-petclinic">
 		<title>PetClinic</title>
+		
+		<para>PetClinic is a sample application demonstrating the usage of Spring Python.</para>
+
+		<itemizedlist>
+			<listitem><para>It uses [http://www.cherrypy.org CherryPy] as the web server component.</para></listitem>
+			<listitem>
+				<para>A [source:trunk/samples/petclinic/cherrypy/html/petclinic.html?format=raw detailed design document]
+				is part of the source code. You can read it through this Trac site or by clicking on a
+				hyperlink while running the application.</para>
+			</listitem>
+ 		</itemizedlist>
+
+		<section id="samples-petclinic-running">
+			<title>How to run</title>
+			
+			<para>Assuming you just checked out a copy of the source code, here are the steps to run PetClinic.</para>
+			
+<programlisting><![CDATA[
+bash$ cd /path/you/checked/out/springpython
+bash$ cd samples/petclinic
+bash$ python configure.py
+]]></programlisting>
+
+			<para>At this point, you will be prompted for MySQL's root password. This is NOT your system's root
+			password. This assumes you have a MySQL server running. After that, it will have setup database
+			<emphasis>petclinic</emphasis>.</para>
+
+<programlisting><![CDATA[
+bash$ cd cherrypy
+bash$ python petclinic.py
+]]></programlisting>
+
+			<para>This assumes you have [http://www.cherrypy.org CherryPy 2] installed. It probably
+			<emphasis>won't</emphasis> work if you are using !CherryPy 3. If you are using Ubuntu/Linux:</para>
+
+<programlisting><![CDATA[
+bash$ sudo apt-get install python-cherrypy
+]]></programlisting>
+
+			<para>Finally, after launching it, you should see a nice URL at the bottom: http://localhost:8080.
+			Well, go ahead! Things should look good now!</para>
+
+			<para><mediaobject>
+				<imageobject role="fo">
+					<imagedata align="left" fileref="images/PetClinic-snapshot.png"
+						format="PNG" scale="100%" width="100%"/>
+				</imageobject>
+				<imageobject role="html">
+					<imagedata align="left" fileref="images/PetClinic-snapshot.png"
+						format="PNG"/>
+				</imageobject>
+				<caption><para>Snapshot of PetClinic application</para></caption>
+			</mediaobject></para>
+
+		</section>
+		
 	</section>
 	
 	<section id="samples-springwiki">
