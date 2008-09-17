@@ -56,22 +56,29 @@
 				lock down access to your methods, utilizing both authentication and domain
 				authorization.</para>
 			</listitem>
-		
-			<listitem>
-				<para><link linkend="samples-petclinic">PetClinic</link> - Everybody's favorite
-				Spring sample application has been rebuilt from the ground up using various web
-				containers including: <ulink url="http://cherrypy.org">CherryPy</ulink>.
-				Go check it out for an example of how to use this framework.</para>
-			</listitem>
 			
 			<listitem>
-				<para><link linkend="samples-petclinic">SpringWiki</link> - Wikis are powerful
-				ways to store and manage content, so we created a simple one as a demo!</para>
-			</listitem>
-			
-			<listitem>
-				<para><link linked="samples-springobt">Spring Bot</link> - Use Spring Python
-				to build a tiny bot to manage the IRC channel of your open source prooject.</para>
+				<para><link linkend="samples">Samples</link> - to help demonstrate various features of Spring Python, some sample
+				applications have been created:</para>
+				
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="samples-petclinic">PetClinic</link> - Everybody's favorite
+						Spring sample application has been rebuilt from the ground up using various web
+						containers including: <ulink url="http://cherrypy.org">CherryPy</ulink>.
+						Go check it out for an example of how to use this framework.</para>
+					</listitem>
+					
+					<listitem>
+						<para><link linkend="samples-springwiki">Spring Wiki</link> - Wikis are powerful
+						ways to store and manage content, so we created a simple one as a demo!</para>
+					</listitem>
+					
+					<listitem>
+						<para><link linkend="samples-springbot">Spring Bot</link> - Use Spring Python
+						to build a tiny bot to manage the IRC channel of your open source project.</para>
+					</listitem>
+				</itemizedlist>
 			</listitem>
 			
 		</itemizedlist>
@@ -114,7 +121,7 @@
 					
 					<listitem><para>If you want to join this project, reporting bugs, opening
 					tickets, etc., please subscribe to the mailing list. To avoid spam clogging this
-					site, '''login is required'''. Drop me a message on the mailing list, then I'll
+					site, <emphasis>login is required</emphasis>. Drop me a message on the mailing list, then I'll
 					consider granting you access.</para></listitem>
 				</itemizedlist>
 		</section>
@@ -141,7 +148,7 @@ svn co https://src.springframework.org/svn/se-springpython-py/trunk springpython
 		
 		</para>
 		
-		<para>That will create a new '''springpython''' folder. This includes both the source code and
+		<para>That will create a new <emphasis>springpython</emphasis> folder. This includes both the source code and
 		the demo applications (PetClinic and SpringWiki).</para>
 		
 		<para>You can browse the code at <ulink url="https://fisheye.springframework.org/browse/se-springpython-py"/>.</para>

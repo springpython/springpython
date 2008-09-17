@@ -91,10 +91,10 @@ movieLister = appContext.getComponent("MovieLister")
 		
 		<para>Using Spring with Java makes it very useful to design to interfaces as opposed to
 		concrete classes. Python, with its dynamic nature may not appear to have the same return
-		on investment. Python supports [http://en.wikipedia.org/wiki/Duck_typing duck typing],
-		which means that if you implement two classes with the same method signatures, they are
-		interchangeable with any 3rd party module, regardless of inheritance hierarchy. Basically,
-		if it talks like a duck, its a duck.</para>
+		on investment. Python supports <ulink url="http://en.wikipedia.org/wiki/Duck_typing">
+		duck typing</ulink>, which means that if you implement two classes with the same method
+		signatures, they are interchangeable with any 3rd party module, regardless of inheritance
+		hierarchy. Basically, if it talks like a duck, its a duck.</para>
 
 		<para>Still, it may be useful to define interface classes in Python, to help mark out
 		the contract.</para>

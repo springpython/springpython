@@ -66,12 +66,11 @@ This is the build file to generate documentation for Spring Python.
 					<include name="**/*.jar"/>
 				</fileset>
 			</classpath>
-			<arg value="-d"/>
 			<arg value="${basedir}/${dist.ref.dir}/pdf/docbook_fop.tmp"/>
 			<arg value="${basedir}/${dist.ref.dir}/pdf/springpython-reference.pdf"/>
 		</java>
 
-		<!-- <delete file="${dist.ref.dir}/pdf/docbook_fop.tmp"/> -->
+		<delete file="${dist.ref.dir}/pdf/docbook_fop.tmp"/>
 
 	</target>
 

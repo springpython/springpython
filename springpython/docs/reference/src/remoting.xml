@@ -85,8 +85,10 @@ print service.getData("Hello")
 			<section id="remoting-pyro-ioc">
 				<title>Exporting a Spring Service Using InversionOfControl</title>
 				
-				<para>In order to reach our service remotely, we have to export it. Spring Python provides PyroServiceExporter
-				to export your service through [http://pyro.sourceforge.net/ Pyro]. Add this to your application context.</para>
+				<para>In order to reach our service remotely, we have to export it. Spring Python
+				provides PyroServiceExporter to export your service through
+				<ulink url="http://pyro.sourceforge.net/">Pyro</ulink>. Add this to your
+				application context.</para>
 
 <programlisting><![CDATA[
 <components>
@@ -182,18 +184,17 @@ for i in range(10):
     pool.append(serviceExporter)
 ]]></programlisting>
 
-		<para>(Yeah, I know, you can probably do this in one line with a list comprehension).</para>
+		<para>(Yeah, I know, you can probably do this in one line with a list
+		comprehension).</para>
 
-		<para>Now you have ten copies of the server running, each under a distinct name.</para>
+		<para>Now you have ten copies of the server running, each under a distinct
+		name.</para>
 
 		<para>For any client, your configuration is a slight tweak.</para>
 
 <programlisting><![CDATA[
 services = []
 for i in range(10):
-		
-		
-
     services.append(PyroProxyFactory(serviceUrl = "PYROLOC://localhost:7766/ServiceName%s" % i))
 ]]></programlisting>
 
