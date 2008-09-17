@@ -27,7 +27,7 @@
                     <fo:table-row>
                         <fo:table-cell text-align="center">
                             <fo:block>
-                                <fo:external-graphic src="file:images/logo.jpg"/>
+                                <fo:external-graphic src="file:images/logo.png"/>
                             </fo:block>
                             <fo:block font-family="Helvetica" font-size="22pt" padding-before="10mm">
                                 <xsl:value-of select="bookinfo/subtitle"/> 
@@ -50,7 +50,7 @@
                     <fo:table-row>
                         <fo:table-cell text-align="center">
                             <fo:block font-family="Helvetica" font-size="12pt" padding="10mm">
-                                <xsl:text>Copyright © 2004-2008 </xsl:text>
+                                <xsl:text>Copyright © 2006-2008 </xsl:text>
                                 <xsl:for-each select="bookinfo/authorgroup/author">
                                     <xsl:if test="position() &gt; 1">
                                         <xsl:text>, </xsl:text>
