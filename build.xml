@@ -6,8 +6,7 @@ This is the build file to generate documentation for Spring Python.
 
 <project name="spring-python-docs" default="doc.all" basedir=".">
 
-	<property file="build.properties"/>
-	<property file="project.properties"/>
+	<property file="springpython.properties"/>
 
 	<target name="clean" description="Clean all output dirs (dist, javadocs, classes, test-classes, etc)">
 
@@ -77,7 +76,7 @@ This is the build file to generate documentation for Spring Python.
 	<target name="doc.html" depends="doc.prepare"
 		description="Compile reference documentation to chunked html">
 
-		<mkdir dir="${dist.ref.dir}/html/images"/>
+		<mkdir dir="${basedir}/${dist.ref.dir}/html/images"/>
 
 		<copy todir="${basedir}/${dist.ref.dir}/html/images">
 			<fileset dir="${basedir}/${doc.ref.dir}/src/images">
@@ -112,7 +111,7 @@ This is the build file to generate documentation for Spring Python.
 
 	<target name="doc.htmlsingle" depends="doc.prepare" description="Compile reference documentation to single html">
 
-		<mkdir dir="${dist.ref.dir}/html_single/images"/>
+		<mkdir dir="${basedir}/${dist.ref.dir}/html_single/images"/>
 
 		<copy todir="${basedir}/${dist.ref.dir}/html_single/images">
 			<fileset dir="${basedir}/${doc.ref.dir}/src/images">
@@ -124,9 +123,9 @@ This is the build file to generate documentation for Spring Python.
 		</copy>
 		<copy todir="${basedir}/${dist.ref.dir}/html_single/" file="${basedir}/${doc.ref.dir}/styles/html.css" failonerror="false"/>
 
-		<java classname="com.icl.saxon.StyleSheet" fork="true" dir="${doc.ref.dir}">
+		<java classname="com.icl.saxon.StyleSheet" fork="true" dir="${dist.ref.dir}">
 			<classpath>
-				<fileset dir="${basedir}/${doc.dir}/reference/lib">
+				<fileset dir="${basedir}/${doc.ref.dir}/lib">
 					<include name="**/*.jar"/>
 				</fileset>
 			</classpath>
