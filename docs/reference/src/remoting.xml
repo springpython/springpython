@@ -2,11 +2,227 @@
 <chapter id="remoting">
 	<title>Remoting</title>
 	
+	<para>Coupling AspectOrientedProgramming with different types of Python remoting services makes it easy
+	to convert your local application into a distributed one. Technically, the remoting segment of Spring Python
+	doesn't use AOP. However, it is very similar in the concept that you won't have to modify either your servers
+	or your clients.</para>
+
+	<para>Distributed applications have multiple components. These can be spread across different instances of
+	the Python interpreter on the same machine, as well on different machines on the network. The key factor is
+	that they need to talk to each other. The developer shouldn't have to spend a large effort coding a custom
+	solution. Another common practice in the realm of distributed programming is that fact that programmers often
+	develop standalone. When it comes time to distribute the application to production, the configuration may be
+	very different. Spring Python solves this by making the link between client and server components a step of
+	configuration not coding.</para>
+
+	<para>In the context of this section of documentation, the term <emphasis>client</emphasis> refers to a
+	client-application that is trying to access some remote service. The service is referred to as the <emphasis>
+	server</emphasis> component. The term remote is subjective. It can either mean a different thread, a different
+	interpretor, or the other side of the world over an Internet connection. As long as both parties agree on the
+	configuration, they all share the same solution.</para>
+
+	<para>Spring Python currently supports:</para>
+	<itemizedlist>
+		<listitem>
+			<para><ulink url="http://pyro.sourceforge.net">Pyro</ulink> (Python Remote Objects) - a pure Python
+			transport mechanism</para>
+		</listitem>
+		<listitem>
+			<para><ulink url="http://hessian.caucho.com">Hessian</ulink> - support for Hessian has just started.
+			So far, you can call python-to-java based on libraries released from Caucho.</para>
+		</listitem>
+	</itemizedlist>
+
 	<section id="remoting-pyro">
 		<title>Remoting with PYRO (Python Remote Objects)</title>
+		
+			<section id="remoting-pyro-conversion">
+				<title>Converting a local service to an remote one</title>
+				
+				<para>For starters, let's define a simple service.</para>
+				
+<programlisting><![CDATA[
+class Service(object):
+    def getData(self, param):
+        return "You got remote data => %s" % param
+]]></programlisting>
+
+				<para>Now, we will create it locally and then call it.</para>
+				
+<programlisting><![CDATA[
+service = Service()
+print service.getData("Hello")
+
+"You got remote data => Hello"
+]]></programlisting>
+
+				<para>Okay, imagine that you want to relocate this service to another instance of Python, or perhaps
+				another machine on your network. To make this easy, let's utilize InversionOfControl, and transform
+				this service into a Spring service. First, we need to define an application context. We will create a
+				file called <emphasis>applicationContext.xml</emphasis>.</para>
+				
+<programlisting><![CDATA[
+<components>
+    <component id="service" class="Service"/>
+</components>
+]]></programlisting>
+
+				<para>The client code is changed to this:</para>
+				
+<programlisting><![CDATA[
+appContext = XmlApplicationContext("applicationContext.xml")
+service = appContext.getComponent("service")
+print service.getData("Hello")
+
+"You got remote data => Hello"
+]]></programlisting>
+
+				<para>Not too tough, ehh? Well, guess what. That little step just decoupled the client from directly
+				creating the service. Now we can step in and configure things for remote procedure calls without the client know it.</para>
+				
+			</section>
+			
+			<section id="remoting-pyro-ioc">
+				<title>Exporting a Spring Service Using InversionOfControl</title>
+				
+				<para>In order to reach our service remotely, we have to export it. Spring Python provides PyroServiceExporter
+				to export your service through [http://pyro.sourceforge.net/ Pyro]. Add this to your application context.</para>
+
+<programlisting><![CDATA[
+<components>
+    <component id="remoteService" class="Service"/>
+
+    <component id="serviceExporter" class="springpython.remoting.pyro.PyroServiceExporter">
+        <property name="serviceName">"ServiceName"</property>
+        <property name="service" local="remoteService"/>
+    </component>
+
+    <component id="service" class="springpython.remoting.pyro.PyroProxyFactory">
+        <property name="serviceUrl">"PYROLOC://localhost:7766/ServiceName"</property>
+    </component>
+
+</components>
+]]></programlisting>
+
+				<para>Three things have happened:</para>
+				<orderedlist>
+					<listitem>
+						<para>Our original service's component name has been changed to <emphasis>remoteService</emphasis>.</para>
+					</listitem>
+					<listitem>
+						<para>Another component was introduced called <emphasis>serviceExporter</emphasis>. It references component
+						<emphasis>remoteService</emphasis>, and provides a proxied interface through a Pyro URL.</para>
+					</listitem>
+					<listitem>
+						<para>We created a client called <emphasis>service</emphasis>. That is the same name our client code it looking
+						for. It won't know the difference!</para>
+					</listitem>
+ 				</orderedlist>
+
+				<para>Now when the client runs, it will fetch the PyroProxyFactory, which will use Pyro to look up the exported
+				module, and end up calling our remote Spring service. And notice how neither our service nor the client have changed!</para>
+
+				<para>We can now split up this application into two components. Running the remote service on another server only
+				requires us to edit the client's application context, changing the URL to get to the service. All without telling
+				the client and server code.</para>
+				
+			</section>
+
+			<section id="remoting-pyro-noxml">
+				<title>Do I have to use XML?</title>
+				
+				<para>No. Again, Spring Python provides you the freedom to do things using the IoC container, or programmatically.</para>
+
+				<para>To do the same configuration as shown above looks like this:</para>
+				
+<programlisting><![CDATA[
+from springpython.remoting.pyro import PyroServiceExport
+from springpython.remoting.pyro import PyroProxyFactory
+
+# Create the service
+remoteService = Service()
+
+# Export it via Pyro using Spring Python's utility classes
+serviceExporter = PyroServiceExporter()
+serviceExporter.serviceName = "ServiceName"
+serviceExporter.service = remoteService 
+
+# Get a handle on a client-side proxy that will remotely call the service.
+service = PyroProxyFactory()
+service.serviceUrl = "PYROLOC://localhost:7766/ServiceName"
+
+# Call the service just you did in the original, simplified version.
+print service.getData("Hello")
+]]></programlisting>
+
+				<para>That is effectively the same steps that the IoC container executes. And it is just as easy to split this
+				up between two machines. Chop the script and run the PyroServiceExporter on one machine, and run the PyroProxyFactory
+				on the other. Then all you have to do is edit the <emphasis>serviceUrl</emphasis>.</para>
+				
+			</section>
+			
+	
 	</section>
 	
 	<section id="remoting-hessian">
 		<title>Remoting with Hessian</title>
 	</section>
+	
+	<section id="remoting-solutions">
+		<title>High-Availability/Clustering Solutions</title>
+		
+		<para>This props you up for many options to increase availability. It is possible to run a copy of the server on multiple
+		machines. You could then institute some type of round-robin router to go to different URLs. You could easily run ten copies
+		of the remote service.</para>
+
+<programlisting><![CDATA[
+pool = []
+for i in range(10):
+    serviceExporter = PyroServiceExporter(serviceName = "ServiceName%s" % i, service = Service())
+    pool.append(serviceExporter)
+]]></programlisting>
+
+		<para>(Yeah, I know, you can probably do this in one line with a list comprehension).</para>
+
+		<para>Now you have ten copies of the server running, each under a distinct name.</para>
+
+		<para>For any client, your configuration is a slight tweak.</para>
+
+<programlisting><![CDATA[
+services = []
+for i in range(10):
+		
+		
+
+    services.append(PyroProxyFactory(serviceUrl = "PYROLOC://localhost:7766/ServiceName%s" % i))
+]]></programlisting>
+
+		<para>Now you have an array of possible services to reach, easily spread between different machines. With a little
+		client-side utility class, we can implement a round-robin solution.</para>
+
+<programlisting><![CDATA[
+class HighAvailabilityService(object):
+    def __init__(self, servicePool):
+        self.servicePool = servicePool
+        self.index = 0
+    def getData(self, param):
+        self.index = (self.index+1) % len(self.servicePool)
+        try:
+            return self.servicePool[self.index].getData(param)
+        except:
+            del(self.servicePool[i])
+            return self.getData(param)
+
+service = HighAvailabilityService(servicePool = services)
+service.getData("Hello")
+service.getData("World")
+]]></programlisting>
+
+		<para>Notice how each call to the HighAvailabilityService class causes the internal index to increment and roll over.
+		If a service doesn't appear to be reachable, it is deleted from the list and attempted again. A little more sophisticated
+		error handling should be added in case there are no services available. And there needs to be a way to grow the services.
+		But this gets us off to a good start.</para>
+		
+	</section>
+	
 </chapter>
