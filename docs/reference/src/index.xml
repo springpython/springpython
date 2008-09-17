@@ -13,7 +13,7 @@
 <book>
 	<bookinfo>
 		<title>Spring Python - Reference Documentation</title>
-		<releaseinfo>${version}</releaseinfo>
+		<releaseinfo>{version}</releaseinfo>
 		<authorgroup>
 			<author>
 				<firstname>Greg</firstname>
