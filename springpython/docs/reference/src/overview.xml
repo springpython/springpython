@@ -134,9 +134,11 @@
   		<ulink url="http://sourceforge.net/project/showfiles.php?group_id=184275">sourceforge.net</ulink>.</para>
 
 		<para>If you want the latest source code type:
-		<programlisting>
-		svn co https://src.springframework.org/svn/se-springpython-py/trunk springpython
-		</programlisting>
+		
+<programlisting><![CDATA[
+svn co https://src.springframework.org/svn/se-springpython-py/trunk springpython
+]]></programlisting>
+		
 		</para>
 		
 		<para>That will create a new '''springpython''' folder. This includes both the source code and

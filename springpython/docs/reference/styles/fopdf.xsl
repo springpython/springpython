@@ -101,7 +101,7 @@
 		<xsl:param name="gentext-key" select="''"/>
 		<xsl:variable name="Version">
 			<xsl:if test="//releaseinfo">
-				<xsl:text>Spring Framework (</xsl:text><xsl:value-of select="//releaseinfo"/><xsl:text>)</xsl:text>
+				<xsl:text>Spring Python (</xsl:text><xsl:value-of select="//releaseinfo"/><xsl:text>)</xsl:text>
 			</xsl:if>
 		</xsl:variable>
 		<xsl:choose>
@@ -447,14 +447,14 @@
     <xsl:template match="ulink">
         <fo:basic-link external-destination="{@url}" xsl:use-attribute-sets="xref.properties" text-decoration="underline" color="blue">
             <xsl:choose>
-            <xsl:when test="count(child::node())=0">
-            <xsl:value-of select="@url"/>
-            </xsl:when>
-            <xsl:otherwise>
-            <xsl:apply-templates/>
-            </xsl:otherwise>
+            	<xsl:when test="count(child::node())=0">
+            		<xsl:value-of select="@url"/>
+            	</xsl:when>
+            	<xsl:otherwise>
+            		<xsl:apply-templates/>
+            	</xsl:otherwise>
             </xsl:choose>
-            </fo:basic-link>
+        </fo:basic-link>
     </xsl:template>
 
     <xsl:template match="link">
