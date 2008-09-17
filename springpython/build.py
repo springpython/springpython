@@ -17,6 +17,7 @@
 from datetime import datetime
 from glob import glob
 import os
+import re
 import sys
 import getopt
 import shutil
@@ -135,17 +136,29 @@ def setup(root, stylesheets=True):
              root,
              ["*.css", "*.js"])
 
+def sub_version(cur):
+    f = open(cur + "/" + p["doc.ref.dir"] + "/src/index.xml")
+    lines = "".join(f.readlines())
+    changed = re.sub(r"{version}", p["version"], lines)
+    f.close()
+    f = open(cur + "/" + p["doc.ref.dir"] + "/src/mangled.xml", "w")
+    f.write(changed)
+    f.close()
+    
 def docs_multi(version):
     root = p["targetDir"] + "/" + p["dist.ref.dir"] + "/html"
+    print root
 
     setup(root)
-    
+
     cur = os.path.abspath(".")
+    sub_version(cur)
     os.chdir(root)
     ref = cur + "/" + p["doc.ref.dir"]
     os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
         " -Xmx256M -XX:MaxPermSize=128m com.icl.saxon.StyleSheet " + \
-        ref+"/src/index.xml " + ref+"/styles/html_chunk.xsl")
+        ref+"/src/mangled.xml " + ref+"/styles/html_chunk.xsl")
+    os.remove(ref+"/src/mangled.xml")
     os.chdir(cur)
 
 def docs_single(version):
@@ -154,11 +167,14 @@ def docs_single(version):
     setup(root)
     
     cur = os.path.abspath(".")
+    sub_version(cur)
     os.chdir(root)
     ref = cur + "/" + p["doc.ref.dir"]
     os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
         " -Xmx256M -XX:MaxPermSize=128m com.icl.saxon.StyleSheet " + \
-        "-o index.html " + ref+"/src/index.xml " + ref+"/styles/html.xsl")
+        "-o index.html " + ref+"/src/mangled.xml " + ref+"/styles/html.xsl")
+    
+    os.remove(ref+"/src/mangled.xml")
     os.chdir(cur)
 
 def docs_pdf(version):
@@ -167,15 +183,17 @@ def docs_pdf(version):
     setup(root, stylesheets=False)
    
     cur = os.path.abspath(".")
+    sub_version(cur)
     os.chdir(root)
     ref = cur + "/" + p["doc.ref.dir"]
     os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
         " -Xmx256M -XX:MaxPermSize=128m com.icl.saxon.StyleSheet " + \
-        "-o docbook_fop.tmp " + ref+"/src/index.xml " + ref+"/styles/fopdf.xsl double.sided=" + p["double.sided"])
+        "-o docbook_fop.tmp " + ref+"/src/mangled.xml " + ref+"/styles/fopdf.xsl double.sided=" + p["double.sided"])
     os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
         " -Xmx256M -XX:MaxPermSize=128m org.apache.fop.apps.Fop " + \
         "docbook_fop.tmp springpython-reference.pdf")
     os.remove("docbook_fop.tmp")
+    os.remove(ref+"/src/mangled.xml")
     os.chdir(cur)
 
 
