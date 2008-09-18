@@ -1,0 +1,26 @@
+ -----
+ Spring Python Site
+ -----
+ The Spring Python Team
+ -----
+
+Introduction
+
+  Spring Python is an offshoot of the Java-based Spring Framework and Spring Security, targeted for Python. Spring provides many useful features, and I wanted those same features available when working with Python.
+
+  You can view this site {{{http://springpython.webfactional.com}in the clear}} or {{{https://springpython.webfactional.com}securely through SSL}}.
+
+  This used to be a trac site, but since Spring Python became an official Spring Extension, it has been replaced with a maven-generated one. Documentation stored in various trac articles has been migrated to the documentation set found in left-hand side of this page. You can view either HTML or a PDF document. The old trac site has been archived for historical benefit.
+
+News
+
+  <<NEWS>> - Spring Python's official documentation has been staged at {{{http://docs.springpython.webfactional.com}}}. - 9/17/2008 G.Turnquist
+
+  <<NEWS>> - Spring Python was given as a "sneak peek" into Spring Extensions to the London Spring User's Group at the end of a presentation on Spring.NET given by Russ Miles. If you follow that link to the Spring Python forums, there is another link to see the online video clip. - 9/15/2008 G.Turnquist
+
+  <<NEWS>> - Spring Python 0.6.0 has been released. This is the release with Spring Python as an official Spring Extension. The primary task was quality, and the first step was to integrate all the unit tests with SpringSource's build team and a continuous integration server. This has been accomplished and one sample of such a run can be found at http://build.springframework.org/browse/EXT-PYQUICK-19. A couple cosmetic issues were closed at the same time. Also, a new email distribution list has been created (mailto:springpython-users@lists.springsource.com), hosted by SpringSource, and existing members have been migrated to it. - 9/5/2008 G.Turnquist
+
+  <<NEWS>> - SpringSource has noticed Spring Python! Russ Miles from Spring Source recently contacted me and invited Spring Python to become an official Spring Extension. Russ is in charge of the Spring Extensions project, a process they are setting up to incubate projects that can potentially become official parts of Spring Source's software portfolio. Read more on our new discussion forum. - 8/11/2008 G.Turnquist
+
+  <<NEWS>> - Spring Python 0.5.0 has been released. This includes declarative transactions you can put into your DecoratorBasedApplicationContext and support for defining propagation levels. Much more testing has been put into verifying that DatabaseTemplate and DatabaseTransactions support MySQL, PostgreSQL, and Sqlite. We also have preliminary support for Oracle. Also, Spring Python has been re-licensed under Apache License 2.0. The sample applications are still under the old licenses, but the core library of Spring Python has been turned business friendly. You can read my my blog article for more information about this. - 5/30/2008 G.Turnquist
+

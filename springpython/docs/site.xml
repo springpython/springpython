@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="Spring Python">
+  <bannerLeft>
+    <name>Spring Python</name>
+    <src>http://sourceforge.net/sflogo.php?group_id=104215&amp;type=5</src>
+    <href>http://sourceforge.net/projects/springpython/</href>
+  </bannerLeft>
+  <bannerRight>
+    <name>Spring Python</name>
+    <src>http://trac.springpython.webfactional.com/chrome/common/logo.png</src>
+    <href>http://springpython.webfactional.com/</href>
+  </bannerRight>
+  <body>
+    <links>
+      <item name="SpringSource" href="http://springsource.com" />
+      <item name="The Spring Framework" href="http://springframework.org"/>
+    </links>
+
+    <menu name="Project">
+      <item name="License" href="license.html"/>
+      <item name="Issue Tracking" href="issue-tracking.html"/>
+      <item name="Source Repository" href="source-repository.html"/>
+      <item name="Team List" href="team-list.html"/>
+      <item name="Integration" href="integration.html"/>
+    </menu>
+
+    <menu name="Support">
+      <item name="Discussion Forum" href="http://forum.springframework.org/forumdisplay.php?f=45"/>
+      <item name="Mailing List" href="http://lists.springsource.com/listmanager/listinfo/springpython-users"/>
+    </menu>
+
+    <menu name="Documentation">
+      <item name="HTML" href="reference/html" />
+      <item name="Single HTML" href="reference/html_single"/>
+      <item name="PDF" href="reference/pdf/springpython-reference.pdf"/>
+    </menu>
+
+    <menu name="Archived">
+      <item name="Old trac site" href="http://trac.springpython.webfactional.com"/>
+    </menu>
+  </body>
+</project>
