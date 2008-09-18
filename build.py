@@ -58,6 +58,7 @@ def usage():
     print "\t\t\t\tIf this option isn't used, default will be tag will be '%s-<current time>'" % p["version"]
     print "\t--publish\t\tpublish this release to the deployment server"
     print "\t--register\t\tregister this release with http://pypi.python.org/pypi"
+    print "\t--site\t\tcreate the site and all its related documents"
     print "\t--docs-html-multi\t\tgenerate HTML documentation, split up into separate sections"
     print "\t--docs-html-single\t\tgenerate HTML documentation in a single file"
     print "\t--docs-pdf\t\tgenerate PDF documentation"
@@ -69,7 +70,7 @@ try:
                                   "hct",
                                   ["help", "clean", "test", "package", "build-stamp=", \
                                    "publish", "register", \
-                                   "docs-html-multi", "docs-html-single", "docs-pdf", "docs-all"])
+                                   "site", "docs-html-multi", "docs-html-single", "docs-pdf", "docs-all"])
 except getopt.GetoptError:
     # print help information and exit:
     print "Invalid command found in %s" % sys.argv
@@ -144,6 +145,12 @@ def sub_version(cur):
     f = open(cur + "/" + p["doc.ref.dir"] + "/src/mangled.xml", "w")
     f.write(changed)
     f.close()
+
+def site(version):
+    docs_multi(version)
+    docs_single(version)
+    docs_pdf(version)
+    os.system("mvn -Dspringpython.version=%s site" % version)
     
 def docs_multi(version):
     root = p["targetDir"] + "/" + p["dist.ref.dir"] + "/html"
@@ -156,7 +163,7 @@ def docs_multi(version):
     os.chdir(root)
     ref = cur + "/" + p["doc.ref.dir"]
     os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
-        " -Xmx256M -XX:MaxPermSize=128m com.icl.saxon.StyleSheet " + \
+        " -Xmx80M -XX:MaxPermSize=80m com.icl.saxon.StyleSheet " + \
         ref+"/src/mangled.xml " + ref+"/styles/html_chunk.xsl")
     os.remove(ref+"/src/mangled.xml")
     os.chdir(cur)
@@ -171,7 +178,7 @@ def docs_single(version):
     os.chdir(root)
     ref = cur + "/" + p["doc.ref.dir"]
     os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
-        " -Xmx256M -XX:MaxPermSize=128m com.icl.saxon.StyleSheet " + \
+        " -Xmx80M -XX:MaxPermSize=80m com.icl.saxon.StyleSheet " + \
         "-o index.html " + ref+"/src/mangled.xml " + ref+"/styles/html.xsl")
     
     os.remove(ref+"/src/mangled.xml")
@@ -187,10 +194,10 @@ def docs_pdf(version):
     os.chdir(root)
     ref = cur + "/" + p["doc.ref.dir"]
     os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
-        " -Xmx256M -XX:MaxPermSize=128m com.icl.saxon.StyleSheet " + \
+        " -Xmx80M -XX:MaxPermSize=80m com.icl.saxon.StyleSheet " + \
         "-o docbook_fop.tmp " + ref+"/src/mangled.xml " + ref+"/styles/fopdf.xsl double.sided=" + p["double.sided"])
     os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
-        " -Xmx256M -XX:MaxPermSize=128m org.apache.fop.apps.Fop " + \
+        " -Xmx80M -XX:MaxPermSize=80m org.apache.fop.apps.Fop " + \
         "docbook_fop.tmp springpython-reference.pdf")
     os.remove("docbook_fop.tmp")
     os.remove(ref+"/src/mangled.xml")
@@ -236,6 +243,9 @@ for option in optlist:
 
     if option[0] in ("--register"):
         register(completeVersion)
+
+    if option[0] in ("--site"):
+        site(completeVersion)
 
     if option[0] in ("--docs-all"):
         docs_multi(completeVersion)
