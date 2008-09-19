@@ -18,6 +18,12 @@
 # spring and then to rebuild the hosted site.
 ###################################################################################
 
+export JAVA_HOME=~/java
+export M2_HOME=~/apache-maven
+export M2=$M2_HOME/bin
+export PATH=$M2:$JAVA_HOME/bin:$PATH
+
 cd ~/springpython
-svn update
-./build.py --clean --site
+svn update >> log.txt
+./build.py --clean --site >> log.txt
+
