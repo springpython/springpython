@@ -17,7 +17,7 @@
     <url>http://build.springframework.org/</url>
   </ciManagement>
   <scm>
-    <connection>scm:svn:https://src.springframework.org/svn/se-springpython-py/</connection>
+    <connection>scm:svn:https://src.springframework.org/svn/se-springpython-py/trunk/springpython</connection>
     <url>https://fisheye.springframework.org/browse/se-springpython-py</url>
   </scm>
   <developers>

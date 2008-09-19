@@ -104,7 +104,7 @@
   		<title>Support</title>
   		
 		<section id="overview-support-forums">
-			<title>Forums</title>
+			<title>Forums and Email</title>
 	
 				<itemizedlist>
 					<listitem><para>You can read the messages on <ulink
@@ -115,14 +115,16 @@
 					url="http://lists.springsource.com/listmanager/listinfo/springpython-users">
 					springpython-developer</ulink> mailing list.</para></listitem>
 					
+					<listitem><para>You can read the <ulink
+					url="http://lists.springsource.com/archives/springpython-users/">
+					current archives of the spring-users mailing list</ulink>.</para></listitem>
+					
 					<listitem><para>You can also read the <ulink
 					url="http://sourceforge.net/mailarchive/forum.php?forum=springpython-developer">
-					old archives of the spring-developer mailing list</ulink>.</para></listitem>
+					old archives of the retired spring-developer mailing list</ulink>.</para></listitem>
 					
-					<listitem><para>If you want to join this project, reporting bugs, opening
-					tickets, etc., please subscribe to the mailing list. To avoid spam clogging this
-					site, <emphasis>login is required</emphasis>. Drop me a message on the mailing list, then I'll
-					consider granting you access.</para></listitem>
+					<listitem><para>If you want to join this project, see
+					<link linkend="overview-becoming-a-team-member">How to become a team member</link></para></listitem>
 				</itemizedlist>
 		</section>
 		
@@ -175,8 +177,74 @@ svn co https://src.springframework.org/svn/se-springpython-py/trunk springpython
 		</itemizedlist>
 		
 		<para>Many others have also contributed through reporting issues, raising questions, and even
-		sending patches. If you wish to become an official member of the team, leave a note at
-		<ulink url="http://forum.springframework.org/forumdisplay.php?f=45">our
-		Spring Python forum</ulink>, and we can discuss the process to becoming an official member.</para>
+		sending patches.</para>
+		
+		<section id="overview-becoming-a-team-member">
+			<title>How to become a team member</title>
+			
+			<para>We like hearing about new people interesting in joining the project. We are also
+			excited in hearing from people interested in working on a particular jira feature.</para>
+
+			<para>The way we do things around here, we like to work through a few patches before
+			granting you any committer rights. You can checkout a copy of the code anonymously,
+			and then work on your patch. Email your patch to one of the official team members, and we
+			will inspect things. From there we will consider committing your patch, or send you feedback.</para>
+			
+			<para>If we decide to commit your changes, we may choose to create a new branch for your
+			feature, based on the scope of the work, or simply commit it to the trunk. After testing,
+			evaluation, and prioritization, we may eventually merge your patch to the trunk. After a few
+			patches, if	things are looking good, we will evaluate giving you committer rights.</para>
+			
+			<para>Spring Python is a <ulink url="http://en.wikipedia.org/wiki/Test-driven_development">
+			TDD-based</ulink> project, meaning if you are working on code, be sure to write an automated
+			test case and write the test case FIRST. For insight into that, take a trip into the code
+			repository's test section to see how current things are run. Your patch can get sold off and
+			committed much faster if you include automated test cases and a pasted sample of your test case
+			running successfully along with the rest of the baseline test suite.</para>
+			
+			<para>You don't have to become a team member to contribute to this project, but if you want
+			to contribute code, then we ask that you follow the details of this process, because this project
+			is focused on high quality code, and we want to hold everyone to the same standard.</para>
+
+			<orderedlist numeration="arabic">
+				<title>Getting Started</title>
+				<listitem>
+					<para>First of all, I suggest you sign up on our <ulink
+					url="http://lists.springsource.com/listmanager/listinfo/springpython-users">
+					springpython-developer</ulink> mailing list. That way, you'll get notified about
+					big items as well be on the inside for important developments that may or may
+					not get published to the web site. <emphasis>NOTE: Use springsource list, NOT the
+					sourceforge one.</emphasis></para>
+				</listitem>
+				<listitem>
+					<para>Second, I suggest you register for a
+					<ulink url="http://jira.springframework.org">jira account</ulink>, so you can leave
+					comments, etc. on the ticket. I think that works (I don't manage jira, so if
+					it doesn't let me know, and we will work from there) NOTE: I like notes and
+					comments tracking what you have done, or what you think needs to be done. It
+					gives us input in case someone else eventually has to complete the ticket.
+					That would also be the place where you can append new files or patches to
+					existing code.</para>
+				</listitem>
+				<listitem>
+					<para>Third, register at the <ulink
+					url="http://forum.springframework.org">
+					SpringSource community forum</ulink>, and if you want to kick
+					ideas around or float a concept, feel free to start a thread in our <ulink
+					url="http://forum.springframework.org/forumdisplay.php?f=45">Spring Python
+					forum</ulink>.</para>
+				</listitem>
+				<listitem>
+					<para>Finally, we really like to have supporting documentation as well as
+					code. That helps other people who aren't as up-to-speed on your piece of the
+					system. Go ahead and start your patch, but don't forget to look into
+					docs/reference/samples.xml. Our documentation is part of the source code, so
+					you can submit doc mods as patches also. Include information such as dependencies,
+					design notes, and whatever else you think would be valuable.</para>
+				</listitem>
+			</orderedlist>
+			
+			<para>With all that said, happy coding!</para>
+		</section>
 	</section>
 </chapter>

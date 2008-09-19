@@ -119,13 +119,13 @@ def register(version):
 # Using glob, generate a list of files, then use map to go over each item, and copy it
 # from source to destination.
 def copy(src, dest, patterns):
+    if not os.path.exists(dest):
+        print "+++ Creating " + dest
+        os.makedirs(dest)
+    
     map(lambda pattern: [shutil.copy(file, dest) for file in glob(src + pattern)], patterns)
 
 def setup(root, stylesheets=True):
-    if not os.path.exists(root + "/images/"):
-        print "+++ Creating " + root + "/images/"
-        os.makedirs(root + "/images/")
-
     copy(
          p["doc.ref.dir"]+"/src/images/",
          root + "/images/",
@@ -147,10 +147,15 @@ def sub_version(cur):
     f.close()
 
 def site(version):
+    docs_all(version)
+    os.system("mvn -Dspringpython.version=%s site" % version)
+
+def docs_all(version):
+    copy("xml/schema/context/", p["targetDir"] + "/docs/schema/context/", ["*.xsd"])
+
     docs_multi(version)
     docs_single(version)
     docs_pdf(version)
-    os.system("mvn -Dspringpython.version=%s site" % version)
     
 def docs_multi(version):
     root = p["targetDir"] + "/" + p["dist.ref.dir"] + "/html"
@@ -248,10 +253,8 @@ for option in optlist:
         site(completeVersion)
 
     if option[0] in ("--docs-all"):
-        docs_multi(completeVersion)
-        docs_single(completeVersion)
-        docs_pdf(completeVersion)
-        
+        docs_all(completeVersion)
+                
     if option[0] in ("--docs-html-multi"):
         docs_multi(completeVersion)
 
