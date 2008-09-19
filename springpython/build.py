@@ -58,9 +58,9 @@ def usage():
     print "\t\t\t\tIf this option isn't used, default will be tag will be '%s-<current time>'" % p["version"]
     print "\t--publish\t\tpublish this release to the deployment server"
     print "\t--register\t\tregister this release with http://pypi.python.org/pypi"
-    print "\t--site\t\tcreate the site and all its related documents"
-    print "\t--docs-html-multi\t\tgenerate HTML documentation, split up into separate sections"
-    print "\t--docs-html-single\t\tgenerate HTML documentation in a single file"
+    print "\t--site\t\t\tcreate the site and all its related documents"
+    print "\t--docs-html-multi\tgenerate HTML documentation, split up into separate sections"
+    print "\t--docs-html-single\tgenerate HTML documentation in a single file"
     print "\t--docs-pdf\t\tgenerate PDF documentation"
     print "\t--docs-all\t\tgenerate all documents"
     print
