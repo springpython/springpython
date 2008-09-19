@@ -106,7 +106,7 @@
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="type" type="xsd:string">
+		<xsd:attribute name="scope" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 	The scope of this component: typically "singleton" (one shared instance,
