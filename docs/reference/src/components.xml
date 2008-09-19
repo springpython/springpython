@@ -54,10 +54,10 @@
 
 			<para>In Java, these are referred to as <ulink url="http://en.wikipedia.org/wiki/Javabean">
 			Javabeans</ulink>. For Spring Python, they are called <emphasis>components</emphasis>. In this example,
-			there are two components, a <emphasis>MovieLister</emphasis> and a <emphasis>MovieFinder</emphasis>. The !MovieFinder
+			there are two components, a <emphasis>MovieLister</emphasis> and a <emphasis>MovieFinder</emphasis>. The MovieFinder
 			has one attribute, <emphasis>filename</emphasis>, which is assigned a string value after initialization.
 			The MovieLister has one attribute, <emphasis>finder</emphasis>, which is assigned "local" reference to the
-			component named "!MovieFinder".</para>
+			component named "MovieFinder".</para>
 
 			<para>Now, someone, usually a <emphasis>main</emphasis> function, will need to instantiate the
 			XmlApplicationContext using this file.</para>
