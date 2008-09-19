@@ -145,7 +145,7 @@
 		<para>If you want the latest source code type:
 		
 <programlisting><![CDATA[
-svn co https://src.springframework.org/svn/se-springpython-py/trunk springpython
+svn co https://src.springframework.org/svn/se-springpython-py/trunk/springpython
 ]]></programlisting>
 		
 		</para>
