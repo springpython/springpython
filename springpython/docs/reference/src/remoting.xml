@@ -62,11 +62,7 @@ print service.getData("Hello")
 				file called <emphasis>applicationContext.xml</emphasis>.</para>
 				
 <programlisting><![CDATA[
-<?xml version="1.0" encoding="UTF-8"?>
-<components
-	xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
+<components>
     <component id="service" class="Service"/>
 </components>
 ]]></programlisting>
@@ -95,11 +91,7 @@ print service.getData("Hello")
 				application context.</para>
 
 <programlisting><![CDATA[
-<?xml version="1.0" encoding="UTF-8"?>
-<components
-	xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
+<components>
     <component id="remoteService" class="Service"/>
 
     <component id="serviceExporter" class="springpython.remoting.pyro.PyroServiceExporter">

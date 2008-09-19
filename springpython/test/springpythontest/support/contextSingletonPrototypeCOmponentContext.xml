@@ -1,8 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<components
-	xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
+<components>
     <component id="MovieLister" class="springpythontest.support.testSupportClasses.MovieLister" scope="prototype">
 	    <property name="finder" local="MovieFinder"/>
 	    <property name="description" local="SingletonString"/>
