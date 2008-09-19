@@ -53,7 +53,7 @@ class PyContainer(object):
 			klass = getattr(componentDesc, "class")
 			comp = _Component(id_, klass)
 			comp.factoryId = getattr(componentDesc, "factory", "default")
-			comp.type_ = getattr(componentDesc, "type", _Component.SINGLETON)
+			comp.scope_ = getattr(componentDesc, "scope", _Component.SINGLETON)
 			comp.lazy_init_ = getattr(componentDesc, "lazy-init", False)
 
 			# Add properties to component description:
@@ -132,7 +132,7 @@ class PyContainer(object):
 		@return: an object of a class specified in config
 		'''
 		if self.classes.has_key(id_):
-			if self.descriptions[id_].type_ == _Component.PROTOTYPE:
+			if self.descriptions[id_].scope_ == _Component.PROTOTYPE:
 				if not self.instances.has_key(id_):
 					self.instances[id_] = _Instance()
 				instance = self.factories[self.descriptions[id_].factoryId].getInstance(self.classes[id_])
