@@ -85,35 +85,6 @@ class RegexpMethodPointcutAdvisor(Pointcut, MethodMatcher, MethodInterceptor):
     """
     This is a combination PointCut/MethodMatcher/MethodInterceptor. It allows associating one or more
     defined advices with a set of regular expression patterns.
-
-    The following block shows how to configure one using IoC.
-
-    <components>
-
-	<component id="wrappingInterceptor" class="springpython.test.support.testSupportClasses.WrappingInterceptor"/>
-
-	<component id="beginEndInterceptor" class="springpython.test.support.testSupportClasses.BeforeAndAfterInterceptor"/>
-
-	<component id="pointcutTest" class="springpython.aop.RegexpMethodPointcutAdvisor">
-		<property name="advice">
-			<list local="beginEndInterceptor"/>
-			<list local="wrappingInterceptor"/>
-		</property>
-		<property name="patterns">[".*do.*"]</property>
-	</component>
-
-	<component id="targetService" class="springpython.test.support.testSupportClasses.SampleService">
-		<interceptor-ref name="pointcutTest"/>
-	</component>
-    
-    <component id="sampleService" class="springpython.aop.ProxyFactoryComponent">
-        <property name="target" local="targetService"/>
-        <property name="advice">
-            <list local="pointcutTest"/>
-        </property>
-    </component>
-    
-    </components>
     """
     def __init__(self, advice = None, patterns = None):
         Pointcut.__init__(self)
