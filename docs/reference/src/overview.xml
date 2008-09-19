@@ -237,10 +237,11 @@ svn co https://src.springframework.org/svn/se-springpython-py/trunk/springpython
 				<listitem>
 					<para>Finally, we really like to have supporting documentation as well as
 					code. That helps other people who aren't as up-to-speed on your piece of the
-					system. Go ahead and start your patch, but don't forget to look into
-					docs/reference/samples.xml. Our documentation is part of the source code, so
-					you can submit doc mods as patches also. Include information such as dependencies,
-					design notes, and whatever else you think would be valuable.</para>
+					system. Go ahead and start your patch, but don't forget to look into the docs
+					folder and update or add to relevant documentation. Our documentation is part
+					of the source code, so you can submit doc mods as patches also. Include information
+					such as dependencies, design notes, and whatever else you think would be
+					valuable.</para>
 				</listitem>
 			</orderedlist>
 			
