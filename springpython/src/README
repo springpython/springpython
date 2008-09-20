@@ -35,3 +35,27 @@ If you want to develop this product, you may have to install some other tools as
    * pmock (apt-get install python-pmock for ubuntu users)
    * Pyro (apt-get install pyro for ubuntu users)
    * CherryPy (apt-get install python-cherrypy for ubuntu users) (This currently supports version 2, not version 3)
+4. To export XML JUnit-style output from the tests you will need to install:
+   * NoseXUnit (http://nosexunit.sourceforge.net/) 
+   
+You may need to run these installs as root using 'sudo'.
+
+To ensure your changes affect the build appropriately, use the build.py script. For example to see all the options available:
+   
+> python build.py --help
+
+Or to build and run all development tests:
+
+> python build.py --test
+
+Or to clean up any recent builds:
+
+> python build.py --clean
+
+Note: You will need to clean the build between test executions with the build.py script.
+
+
+
+
+    
+ 

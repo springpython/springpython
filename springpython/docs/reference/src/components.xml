@@ -42,7 +42,8 @@
 			adapted to something very similar in Spring Python.</para>
 
 <programlisting><![CDATA[
-<components>
+<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <component id="MovieLister" class="springpython.test.support.testSupportClasses.MovieLister">
         <property name="finder" local="MovieFinder" />
     </component>

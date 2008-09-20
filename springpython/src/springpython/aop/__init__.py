@@ -88,7 +88,8 @@ class RegexpMethodPointcutAdvisor(Pointcut, MethodMatcher, MethodInterceptor):
 
     The following block shows how to configure one using IoC.
 
-    <components>
+    <components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 	<component id="wrappingInterceptor" class="springpython.test.support.testSupportClasses.WrappingInterceptor"/>
 
