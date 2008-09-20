@@ -15,6 +15,7 @@ DOM = 'DOM'
 # for this. Instead, it is hard-coded to use the EXPAT mode.
 import xml.parsers.expat
 EXPAT = 'EXPAT'
+SCHEMA = 'http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd'
 
 def instance (x):
     global minidom, Node
@@ -319,10 +320,12 @@ def pyobj_from_dom(dom_node):
     return py_obj
 
 def py_name(name):
+    name = name.replace(SCHEMA, '')
     name = name.replace('#', '_')
     name = name.replace(':', '_')
     name = name.replace('-', '__')
     name = name.replace('.', '_')
+    name = name.replace(' ', '')
     return name
 
 import objectify
