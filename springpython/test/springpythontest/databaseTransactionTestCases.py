@@ -45,11 +45,11 @@ class AbstractTransactionTestCase(unittest.TestCase):
         if not self.createdTables:
             self.createTables()
         self.createTables()
-        self.databaseTemplate = DatabaseTemplate(self.factory)
-        self.databaseTemplate.execute("DELETE FROM animal")
-        self.databaseTemplate.execute("DELETE FROM account")
+        self.dt = DatabaseTemplate(self.factory)
+        self.dt.execute("DELETE FROM animal")
+        self.dt.execute("DELETE FROM account")
         self.factory.commit()
-        self.assertEquals(len(self.databaseTemplate.queryForList("SELECT * FROM animal")), 0)
+        self.assertEquals(len(self.dt.query_for_list("SELECT * FROM animal")), 0)
         self.transactionManager = ConnectionFactoryTransactionManager(self.factory)
         self.transactionTemplate = TransactionTemplate(self.transactionManager)
 
@@ -57,64 +57,64 @@ class AbstractTransactionTestCase(unittest.TestCase):
         self.factory.getConnection().rollback()
 
     def testInsertingRowsIntoTheDatabase(self):
-        rows = self.databaseTemplate.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
+        rows = self.dt.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
         self.assertEquals(rows, 1)
 
-        name = self.databaseTemplate.queryForObject("SELECT name FROM animal WHERE name = 'black mamba'", requiredType=types.StringType)
+        name = self.dt.query_for_object("SELECT name FROM animal WHERE name = 'black mamba'", required_type=types.StringType)
         self.assertEquals(name, "black mamba")
 
     def testInsertingTwoRowsWithoutaTransactionButManuallyCommitted(self):
-        self.databaseTemplate.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
-        self.databaseTemplate.execute("INSERT INTO animal (name) VALUES (?)", ('copperhead',))
+        self.dt.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
+        self.dt.execute("INSERT INTO animal (name) VALUES (?)", ('copperhead',))
         self.factory.commit()
-        self.assertEquals(len(self.databaseTemplate.queryForList("SELECT * FROM animal")), 2)
+        self.assertEquals(len(self.dt.query_for_list("SELECT * FROM animal")), 2)
 
     def testInsertingTwoRowsWithoutaTransactionButManuallyRolledBack(self):
-        self.databaseTemplate.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
-        self.databaseTemplate.execute("INSERT INTO animal (name) VALUES (?)", ('copperhead',))
-        self.assertEquals(len(self.databaseTemplate.queryForList("SELECT * FROM animal")), 2)
-        self.databaseTemplate.connectionFactory.getConnection().rollback()
-        self.assertEquals(len(self.databaseTemplate.queryForList("SELECT * FROM animal")), 0)
+        self.dt.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
+        self.dt.execute("INSERT INTO animal (name) VALUES (?)", ('copperhead',))
+        self.assertEquals(len(self.dt.query_for_list("SELECT * FROM animal")), 2)
+        self.dt.connection_factory.getConnection().rollback()
+        self.assertEquals(len(self.dt.query_for_list("SELECT * FROM animal")), 0)
 
     def testInsertingTwoRowsWithaTransactionAndNoErrorsAndNoResults(self):
         class txDefinition(TransactionCallbackWithoutResult):
-            def doInTransactionWithoutResult(s, status):
-                self.databaseTemplate.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
-                self.databaseTemplate.execute("INSERT INTO animal (name) VALUES (?)", ('copperhead',))
+            def do_in_tx_without_result(s, status):
+                self.dt.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
+                self.dt.execute("INSERT INTO animal (name) VALUES (?)", ('copperhead',))
                 
         self.transactionTemplate.execute(txDefinition())
-        self.assertEquals(len(self.databaseTemplate.queryForList("SELECT * FROM animal")), 2)
+        self.assertEquals(len(self.dt.query_for_list("SELECT * FROM animal")), 2)
 
     def testInsertingTwoRowsWithaTransactionAndAnIntermediateErrorAndNoResults(self):
         class txDefinition(TransactionCallbackWithoutResult):
-            def doInTransactionWithoutResult(s, status):
-                self.databaseTemplate.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
-                self.assertEquals(len(self.databaseTemplate.queryForList("SELECT * FROM animal")), 1)
+            def do_in_tx_without_result(s, status):
+                self.dt.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
+                self.assertEquals(len(self.dt.query_for_list("SELECT * FROM animal")), 1)
                 raise DataAccessException("This should break the transaction, and rollback the insert.")
                 
         self.assertRaises(DataAccessException, self.transactionTemplate.execute, txDefinition())
-        self.assertEquals(len(self.databaseTemplate.queryForList("SELECT * FROM animal")), 0)
+        self.assertEquals(len(self.dt.query_for_list("SELECT * FROM animal")), 0)
 
     def testInsertingTwoRowsWithaTransactionAndNoErrorsAndResults(self):
         class txDefinition(TransactionCallback):
-            def doInTransaction(s, status):
-                self.databaseTemplate.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
-                self.databaseTemplate.execute("INSERT INTO animal (name) VALUES (?)", ('copperhead',))
-                results = self.databaseTemplate.queryForObject("SELECT name FROM animal WHERE name like 'c%'", requiredType=types.StringType)
+            def do_in_transaction(s, status):
+                self.dt.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
+                self.dt.execute("INSERT INTO animal (name) VALUES (?)", ('copperhead',))
+                results = self.dt.query_for_object("SELECT name FROM animal WHERE name like 'c%'", required_type=types.StringType)
                 return results
                 
         self.assertEquals(self.transactionTemplate.execute(txDefinition()), "copperhead")
-        self.assertEquals(len(self.databaseTemplate.queryForList("SELECT * FROM animal")), 2)
+        self.assertEquals(len(self.dt.query_for_list("SELECT * FROM animal")), 2)
 
     def testInsertingTwoRowsWithaTransactionAndAnIntermediateErrorAndResults(self):
         class txDefinition(TransactionCallback):
-            def doInTransaction(s, status):
-                self.databaseTemplate.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba'))
-                self.assertEquals(len(self.databaseTemplate.queryForList("SELECT * FROM animal")), 1)
+            def do_in_transaction(s, status):
+                self.dt.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba'))
+                self.assertEquals(len(self.dt.query_for_list("SELECT * FROM animal")), 1)
                 raise DataAccessException("This should break the transaction, and rollback the insert.")
                 
         self.assertRaises(DataAccessException, self.transactionTemplate.execute, txDefinition())
-        self.assertEquals(len(self.databaseTemplate.queryForList("SELECT * FROM animal")), 0)
+        self.assertEquals(len(self.dt.query_for_list("SELECT * FROM animal")), 0)
 
     def testDeclarativeTransactions(self):
         appContext = DatabaseTxTestAppContext(self.factory)

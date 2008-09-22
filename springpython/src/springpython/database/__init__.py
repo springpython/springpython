@@ -20,12 +20,12 @@ class IncorrectResultSizeDataAccessException(DataAccessException):
     pass
 
 class ArgumentMustBeNamed(DataAccessException):
-    def __init__(self, argumentName, msg = ""):
+    def __init__(self, arg_name, msg = ""):
         DataAccessException.__init__(self, msg)
-        self.argumentName = argumentName
+        self.arg_name = arg_name
 
 class InvalidArgumentType(DataAccessException):
-    def __init__(self, argumentType, validTypes, msg = ""):
+    def __init__(self, arg_type, valid_types, msg = ""):
         DataAccessException.__init__(self, msg)
-        self.argumentType = argumentType
-        self.validTypes = validTypes
+        self.arg_type = arg_type
+        self.valid_types = valid_types

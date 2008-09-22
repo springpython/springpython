@@ -15,18 +15,11 @@
 """
 import logging
 import types
-import warnings
 from springpython.database import ArgumentMustBeNamed
 from springpython.database import DataAccessException
 from springpython.database import IncorrectResultSizeDataAccessException
 from springpython.database import InvalidArgumentType
 from springpython.database import factory
-
-class ConnectionFactory(factory.ConnectionFactory):
-    def __init__(self):
-        warnings.warn("springpython.database's core.ConnectionFactory has moved to factory.ConnectionFactory.",
-            DeprecationWarning, 2)
-        factory.ConnectionFactory.__init__(self)
 
 class DaoSupport(object):
     """
@@ -34,48 +27,48 @@ class DaoSupport(object):
     to help carry out database operations. It requires that a connection object be
     provided during instantion.
     """
-    def __init__(self, connectionFactory = None):
-        self.databaseTemplate = DatabaseTemplate()
-        self.connectionFactory = connectionFactory
+    def __init__(self, connection_factory = None):
+        self.database_template = DatabaseTemplate()
+        self.connection_factory = connection_factory
         
     def __setattr__(self, name, value):
         """When the connection factory is set, pass it on through to the database template."""
         self.__dict__[name] = value
-        if name == "connectionFactory" and value:
-            self.__dict__["databaseTemplate"].connectionFactory = value
+        if name == "connection_factory" and value:
+            self.__dict__["database_template"].connection_factory = value
 
 class DatabaseTemplate(object):
     """
     This class is meant to mimic the Spring framework's JdbcTemplate class.
     Since Python doesn't use JDBC, the name is generalized to "Database"
     """
-    def __init__(self, connectionFactory = None):
-        self.connectionFactory = connectionFactory
+    def __init__(self, connection_factory = None):
+        self.connection_factory = connection_factory
         self.logger = logging.getLogger("springpython.database.core.DatabaseTemplate")
 
     def __setattr__(self, name, value):
         """When the connection factory is set, initialize a connection to the database."""
         self.__dict__[name] = value
-        if name == "connectionFactory" and value:
+        if name == "connection_factory" and value:
             self.__db = value.getConnection()
             
-    def execute(self, sqlStatement, args = None):
+    def execute(self, sql_statement, args = None):
         """Issue a single SQL execute, typically a DDL statement."""
-        sqlStatement = self.connectionFactory.convertFromJavaToPythonNotation(sqlStatement)
+        sql_statement = self.connection_factory.convert_sql_binding(sql_statement)
 
         cursor = self.__db.cursor()
         error = None
-        rowsAffected = 0
+        rows_affected = 0
         try:
             try:
                 if args:
-                    cursor.execute(sqlStatement, args)
-                    rowsAffected = cursor.rowcount
+                    cursor.execute(sql_statement, args)
+                    rows_affected = cursor.rowcount
                 else:
-                    cursor.execute(sqlStatement)
-                    rowsAffected = cursor.rowcount
+                    cursor.execute(sql_statement)
+                    rows_affected = cursor.rowcount
             except Exception, e:
-                self.logger.debug("execute.execute: Trapped %s while trying to execute '%s'" % (e, sqlStatement))
+                self.logger.debug("execute.execute: Trapped %s while trying to execute '%s'" % (e, sql_statement))
                 error = e
         finally:
             try:
@@ -86,28 +79,28 @@ class DatabaseTemplate(object):
         if error:
             raise DataAccessException(error)
         
-        return rowsAffected
+        return rows_affected
     
-    def query(self, sqlQuery, args = None, rowhandler = None):
+    def query(self, sql_query, args = None, rowhandler = None):
         """Execute a query given static SQL, reading the ResultSet on a per-row basis with a RowCallbackHandler.
         If args is provided, bind the arguments (to avoid SQL injection attacks)."""
 
-        # This is the case where only two, non-named arguments were provided, the sqlQuery and one other.
+        # This is the case where only two, non-named arguments were provided, the sql_query and one other.
         # If the second argument was 'args', it is invalid since 'rowhandler' is required.
         # It is was 'rowhandler', it shifted into 'args' position, and requires naming.
         if args and not rowhandler:
-            raise ArgumentMustBeNamed(argumentName="rowhandler")
+            raise ArgumentMustBeNamed(arg_name="rowhandler")
 
-        return [rowhandler.processRow(row) for row in self.queryForList(sqlQuery, args)]
+        return [rowhandler.process_row(row) for row in self.query_for_list(sql_query, args)]
     
-    def queryForList(self, sqlQuery, args = None):
+    def query_for_list(self, sql_query, args = None):
         """Execute a query for a result list, given static SQL. If args is provided, bind the arguments 
         (to avoid SQL injection attacks)."""
 
-        if args and type(args) not in self.connectionFactory.acceptableTypes:
-            raise InvalidArgumentType(type(args), self.connectionFactory.acceptableTypes)
+        if args and type(args) not in self.connection_factory.acceptable_types:
+            raise InvalidArgumentType(type(args), self.connection_factory.acceptable_types)
 
-        sqlQuery = self.connectionFactory.convertFromJavaToPythonNotation(sqlQuery)
+        sql_query = self.connection_factory.convert_sql_binding(sql_query)
         
         cursor = self.__db.cursor()
         error = None
@@ -115,46 +108,46 @@ class DatabaseTemplate(object):
         try:
             try:
                 if args:
-                    cursor.execute(sqlQuery, args)
+                    cursor.execute(sql_query, args)
                 else:
-                    cursor.execute(sqlQuery)
+                    cursor.execute(sql_query)
                 results = cursor.fetchall()
             except Exception, e:
-                self.logger.debug("queryForList.execute: Trapped %s while trying to execute '%s'" % (e, sqlQuery))
+                self.logger.debug("query_for_list.execute: Trapped %s while trying to execute '%s'" % (e, sql_query))
                 error = e
         finally:
             try:
                 cursor.close()
             except Exception, e:
-                self.logger.debug("queryForList.close: Trapped %s, and throwing away." % e)
+                self.logger.debug("query_for_list.close: Trapped %s, and throwing away." % e)
 
         if error:
-            self.logger.debug("queryForList: I thought about kicking this up the chain => %s" % error)
+            self.logger.debug("query_for_list: I thought about kicking this up the chain => %s" % error)
 
         # Convert multi-item tuple into list
         return [result for result in results]
 
-    def queryForInt(self, sqlQuery, args = None):
+    def query_for_int(self, sql_query, args = None):
         """Execute a query that results in an int value, given static SQL. If args is provided, bind the arguments 
         (to avoid SQL injection attacks)."""
-        return self.queryForObject(sqlQuery, args, types.IntType)
+        return self.query_for_object(sql_query, args, types.IntType)
     
-    def queryForLong(self, sqlQuery, args = None):
+    def query_for_long(self, sql_query, args = None):
         """Execute a query that results in an int value, given static SQL. If args is provided, bind the arguments 
         (to avoid SQL injection attacks)."""
-        return self.queryForObject(sqlQuery, args, types.LongType)
+        return self.query_for_object(sql_query, args, types.LongType)
     
-    def queryForObject(self, sqlQuery, args = None, requiredType = None):
+    def query_for_object(self, sql_query, args = None, required_type = None):
         """Execute a query that results in an int value, given static SQL. If args is provided, bind the arguments 
         (to avoid SQL injection attacks)."""
 
-        # This is the case where only two, non-named arguments were provided, the sqlQuery and one other.
-        # If the second argument was 'args', it is invalid since 'requiredType' is required.
-        # It is was 'requiredType', it shifted into 'args' position, and requires naming.
-        if args and not requiredType:
-            raise ArgumentMustBeNamed(argumentName="requiredType")
+        # This is the case where only two, non-named arguments were provided, the sql_query and one other.
+        # If the second argument was 'args', it is invalid since 'required_type' is required.
+        # It is was 'required_type', it shifted into 'args' position, and requires naming.
+        if args and not required_type:
+            raise ArgumentMustBeNamed(arg_name="required_type")
 
-        results = self.queryForList(sqlQuery, args)
+        results = self.query_for_list(sql_query, args)
         
         if len(results) != 1:
             raise IncorrectResultSizeDataAccessException("Instead of getting one row, this query returned %s" % len(results))
@@ -165,27 +158,27 @@ class DatabaseTemplate(object):
         equivalentTypes = [
                            [types.UnicodeType, types.StringType]
                            ]
-        if type(results[0][0]) != requiredType:
+        if type(results[0][0]) != required_type:
             foundEquivType = False
             for equivType in equivalentTypes:
-                if type(results[0][0]) in equivType and requiredType in equivType:
+                if type(results[0][0]) in equivType and required_type in equivType:
                     foundEquivType = True
                     break
             if not foundEquivType:
-                raise DataAccessException("Expected %s, but instead got %s"% (requiredType, type(results[0][0])))
+                raise DataAccessException("Expected %s, but instead got %s"% (required_type, type(results[0][0])))
 
         return results[0][0]
 
-    def update(self, sqlStatement, args = None):
+    def update(self, sql_statement, args = None):
         """Issue a single SQL update.  If args is provided, bind the arguments 
         (to avoid SQL injection attacks)."""
-        return self.execute(sqlStatement, args)
+        return self.execute(sql_statement, args)
     
     
 class RowCallbackHandler(object):
     """
     This is an interface to handle one row of data.
     """
-    def processRow(self, row):
+    def process_row(self, row):
         raise NotImplementedError()
 

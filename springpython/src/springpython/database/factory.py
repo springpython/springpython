@@ -18,9 +18,9 @@ import sys
 import types
 
 class ConnectionFactory(object):
-    def __init__(self, acceptableTypes):
+    def __init__(self, acceptable_types):
         self.__db = None
-        self.acceptableTypes = acceptableTypes
+        self.acceptable_types = acceptable_types
 
     """This interface defines an object that is able to make database connections.
     This allows database connections to be defined inside application contexts, and
@@ -34,24 +34,24 @@ class ConnectionFactory(object):
         return self.__db
 
     def commit(self):
-        if self.inTransaction():
+        if self.in_transaction():
             self.getConnection().commit()
 
     def rollback(self):
-        if self.inTransaction():
+        if self.in_transaction():
             self.getConnection().rollback()
 
-    def inTransaction(self):
+    def in_transaction(self):
         raise NotImplementedError()
 
-    def countType(self):
+    def count_type(self):
         raise NotImplementedError()
     
-    def convertFromJavaToPythonNotation(self, sqlQuery):
+    def convert_sql_binding(self, sql_query):
         """This is to help Java users migrate to Python. Java notation defines binding variables
         points with '?', while Python uses '%s', and this method will convert from one format
         to the other."""
-        return re.sub(pattern="\?", repl="%s", string=sqlQuery)
+        return re.sub(pattern="\?", repl="%s", string=sql_query)
 
 class MySQLConnectionFactory(ConnectionFactory):
     def __init__(self, username = None, password = None, hostname = None, db = None):
@@ -66,10 +66,10 @@ class MySQLConnectionFactory(ConnectionFactory):
         import MySQLdb
         return MySQLdb.connect(self.hostname, self.username, self.password, self.db)
 
-    def inTransaction(self):
+    def in_transaction(self):
         return True
 
-    def countType(self):
+    def count_type(self):
         return types.LongType
 
 class PgdbConnectionFactory(ConnectionFactory):
@@ -85,10 +85,10 @@ class PgdbConnectionFactory(ConnectionFactory):
         import pgdb
         return pgdb.connect(user=self.user, password=self.password, database=self.database, host=self.host)
 
-    def inTransaction(self):
+    def in_transaction(self):
         return True
 
-    def countType(self):
+    def count_type(self):
         return types.LongType
 
 class Sqlite3ConnectionFactory(ConnectionFactory):
@@ -101,15 +101,15 @@ class Sqlite3ConnectionFactory(ConnectionFactory):
         import sqlite3
         return sqlite3.connect(self.db)               
 
-    def inTransaction(self):
+    def in_transaction(self):
         return True
 
-    def countType(self):
+    def count_type(self):
         return types.IntType
 
-    def convertFromJavaToPythonNotation(self, sqlQuery):
+    def convert_sql_binding(self, sql_query):
         """sqlite3 uses the ? notation, like Java's JDBC."""
-        return re.sub(pattern="%s", repl="?", string=sqlQuery)
+        return re.sub(pattern="%s", repl="?", string=sql_query)
 
 class cxoraConnectionFactory(ConnectionFactory):
     def __init__(self, username = None, password = None, hostname = None, db = None):
