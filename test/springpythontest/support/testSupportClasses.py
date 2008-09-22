@@ -44,22 +44,22 @@ class Animal(object):
         self.category = category
         
 class SampleRowCallbackHandler(RowCallbackHandler):
-    def processRow(self, row):
+    def process_row(self, row):
         return Person(name = row[0], phone = row[1])
 
 class AnimalRowCallbackHandler(RowCallbackHandler):
-    def processRow(self, row):
+    def process_row(self, row):
         return Animal(name = row[0], category = row[1])
 
 class InvalidCallbackHandler(object):
     pass
 
 class ImproperCallbackHandler(object):
-    def processRow(self):
+    def process_row(self):
         raise Exception("You should not have made it this far.")
 
 class ValidHandler(object):
-    def processRow(self, row):
+    def process_row(self, row):
         return {row[0]:row[1]}
 
 class MovieLister(object):
@@ -194,7 +194,7 @@ class ImpFileProps(object):
         self.oid = oid
 
 class ImpFilePropsRowCallbackHandler(RowCallbackHandler):
-    def processRow(self, row):
+    def process_row(self, row):
         return ImpFileProps(row[0], row[1], row[2], row[3])
 
 class BankException(Exception):
@@ -208,30 +208,30 @@ class Bank(object):
         self.logger = logging.getLogger("springpythontest.testSupportClasses.Bank")
         self.dt = DatabaseTemplate(factory)
 
-    def open(self, accountNum):
-        self.logger.debug("Opening account %s with $0 balance." % accountNum)
-        self.dt.execute("INSERT INTO account (account_num, balance) VALUES (?,?)", (accountNum, 0))
+    def open(self, account_num):
+        self.logger.debug("Opening account %s with $0 balance." % account_num)
+        self.dt.execute("INSERT INTO account (account_num, balance) VALUES (?,?)", (account_num, 0))
 
-    def deposit(self, amount, accountNum):
-        self.logger.debug("Depositing $%s into %s" % (amount, accountNum))
-        rows = self.dt.execute("UPDATE account SET balance = balance + ? WHERE account_num = ?", (amount, accountNum))
+    def deposit(self, amount, account_num):
+        self.logger.debug("Depositing $%s into %s" % (amount, account_num))
+        rows = self.dt.execute("UPDATE account SET balance = balance + ? WHERE account_num = ?", (amount, account_num))
         if rows == 0:
-            raise BankException("Account %s does NOT exist" % accountNum)
+            raise BankException("Account %s does NOT exist" % account_num)
 
-    def withdraw(self, amount, accountNum):
-        self.logger.debug("Withdrawing $%s from %s" % (amount, accountNum))
-        rows = self.dt.execute("UPDATE account SET balance = balance - ? WHERE account_num = ?", (amount, accountNum))
+    def withdraw(self, amount, account_num):
+        self.logger.debug("Withdrawing $%s from %s" % (amount, account_num))
+        rows = self.dt.execute("UPDATE account SET balance = balance - ? WHERE account_num = ?", (amount, account_num))
         if rows == 0:
-            raise BankException("Account %s does NOT exist" % accountNum)
+            raise BankException("Account %s does NOT exist" % account_num)
         return amount
 
-    def balance(self, accountNum):
-        return self.dt.queryForObject("SELECT balance FROM account WHERE account_num = ?", (accountNum,), types.FloatType)
+    def balance(self, account_num):
+        return self.dt.query_for_object("SELECT balance FROM account WHERE account_num = ?", (account_num,), types.FloatType)
 
-    def transfer(self, amount, fromAccountNum, toAccountNum):
-        self.logger.debug("Transferring $%s from %s to %s." % (amount, fromAccountNum, toAccountNum))
-        self.withdraw(amount, fromAccountNum)
-        self.deposit(amount, toAccountNum)
+    def transfer(self, amount, from_account, to_account):
+        self.logger.debug("Transferring $%s from %s to %s." % (amount, from_account, to_account))
+        self.withdraw(amount, from_account)
+        self.deposit(amount, to_account)
 
 class DatabaseTxTestAppContext(DecoratorBasedApplicationContext):
     def __init__(self, factory):
@@ -239,15 +239,15 @@ class DatabaseTxTestAppContext(DecoratorBasedApplicationContext):
         DecoratorBasedApplicationContext.__init__(self)
 
     @component
-    def bankTarget(self):
+    def bank_target(self):
         return Bank(self.factory)
 
     @component
-    def transactionalComponent(self):
-        return AutoTransactionalComponent(self.transactionManager())
+    def tx_component(self):
+        return AutoTransactionalComponent(self.tx_mgr())
 
     @component
-    def transactionManager(self):
+    def tx_mgr(self):
         return ConnectionFactoryTransactionManager(self.factory)
 
     @component
@@ -255,7 +255,7 @@ class DatabaseTxTestAppContext(DecoratorBasedApplicationContext):
         transactionAttributes = []
         transactionAttributes.append((".*transfer", ["PROPAGATION_REQUIRED"]))
         transactionAttributes.append((".*", ["PROPAGATION_REQUIRED","readOnly"]))
-        return TransactionProxyFactoryComponent(self.transactionManager(), self.bankTarget(), transactionAttributes)
+        return TransactionProxyFactoryComponent(self.tx_mgr(), self.bank_target(), transactionAttributes)
 
 
 class DatabaseTxTestAppContextWithNoAutoTransactionalComponent(DecoratorBasedApplicationContext):
@@ -264,11 +264,11 @@ class DatabaseTxTestAppContextWithNoAutoTransactionalComponent(DecoratorBasedApp
         DecoratorBasedApplicationContext.__init__(self)
 
     @component
-    def bankTarget(self):
+    def bank_target(self):
         return Bank(self.factory)
 
     @component
-    def transactionManager(self):
+    def tx_mgr(self):
         return ConnectionFactoryTransactionManager(self.factory)
 
     @component
@@ -283,31 +283,31 @@ class TransactionalBank(object):
         self.logger = logging.getLogger("springpythontest.testSupportClasses.TransactionalBank")
         self.dt = DatabaseTemplate(factory)
 
-    def open(self, accountNum):
-        self.logger.debug("Opening account %s with $0 balance." % accountNum)
-        self.dt.execute("INSERT INTO account (account_num, balance) VALUES (?,?)", (accountNum, 0))
+    def open(self, account_num):
+        self.logger.debug("Opening account %s with $0 balance." % account_num)
+        self.dt.execute("INSERT INTO account (account_num, balance) VALUES (?,?)", (account_num, 0))
 
-    def deposit(self, amount, accountNum):
-        self.logger.debug("Depositing $%s into %s" % (amount, accountNum))
-        rows = self.dt.execute("UPDATE account SET balance = balance + ? WHERE account_num = ?", (amount, accountNum))
+    def deposit(self, amount, account_num):
+        self.logger.debug("Depositing $%s into %s" % (amount, account_num))
+        rows = self.dt.execute("UPDATE account SET balance = balance + ? WHERE account_num = ?", (amount, account_num))
         if rows == 0:
-            raise BankException("Account %s does NOT exist" % accountNum)
+            raise BankException("Account %s does NOT exist" % account_num)
 
-    def withdraw(self, amount, accountNum):
-        self.logger.debug("Withdrawing $%s from %s" % (amount, accountNum))
-        rows = self.dt.execute("UPDATE account SET balance = balance - ? WHERE account_num = ?", (amount, accountNum))
+    def withdraw(self, amount, account_num):
+        self.logger.debug("Withdrawing $%s from %s" % (amount, account_num))
+        rows = self.dt.execute("UPDATE account SET balance = balance - ? WHERE account_num = ?", (amount, account_num))
         if rows == 0:
-            raise BankException("Account %s does NOT exist" % accountNum)
+            raise BankException("Account %s does NOT exist" % account_num)
         return amount
 
-    def balance(self, accountNum):
-        return self.dt.queryForObject("SELECT balance FROM account WHERE account_num = ?", (accountNum,), types.FloatType)
+    def balance(self, account_num):
+        return self.dt.query_for_object("SELECT balance FROM account WHERE account_num = ?", (account_num,), types.FloatType)
 
     @Transactional()
-    def transfer(self, amount, fromAccountNum, toAccountNum):
-        self.logger.debug("Transferring $%s from %s to %s." % (amount, fromAccountNum, toAccountNum))
-        self.withdraw(amount, fromAccountNum)
-        self.deposit(amount, toAccountNum)
+    def transfer(self, amount, from_account, to_account):
+        self.logger.debug("Transferring $%s from %s to %s." % (amount, from_account, to_account))
+        self.withdraw(amount, from_account)
+        self.deposit(amount, to_account)
 
 class DatabaseTxTestDecorativeTransactions(DecoratorBasedApplicationContext):
     def __init__(self, factory):
@@ -315,11 +315,11 @@ class DatabaseTxTestDecorativeTransactions(DecoratorBasedApplicationContext):
         DecoratorBasedApplicationContext.__init__(self)
 
     @component
-    def transactionalComponent(self):
-        return AutoTransactionalComponent(self.transactionManager())
+    def tx_component(self):
+        return AutoTransactionalComponent(self.tx_mgr())
 
     @component
-    def transactionManager(self):
+    def tx_mgr(self):
         return ConnectionFactoryTransactionManager(self.factory)
 
     @component
@@ -335,31 +335,31 @@ class TransactionalBankWithNoTransactionalArguments(object):
         self.logger = logging.getLogger("springpythontest.testSupportClasses.TransactionalBankWithNoTransactionalArguments")
         self.dt = DatabaseTemplate(factory)
 
-    def open(self, accountNum):
-        self.logger.debug("Opening account %s with $0 balance." % accountNum)
-        self.dt.execute("INSERT INTO account (account_num, balance) VALUES (?,?)", (accountNum, 0))
+    def open(self, account_num):
+        self.logger.debug("Opening account %s with $0 balance." % account_num)
+        self.dt.execute("INSERT INTO account (account_num, balance) VALUES (?,?)", (account_num, 0))
 
-    def deposit(self, amount, accountNum):
-        self.logger.debug("Depositing $%s into %s" % (amount, accountNum))
-        rows = self.dt.execute("UPDATE account SET balance = balance + ? WHERE account_num = ?", (amount, accountNum))
+    def deposit(self, amount, account_num):
+        self.logger.debug("Depositing $%s into %s" % (amount, account_num))
+        rows = self.dt.execute("UPDATE account SET balance = balance + ? WHERE account_num = ?", (amount, account_num))
         if rows == 0:
-            raise BankException("Account %s does NOT exist" % accountNum)
+            raise BankException("Account %s does NOT exist" % account_num)
 
-    def withdraw(self, amount, accountNum):
-        self.logger.debug("Withdrawing $%s from %s" % (amount, accountNum))
-        rows = self.dt.execute("UPDATE account SET balance = balance - ? WHERE account_num = ?", (amount, accountNum))
+    def withdraw(self, amount, account_num):
+        self.logger.debug("Withdrawing $%s from %s" % (amount, account_num))
+        rows = self.dt.execute("UPDATE account SET balance = balance - ? WHERE account_num = ?", (amount, account_num))
         if rows == 0:
-            raise BankException("Account %s does NOT exist" % accountNum)
+            raise BankException("Account %s does NOT exist" % account_num)
         return amount
 
-    def balance(self, accountNum):
-        return self.dt.queryForObject("SELECT balance FROM account WHERE account_num = ?", (accountNum,), types.FloatType)
+    def balance(self, account_num):
+        return self.dt.query_for_object("SELECT balance FROM account WHERE account_num = ?", (account_num,), types.FloatType)
 
     @Transactional
-    def transfer(self, amount, fromAccountNum, toAccountNum):
-        self.logger.debug("Transferring $%s from %s to %s." % (amount, fromAccountNum, toAccountNum))
-        self.withdraw(amount, fromAccountNum)
-        self.deposit(amount, toAccountNum)
+    def transfer(self, amount, from_account, to_account):
+        self.logger.debug("Transferring $%s from %s to %s." % (amount, from_account, to_account))
+        self.withdraw(amount, from_account)
+        self.deposit(amount, to_account)
 
 class DatabaseTxTestDecorativeTransactionsWithNoArguments(DecoratorBasedApplicationContext):
     def __init__(self, factory):
@@ -367,11 +367,11 @@ class DatabaseTxTestDecorativeTransactionsWithNoArguments(DecoratorBasedApplicat
         DecoratorBasedApplicationContext.__init__(self)
 
     @component
-    def transactionalComponent(self):
-        return AutoTransactionalComponent(self.transactionManager())
+    def tx_component(self):
+        return AutoTransactionalComponent(self.tx_mgr())
 
     @component
-    def transactionManager(self):
+    def tx_mgr(self):
         return ConnectionFactoryTransactionManager(self.factory)
 
     @component
@@ -388,35 +388,35 @@ class TransactionalBankWithLotsOfTransactionalArguments(object):
         self.dt = DatabaseTemplate(factory)
 
     @Transactional(["PROPAGATION_REQUIRED"])
-    def open(self, accountNum):
-        self.logger.debug("Opening account %s with $0 balance." % accountNum)
-        self.dt.execute("INSERT INTO account (account_num, balance) VALUES (?,?)", (accountNum, 0))
+    def open(self, account_num):
+        self.logger.debug("Opening account %s with $0 balance." % account_num)
+        self.dt.execute("INSERT INTO account (account_num, balance) VALUES (?,?)", (account_num, 0))
 
     @Transactional(["PROPAGATION_REQUIRED"])
-    def deposit(self, amount, accountNum):
-        self.logger.debug("Depositing $%s into %s" % (amount, accountNum))
-        rows = self.dt.execute("UPDATE account SET balance = balance + ? WHERE account_num = ?", (amount, accountNum))
+    def deposit(self, amount, account_num):
+        self.logger.debug("Depositing $%s into %s" % (amount, account_num))
+        rows = self.dt.execute("UPDATE account SET balance = balance + ? WHERE account_num = ?", (amount, account_num))
         if rows == 0:
-            raise BankException("Account %s does NOT exist" % accountNum)
+            raise BankException("Account %s does NOT exist" % account_num)
 
     @Transactional(["PROPAGATION_REQUIRED"])
-    def withdraw(self, amount, accountNum):
-        self.logger.debug("Withdrawing $%s from %s" % (amount, accountNum))
-        rows = self.dt.execute("UPDATE account SET balance = balance - ? WHERE account_num = ?", (amount, accountNum))
+    def withdraw(self, amount, account_num):
+        self.logger.debug("Withdrawing $%s from %s" % (amount, account_num))
+        rows = self.dt.execute("UPDATE account SET balance = balance - ? WHERE account_num = ?", (amount, account_num))
         if rows == 0:
-            raise BankException("Account %s does NOT exist" % accountNum)
+            raise BankException("Account %s does NOT exist" % account_num)
         return amount
 
     @Transactional(["PROPAGATION_SUPPORTS","readOnly"])
-    def balance(self, accountNum):
-        self.logger.debug("Checking balance for %s" % accountNum)
-        return self.dt.queryForObject("SELECT balance FROM account WHERE account_num = ?", (accountNum,), types.FloatType)
+    def balance(self, account_num):
+        self.logger.debug("Checking balance for %s" % account_num)
+        return self.dt.query_for_object("SELECT balance FROM account WHERE account_num = ?", (account_num,), types.FloatType)
 
     @Transactional(["PROPAGATION_REQUIRED"])
-    def transfer(self, amount, fromAccountNum, toAccountNum):
-        self.logger.debug("Transferring $%s from %s to %s." % (amount, fromAccountNum, toAccountNum))
-        self.withdraw(amount, fromAccountNum)
-        self.deposit(amount, toAccountNum)
+    def transfer(self, amount, from_account, to_account):
+        self.logger.debug("Transferring $%s from %s to %s." % (amount, from_account, to_account))
+        self.withdraw(amount, from_account)
+        self.deposit(amount, to_account)
 
     @Transactional(["PROPAGATION_NEVER"])
     def nonTransactionalOperation(self):
@@ -441,12 +441,12 @@ class DatabaseTxTestDecorativeTransactionsWithLotsOfArguments(DecoratorBasedAppl
         DecoratorBasedApplicationContext.__init__(self)
 
     @component
-    def transactionManager(self):
+    def tx_mgr(self):
         return ConnectionFactoryTransactionManager(self.factory)
 
     @component
-    def transactionalComponent(self):
-        return AutoTransactionalComponent(self.transactionManager())
+    def tx_component(self):
+        return AutoTransactionalComponent(self.tx_mgr())
 
     @component
     def bank(self):
