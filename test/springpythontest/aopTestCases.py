@@ -30,12 +30,12 @@ from springpythontest.support.testSupportClasses import WrappingInterceptor
 class AopInterfaceTestCase(unittest.TestCase):
     def testPointcutInterface(self):
         pointcut = Pointcut()
-        self.assertRaises(NotImplementedError, pointcut.getClassFilter)
-        self.assertRaises(NotImplementedError, pointcut.getMethodMatcher)
+        self.assertRaises(NotImplementedError, pointcut.class_filter)
+        self.assertRaises(NotImplementedError, pointcut.method_matcher)
         
     def testMethodMatcherInterface(self):
         methodMatcher = MethodMatcher()
-        self.assertRaises(NotImplementedError, methodMatcher.matchesMethodAndTarget, None, None, None)
+        self.assertRaises(NotImplementedError, methodMatcher.matches_method_and_target, None, None, None)
         
     def testMethodInterceptorInterface(self):
         methodInterceptor = MethodInterceptor()
@@ -49,7 +49,7 @@ class AopProxyTestCase(unittest.TestCase):
     def testCreatingAProxyFactoryAndAddingAnInterceptorProgrammatically(self):
         factory = ProxyFactory()
         factory.target = SampleService()
-        factory.addInterceptor(WrappingInterceptor())
+        factory.interceptors.append(WrappingInterceptor())
         service = factory.getProxy()
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
