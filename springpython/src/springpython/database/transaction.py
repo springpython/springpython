@@ -203,8 +203,8 @@ class TransactionalInterceptor(MethodInterceptor):
 
         # Iterate over the txAttributes, and when a method match is found, apply the properties
         for pattern, txDefProps in self.transactionAttributes:
-            if re.compile(pattern).match(invocation.methodName):
-                self.logger.debug("%s matches pattern %s, tx attributes = %s" % (invocation.methodName, pattern, txDefProps))
+            if re.compile(pattern).match(invocation.method_name):
+                self.logger.debug("%s matches pattern %s, tx attributes = %s" % (invocation.method_name, pattern, txDefProps))
                 txTemplate.setTxAttributes(txDefProps)
                 break
             

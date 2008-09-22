@@ -122,11 +122,11 @@ class AbstractMethodDefinitionSource(ObjectDefinitionSource):
     
     def getAttributes(self, obj):
         try:
-            moduleName = obj.instance.__module__
-            className = obj.instance.__class__.__name__
-            methodName = obj.methodName
-            fullMethodName = "%s.%s.%s" % (moduleName, className, methodName)
-            return self.lookupAttributes(fullMethodName)
+            module_name = obj.instance.__module__
+            class_name = obj.instance.__class__.__name__
+            method_name = obj.method_name
+            full_method_name = "%s.%s.%s" % (module_name, class_name, method_name)
+            return self.lookupAttributes(full_method_name)
         except AttributeError:
             raise TypeError("obj must be a MethodInvocation")
 
