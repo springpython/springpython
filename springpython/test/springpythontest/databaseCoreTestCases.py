@@ -13,10 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
-import warnings
-warnings.warn("Expect three deprecation warnings: mysql, postgresql, and Sqlite have moved to the factory module.",
-    stacklevel=2)
-
 import logging
 import os
 import sys
@@ -29,9 +25,6 @@ from springpython.database import DataAccessException
 from springpython.database import InvalidArgumentType
 from springpython.database.core import DatabaseTemplate
 from springpython.database import factory
-from springpython.database import mysql
-from springpython.database import postgresql
-from springpython.database import Sqlite
 from springpythontest.support import testSupportClasses
 
 logger = logging.getLogger("springpythontest.databaseCoreTestCases")
