@@ -65,7 +65,7 @@ class WrappingInterceptor(MethodInterceptor):
 from springpython.aop import *
 factory = ProxyFactory()
 factory.target = SampleService()
-factory.addInterceptor(WrappingInterceptor())
+factory.interceptors.append(WrappingInterceptor())
 service = factory.getProxy()
 ]]></programlisting>
 
@@ -122,7 +122,7 @@ service = ProxyFactoryComponent(target = SampleService(), interceptors = [Wrappi
 		definition of a <emphasis>join point</emphasis>. Join points are composed of rules
 		referred to as <emphasis>point cuts</emphasis>.</para>
 
-		<para>In this case, we want to only apply our !WrappingInterceptor to methods that start with "do".</para>
+		<para>In this case, we want to only apply our WrappingInterceptor to methods that start with "do".</para>
 		
 <programlisting><![CDATA[
 from springpython.aop import *
