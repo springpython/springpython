@@ -65,7 +65,7 @@ dt = DatabaseTemplate(connectionFactory)
 class TvShowCallbackHandler(RowCallbackHandler):
     """This will handle one row of database. It can be reused for many queries if they
        are returning the same columns."""
-    def processRow(self, row):
+    def process_row(self, row):
         return TvShow(title=row[0], airDate=row[1], episodeNumber=row[2], writer=row[3])
 
 
@@ -145,10 +145,10 @@ results = dt.query("select title, air_date, episode_number, writer from tv_shows
 <programlisting><![CDATA[
  ||execute(sqlStatement, args = None) || execute any statement, return number of rows affected ||
  ||query(sqlQuery, args = None, rowhandler = None) || query, return list converted by rowhandler ||
- ||queryForList(sqlQuery, args = None) || query, return list of DB-API tuples (or a dictionary if you use [http://sqlwrappy.sourceforge.net/ sqlWrappy]) ||
- ||queryForInt(sqlQuery, args = None) || query for a single column of a single row, and return an integer (throws exception otherwise) ||
- ||queryForLong(sqlQuery, args = None) || query for a single column of a single row, and return a long (throws exception otherwise) ||
- ||queryForObject(sqlQuery, args = None, requiredType = None) || query for a single column of a single row, and return the object with possibly no checking ||
+ ||query_for_list(sqlQuery, args = None) || query, return list of DB-API tuples (or a dictionary if you use [http://sqlwrappy.sourceforge.net/ sqlWrappy]) ||
+ ||query_for_int(sqlQuery, args = None) || query for a single column of a single row, and return an integer (throws exception otherwise) ||
+ ||query_for_long(sqlQuery, args = None) || query for a single column of a single row, and return a long (throws exception otherwise) ||
+ ||query_for_object(sqlQuery, args = None, requiredType = None) || query for a single column of a single row, and return the object with possibly no checking ||
  ||update(sqlStatement, args = None) || update the database, return number of rows updated ||
 ]]></programlisting>
 
