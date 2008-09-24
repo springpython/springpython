@@ -6,12 +6,12 @@
 	<component id="remoteService1" class="springpythontest.support.testSupportClasses.RemoteService1"/>
 
 	<component id="serviceExporter1" class="springpython.remoting.pyro.PyroServiceExporter">
-		<property name="serviceName">"RemoteService1"</property>
+		<property name="service_name">"RemoteService1"</property>
 		<property name="service" local="remoteService1"/>
 	</component>
 
 	<component id="clientService1" class="springpython.remoting.pyro.PyroProxyFactory">
-		<property name="serviceUrl">"PYROLOC://localhost:7766/RemoteService1"</property>
+		<property name="service_url">"PYROLOC://localhost:7766/RemoteService1"</property>
 	</component>
 
 	<component id="service1" class="springpython.aop.ProxyFactoryComponent">
@@ -31,12 +31,12 @@
 	</component>
 
 	<component id="serviceExporter2" class="springpython.remoting.pyro.PyroServiceExporter">
-		<property name="serviceName">"RemoteService2"</property>
+		<property name="service_name">"RemoteService2"</property>
 		<property name="service" local="remoteService2"/>
 	</component>
 
 	<component id="clientService2" class="springpython.remoting.pyro.PyroProxyFactory">
-		<property name="serviceUrl">"PYROLOC://localhost:7766/RemoteService2"</property>
+		<property name="service_url">"PYROLOC://localhost:7766/RemoteService2"</property>
 	</component>
 
 	<component id="service2" class="springpython.aop.ProxyFactoryComponent">

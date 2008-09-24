@@ -85,17 +85,17 @@ class PyroRemotingTestCase(unittest.TestCase):
     def testExportingAServiceThroughProgrammatically(self):
         remoteService1 = RemoteService1()
         serviceExporter1 = PyroServiceExporter()
-        serviceExporter1.serviceName = "RemoteService1"
+        serviceExporter1.service_name = "RemoteService1"
         serviceExporter1.service = remoteService1
         clientSideProxy1 = PyroProxyFactory()
-        clientSideProxy1.serviceUrl = "PYROLOC://localhost:7766/RemoteService1"
+        clientSideProxy1.service_url = "PYROLOC://localhost:7766/RemoteService1"
                
         remoteService2 = RemoteService2()
         serviceExporter2 = PyroServiceExporter()
-        serviceExporter2.serviceName = "RemoteService2"
+        serviceExporter2.service_name = "RemoteService2"
         serviceExporter2.service = remoteService2
         clientSideProxy2 = PyroProxyFactory()
-        clientSideProxy2.serviceUrl = "PYROLOC://localhost:7766/RemoteService2"
+        clientSideProxy2.service_url = "PYROLOC://localhost:7766/RemoteService2"
            
         time.sleep(0.01)
         
@@ -132,7 +132,7 @@ class HessianRemotingTestCase(unittest.TestCase):
         self.run_jetty()
 
         clientSideProxy = HessianProxyFactory()
-        clientSideProxy.serviceUrl = "http://localhost:8080/"
+        clientSideProxy.service_url = "http://localhost:8080/"
 
         results = clientSideProxy.transform("Greg Turnquist a,b,c,x,y,z")
 
