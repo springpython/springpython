@@ -315,6 +315,10 @@ class PetClinicClientOnly(DecoratorBasedApplicationContext):
         return petClientView
 
     @component
+    def root(self):
+        return view.PetClinicView(self.controller())    
+
+    @component
     def userDetailsService(self):
         userDetailsService = PyroProxyFactory()
         userDetailsService.serviceUrl = "PYROLOC://localhost:7766/UserDetails"
