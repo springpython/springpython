@@ -42,25 +42,27 @@ class UserDetailsService(object):
 
     The interface requires only one read-only method, which simplifies support of new data access strategies.
     """
-    
-    def loadUserByUsername(self, username):
+
+    def load_user(self, username):
         raise NotImplementedError()
 
-
 class InMemoryUserDetailsService(UserDetailsService):
-    def __init__(self, userMap = None):
+    def __init__(self, user_dict = None):
         super(InMemoryUserDetailsService, self).__init__()
-        self.userMap = userMap
+        if user_dict is None:
+            self.user_dict = {}
+        else:
+            self.user_dict = user_dict
         self.logger = logging.getLogger("springpython.security.userdetails.InMemoryUserDetailsService")
         
-    def loadUserByUsername(self, username):
-        if username in self.userMap and len(self.userMap[username][1]) > 0:
-            self.logger.debug("Found %s in %s" % (username, self.userMap))
-            return User(username, self.userMap[username][0], self.userMap[username][2], True, True, True, self.userMap[username][1])
+    def load_user(self, username):
+        if username in self.user_dict and len(self.user_dict[username][1]) > 0:
+            self.logger.debug("Found %s in %s" % (username, self.user_dict))
+            return User(username, self.user_dict[username][0], self.user_dict[username][2], True, True, True, self.user_dict[username][1])
         
         error = None
-        if username not in self.userMap:
-            error = UsernameNotFoundException("User not found in %s" % self.userMap)
+        if username not in self.user_dict:
+            error = UsernameNotFoundException("User not found in %s" % self.user_dict)
         else:
             error = UsernameNotFoundException("User has no GrantedAuthority")
         self.logger.debug(error)

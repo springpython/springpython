@@ -25,53 +25,53 @@ from springpython.security.providers import UsernamePasswordAuthenticationToken
 from springpython.security.providers.encoding import PlaintextPasswordEncoder
 
 class UserCache(object):
-    def getUserFromCache(self, username):
+    def get_user(self, username):
         raise NotImplementedError()
 
-    def putUserInCache(self, user):
+    def put_user(self, user):
         raise NotImplementedError()
 
-    def removeUserFromCache(self, username):
+    def remove_user(self, username):
         raise NotImplementedError()
     
 class NullUserCache(UserCache):
-    def getUserFromCache(self, username):
+    def get_user(self, username):
         return None
 
-    def putUserInCache(self, user):
+    def put_user(self, user):
         pass
 
-    def removeUserFromCache(self, username):
+    def remove_user(self, username):
         pass
 
 class AbstractUserDetailsAuthenticationProvider(AuthenticationProvider):
     def __init__(self):
         super(AbstractUserDetailsAuthenticationProvider, self).__init__()
-        self.userCache = NullUserCache()
-        self.hideUserNotFoundExceptions = True
-        self.forcePrincipalAsString = True
+        self.user_cache = NullUserCache()
+        self.hide_user_not_found_exceptions = True
+        self.force_principal_as_str = True
         self.logger = logging.getLogger("springpython.security.providers.AbstractUserDetailsAuthenticationProvider")
 
     def authenticate(self, authentication):
         # Determine username
         username = authentication.username
 
-        cacheWasUsed = True
-        user = self.userCache.getUserFromCache(username)
+        cache_was_used = True
+        user = self.user_cache.get_user(username)
 
         if user is None:
-            cacheWasUsed = False
+            cache_was_used = False
 
             try:
-                user = self.retrieveUser(username, authentication)
+                user = self.retrieve_user(username, authentication)
             except UsernameNotFoundException, notFound:
-                if self.hideUserNotFoundExceptions:
+                if self.hide_user_not_found_exceptions:
                     raise BadCredentialsException("UsernameNotFound: Bad credentials")
                 else:
                     raise notFound
 
             if user is None:
-                raise Exception("retrieveUser returned null - a violation of the interface contract")
+                raise Exception("retrieve_user returned null - a violation of the interface contract")
 
         if not user.accountNonLocked:
             raise LockedException("User account is locked")
@@ -85,36 +85,36 @@ class AbstractUserDetailsAuthenticationProvider(AuthenticationProvider):
         # This check must come here, as we don't want to tell users
         # about account status unless they presented the correct credentials
         try:
-            self.additionalAuthenticationChecks(user, authentication)
+            self.additional_auth_checks(user, authentication)
         except AuthenticationException, exception:
-            if cacheWasUsed:
+            if cache_was_used:
                 # There was a problem, so try again after checking we're using latest data (ie not from the cache)
-                cacheWasUsed = False
-                user = self.retrieveUser(username, authentication)
-                self.additionalAuthenticationChecks(user, authentication)
+                cache_was_used = False
+                user = self.retrieve_user(username, authentication)
+                self.additional_auth_checks(user, authentication)
             else:
                 raise exception
 
         if not user.credentialsNonExpired:
             raise CredentialsExpiredException("User credentials have expired")
 
-        if not cacheWasUsed:
-            self.userCache.putUserInCache(user)
+        if not cache_was_used:
+            self.user_cache.put_user(user)
 
-        principalToReturn = user
+        principal_to_return = user
         
-        if self.forcePrincipalAsString:
-            principalToReturn = user.username
+        if self.force_principal_as_str:
+            principal_to_return = user.username
 
-        return self.createSuccessAuthentication(principalToReturn, authentication, user)
+        return self.create_success_auth(principal_to_return, authentication, user)
 
-    def additionalAuthenticationChecks(self, userDetails, authentication):
+    def additional_auth_checks(self, user_details, authentication):
         raise NotImplementedError()
     
-    def retrieveUser(self, username, authentication):
+    def retrieve_user(self, username, authentication):
         raise NotImplementedError()
     
-    def createSuccessAuthentication(self, principal, authentication, user):
+    def create_success_auth(self, principal, authentication, user):
         # Ensure we return the original credentials the user supplied,
         # so subsequent attempts are successful even with encoded passwords.
         # Also ensure we return the original getDetails(), so that future
@@ -124,40 +124,40 @@ class AbstractUserDetailsAuthenticationProvider(AuthenticationProvider):
         return result
 
 class DaoAuthenticationProvider(AbstractUserDetailsAuthenticationProvider):
-    def __init__(self, userDetailsService = None, passwordEncoder = PlaintextPasswordEncoder()):
+    def __init__(self, user_details_service = None, password_encoder = PlaintextPasswordEncoder()):
         super(DaoAuthenticationProvider, self).__init__()
-        self.passwordEncoder = passwordEncoder
-        self.saltSource = None
-        self.userDetailsService = userDetailsService
-        self.includeDetailsObject = True
+        self.password_encoder = password_encoder
+        self.salt_source = None
+        self.user_details_service = user_details_service
+        self.include_details_obj = True
         self.logger = logging.getLogger("springpython.security.providers.DaoAuthenticationProvider")
         
-    def retrieveUser(self, username, authentication):
-        loadedUser = None
+    def retrieve_user(self, username, authentication):
+        loaded_user = None
 
         try:
-            loadedUser = self.userDetailsService.loadUserByUsername(username)
+            loaded_user = self.user_details_service.load_user(username)
         except DataAccessException, repositoryProblem:
             raise AuthenticationServiceException(repositoryProblem)
 
-        if loadedUser is None:
+        if loaded_user is None:
             raise AuthenticationServiceException("UserDetailsService returned null, which is an interface contract violation")
 
-        return loadedUser
+        return loaded_user
 
-    def additionalAuthenticationChecks(self, userDetails, authentication):
+    def additional_auth_checks(self, user_details, authentication):
         salt = None
 
-        if self.saltSource is not None:
-            salt = self.saltSource.getSalt(userDetails)
+        if self.salt_source is not None:
+            salt = self.salt_source.get_salt(user_details)
             
-        if not self.passwordEncoder.isPasswordValid(userDetails.password, authentication.getCredentials(), salt):
-            raise BadCredentialsException("additionalAuthenticationChecks: Bad credentials")
+        if not self.password_encoder.isPasswordValid(user_details.password, authentication.getCredentials(), salt):
+            raise BadCredentialsException("additional_auth_checks: Bad credentials")
 
 class SaltSource(object):
     """Provides alternative sources of the salt to use for encoding passwords."""
     
-    def getSalt(self, user):
+    def get_salt(self, user):
         """Returns the salt to use for the indicated user."""
         raise NotImplementedError()
     
@@ -169,12 +169,12 @@ class SystemWideSaltSource(SaltSource):
     password will still have the same digested password. Of benefit is the digested passwords will at least be more protected than if stored without any salt.
     """
     
-    def __init__(self, systemWideSalt = ""):
+    def __init__(self, system_wide_salt = ""):
         super(SystemWideSaltSource, self).__init__()
-        self.systemWideSalt = systemWideSalt
+        self.system_wide_salt = system_wide_salt
         
-    def getSalt(self, user):
-        return self.systemWideSalt
+    def get_salt(self, user):
+        return self.system_wide_salt
     
 class ReflectionSaltSource(SaltSource):
     """
@@ -185,13 +185,13 @@ class ReflectionSaltSource(SaltSource):
     Do not use username if it is likely to change.
     """
     
-    def __init__(self, userPropertyToUser = ""):
+    def __init__(self, user_prop_to_use = ""):
         super(ReflectionSaltSource, self).__init__()
-        self.userPropertyToUse = userPropertyToUser
+        self.user_prop_to_use = user_prop_to_use
         
-    def getSalt(self, user):
+    def get_salt(self, user):
         try:
-            reflectionMethod = getattr(user, self.userPropertyToUse)
+            reflectionMethod = getattr(user, self.user_prop_to_use)
             return reflectionMethod()
         except Exception, e:
             raise AuthenticationServiceException(e);

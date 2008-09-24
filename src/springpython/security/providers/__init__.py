@@ -23,7 +23,6 @@ class ProviderNotFoundException(AuthenticationException):
     An exception thrown when a list of providers are polled for a security decision,
     and none of them supports the request.
     """
-    
     pass
 
 class Authentication:
@@ -53,21 +52,21 @@ class UsernamePasswordAuthenticationToken(Authentication):
     A basic concrete version of authentication. Works for most scenarios.
     """
     
-    def __init__(self, username = None, password = None, grantedAuthorities = None):
+    def __init__(self, username = None, password = None, granted_auths = None):
         Authentication.__init__(self)
         self.username = username
         self.password = password
-        if grantedAuthorities is None:
-            self.grantedAuthorities = []
+        if granted_auths is None:
+            self.granted_auths = []
         else:
-            self.grantedAuthorities = grantedAuthorities
+            self.granted_auths = granted_auths
             
     def getCredentials(self):
         return self.password
 
     def __str__(self):
         return "[UsernamePasswordAuthenticationToken] User: [%s] Password: [PROTECTED] GrantedAuthorities: %s Authenticated: %s" % \
-            (self.username, self.grantedAuthorities, self.isAuthenticated())
+            (self.username, self.granted_auths, self.isAuthenticated())
 
 class AuthenticationManager:
     """
@@ -84,8 +83,11 @@ class AuthenticationManager:
     even process an Authentication, the AuthenticationManager will throw a ProviderNotFoundException.
     """
     
-    def __init__(self, authenticationProviderList = []):
-        self.authenticationProviderList = authenticationProviderList
+    def __init__(self, auth_providers = None):
+        if auth_providers is None:
+            self.auth_providers = []
+        else:
+            self.auth_providers = auth_providers
         self.logger = logging.getLogger("springpython.security.providers.AuthenticationManager")
 
     def authenticate(self, authentication):
@@ -94,9 +96,9 @@ class AuthenticationManager:
         populated Authentication object (including granted authorities) if successful.
         """
         authenticationException = ProviderNotFoundException()
-        for authenticationProvider in self.authenticationProviderList:
+        for auth_provider in self.auth_providers:
             try:
-                results = authenticationProvider.authenticate(authentication)
+                results = auth_provider.authenticate(authentication)
                 if results:
                     results.setAuthenticated(True)
                     return results
@@ -127,37 +129,5 @@ class LdapAuthenticationProvider(AuthenticationProvider):
     """
     An AuthenticationProvider implementation that provides integration with an LDAP server.
     """
-    
     pass
 
-class InMemoryAuthenticationProvider(AuthenticationProvider):
-    """
-    Retrieves user details from an in-memory list created by the bean context.
-    DEPRECATED since v0.2: Use InMemoryUserDetailsService with a DaoAuthenticationProvider instead. 
-    """
-    
-    def __init__(self, userMap = None):
-        super(InMemoryAuthenticationProvider, self).__init__()
-        if not userMap:
-            self.userMap = {}
-        else:
-            self.userMap = userMap
-
-    def authenticate(self, authentication):
-        if self.supports(authentication):
-            if authentication.username not in self.userMap:
-                raise BadCredentialsException("Account %s does NOT exist" % authentication.username)
-            (password, authentication.grantedAuthorities, enabled) = self.userMap[authentication.username]
-            if not enabled:
-                raise DisabledException("Account %s is disabled" % authentication.username)
-            if password != authentication.password:
-                raise BadCredentialsException("Account %s has invalid password" % authentication.username)
-            return authentication
-            
-    def supports(self, authentication):
-        """
-        This provider can handle UsernamePasswordAuthenticationTokens
-        """
-        return isinstance(authentication, UsernamePasswordAuthenticationToken)
-
-       

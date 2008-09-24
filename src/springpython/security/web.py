@@ -236,8 +236,8 @@ class AuthenticationProcessingFilter(Filter):
     with the HttpSessionContextIntegrationFilter.
     """
     
-    def __init__(self, authenticationManager=None, alwaysReauthenticate=False):
-        self.authenticationManager = authenticationManager
+    def __init__(self, auth_manager=None, alwaysReauthenticate=False):
+        self.auth_manager = auth_manager
         self.alwaysReauthenticate = alwaysReauthenticate
         self.logger = logging.getLogger("springpython.security.web.AuthenticationProcessingFilter")
         
@@ -256,7 +256,7 @@ class AuthenticationProcessingFilter(Filter):
             # Authenticate existing credentials using the authentication manager.
             token = SecurityContextHolder.getContext().authentication
             self.logger.debug("Trying to authenticate %s using the authentication manager" % token)
-            SecurityContextHolder.getContext().authentication = self.authenticationManager.authenticate(token)
+            SecurityContextHolder.getContext().authentication = self.auth_manager.authenticate(token)
             self.logger.debug("%s was successfully authenticated, access GRANTED." % token.username)
         except AuthenticationException, e:
             self.logger.debug("Authentication failure, access DENIED.")
@@ -299,12 +299,12 @@ class RegExpBasedFilterInvocationDefinitionMap(AbstractFilterInvocationDefinitio
     Accordingly, the most specific regular expressions should be registered first, with the most general regular expressions registered last.
     """
     
-    def __init__(self, objectDefinitionSource):
-        self.objectDefinitionSource = objectDefinitionSource
+    def __init__(self, obj_def_source):
+        self.obj_def_source = obj_def_source
 
     def lookupAttributes(self, url):
-        if self.objectDefinitionSource:
-            for rule, attr in self.objectDefinitionSource:
+        if self.obj_def_source:
+            for rule, attr in self.obj_def_source:
                 if re.compile(rule).match(url):
                     return attr 
         return None
@@ -321,25 +321,25 @@ class FilterSecurityInterceptor(Filter, AbstractSecurityInterceptor):
     # Key to the FilterSecurityInterceptor's token data stored in an HttpSession dictionary.
     SPRINGPYTHON_FILTER_SECURITY_INTERCEPTOR_KEY = "SPRINGPYTHON_FILTER_SECURITY_INTERCEPTOR_KEY"
     
-    def __init__(self, authenticationManager = None, accessDecisionManager = None, objectDefinitionSource = None, sessionStrategy=None):
+    def __init__(self, auth_manager = None, access_decision_mgr = None, obj_def_source = None, sessionStrategy=None):
         Filter.__init__(self)
-        AbstractSecurityInterceptor.__init__(self, authenticationManager, accessDecisionManager, objectDefinitionSource)
+        AbstractSecurityInterceptor.__init__(self, auth_manager, access_decision_mgr, obj_def_source)
         self.sessionStrategy = sessionStrategy
-        self.objectDefinitionSource = objectDefinitionSource
+        self.obj_def_source = obj_def_source
 
     def __setattr__(self, name, value):
-        if name == "objectDefinitionSource" and value is not None:
+        if name == "obj_def_source" and value is not None:
             self.__dict__[name] = RegExpBasedFilterInvocationDefinitionMap(value)
         else:
             self.__dict__[name] = value
 
     def obtainObjectDefinitionSource(self):
-        return self.objectDefinitionSource
+        return self.obj_def_source
 
     def __call__(self, environ, start_response):
         httpSession = self.sessionStrategy.getHttpSession(environ)
         fi = FilterInvocation(environ)
-        token = self.beforeInvocation(fi)
+        token = self.before_invocation(fi)
         if httpSession is not None:
             httpSession[self.SPRINGPYTHON_FILTER_SECURITY_INTERCEPTOR_KEY] = token
 
@@ -347,7 +347,7 @@ class FilterSecurityInterceptor(Filter, AbstractSecurityInterceptor):
 
         if httpSession is not None and self.SPRINGPYTHON_FILTER_SECURITY_INTERCEPTOR_KEY in httpSession:
             token = httpSession[self.SPRINGPYTHON_FILTER_SECURITY_INTERCEPTOR_KEY]
-            self.afterInvocation(token, None)
+            self.after_invocation(token, None)
 
         return results
 

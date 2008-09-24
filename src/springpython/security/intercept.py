@@ -25,15 +25,15 @@ logger = logging.getLogger("springpython.security.intercept")
 class ObjectDefinitionSource(object):
     """Implemented by classes that store and can identify the ConfigAttributeDefinition that applies to a given secure object invocation."""
 
-    def getAttributes(obj):
+    def get_attributes(obj):
         """Accesses the ConfigAttributeDefinition that applies to a given secure object."""
         raise NotImplementedError()
 
-    def getConfigAttributeDefinitions():
+    def get_conf_attr_defs():
         """If available, all of the ConfigAttributeDefinitions defined by the implementing class."""
         raise NotImplementedError()
 
-    def supports(clazz):
+    def supports(cls):
         """Indicates whether the ObjectDefinitionSource implementation is able to provide ConfigAttributeDefinitions for
         the indicated secure object type."""
         raise NotImplementedError()
@@ -43,13 +43,13 @@ class InterceptorStatusToken(object):
     A return object received by AbstractSecurityInterceptor subclasses.
 
     This class reflects the status of the security interception, so that the final call to
-    AbstractSecurityInterceptor.afterInvocation(InterceptorStatusToken, Object) can tidy up correctly.
+    AbstractSecurityInterceptor.after_invocation(InterceptorStatusToken, Object) can tidy up correctly.
     """
     
-    def __init__(self, authentication = None, attr = None, secureObject = None):
+    def __init__(self, authentication = None, attr = None, secure_obj = None):
         self.authentication = authentication
         self.attr = attr
-        self.secureObject = secureObject
+        self.secure_obj = secure_obj
 
 class AbstractSecurityInterceptor(object):
     """
@@ -70,7 +70,7 @@ class AbstractSecurityInterceptor(object):
                 An InterceptorStatusToken is returned so that after the subclass has finished proceeding with execution
                 of the object, its finally clause can ensure the AbstractSecurityInterceptor is re-called and tidies up
                 correctly.
-             5. The concrete subclass will re-call the AbstractSecurityInterceptor via the afterInvocation(InterceptorStatusToken, Object) method.
+             5. The concrete subclass will re-call the AbstractSecurityInterceptor via the after_invocation(InterceptorStatusToken, Object) method.
              (6. If the RunAsManager replaced the Authentication object, return the SecurityContextHolder to the object
                 that existed after the call to AuthenticationManager. FUTURE)
              7. If an AfterInvocationManager is defined, invoke the invocation manager and allow it to replace the object
@@ -78,41 +78,41 @@ class AbstractSecurityInterceptor(object):
        (4. For an invocation that is public (there is no ConfigAttributeDefinition for the secure object invocation):
              1. As described above, the concrete subclass will be returned an InterceptorStatusToken which is subsequently
                 re-presented to the AbstractSecurityInterceptor after the secure object has been executed. The
-                AbstractSecurityInterceptor will take no further action when its afterInvocation(InterceptorStatusToken, Object)
+                AbstractSecurityInterceptor will take no further action when its after_invocation(InterceptorStatusToken, Object)
                 is called. FUTURE)
        5. Control again returns to the concrete subclass, along with the Object that should be returned to the caller. The
           subclass will then return that result or exception to the original caller.
     """
     
-    def __init__(self, authenticationManager = None, accessDecisionManager = None, objectDefinitionSource = None):
-        self.authenticationManager = authenticationManager
-        self.accessDecisionManager = accessDecisionManager
-        self.objectDefinitionSource = objectDefinitionSource
+    def __init__(self, auth_manager = None, access_decision_mgr = None, obj_def_source = None):
+        self.auth_manager = auth_manager
+        self.access_decision_mgr = access_decision_mgr
+        self.obj_def_source = obj_def_source
         self.logger = logging.getLogger("springpython.security.intercept.AbstractSecurityInterceptor")
 
-    def obtainObjectDefinitionSource(self):
+    def obtain_obj_def_source(self):
        raise NotImplementedError()
 
-    def beforeInvocation(self, invocation):
-        attr = self.obtainObjectDefinitionSource().getAttributes(invocation)
+    def before_invocation(self, invocation):
+        attr = self.obtain_obj_def_source().get_attributes(invocation)
         if attr:
             self.logger.debug("Secure object: %s; ConfigAttributes: %s" % (invocation, attr))
             if not SecurityContextHolder.getContext().authentication:
                 raise AuthenticationCredentialsNotFoundException("An Authentication object was not found in the security credentials")
             if not SecurityContextHolder.getContext().authentication.isAuthenticated():
-                authenticated = self.authenticationManager.authenticate(SecurityContextHolder.getContext().authentication)
+                authenticated = self.auth_manager.authenticate(SecurityContextHolder.getContext().authentication)
                 self.logger.debug("Successfully Authenticated: " + authenticated)
                 SecurityContextHolder.getContext().authentication = authenticated
             else:
                 authenticated = SecurityContextHolder.getContext().authentication
                 self.logger.debug("Previously Authenticated: %s" % authenticated)
-            self.accessDecisionManager.decide(authenticated, invocation, attr)
+            self.access_decision_mgr.decide(authenticated, invocation, attr)
             self.logger.debug("Authorization successful")
             return InterceptorStatusToken(authenticated, attr, invocation)
         else:
             return None
     
-    def afterInvocation(self, token, results):
+    def after_invocation(self, token, results):
         """As a minimum, this needs to pass the results right on through. Subclasses can extend this behavior
         to utilize the token information."""
         return results
@@ -120,7 +120,7 @@ class AbstractSecurityInterceptor(object):
 class AbstractMethodDefinitionSource(ObjectDefinitionSource):
     """Abstract implementation of ObjectDefinitionSource."""
     
-    def getAttributes(self, obj):
+    def get_attributes(self, obj):
         try:
             module_name = obj.instance.__module__
             class_name = obj.instance.__class__.__name__
@@ -135,7 +135,7 @@ class AbstractMethodDefinitionSource(ObjectDefinitionSource):
 
 class MethodDefinitionMap(AbstractMethodDefinitionSource):
     """
-    Stores an objectDefinitionSource for each method signature defined in a component.
+    Stores an obj_def_source for each method signature defined in a component.
     
     Regular expressions are used to match a method request in a ConfigAttributeDefinition. The order of registering
     the regular expressions is very important. The system will identify the first matching regular expression for a given
@@ -144,12 +144,12 @@ class MethodDefinitionMap(AbstractMethodDefinitionSource):
     Accordingly, the most specific regular expressions should be registered first, with the most general regular expressions registered last.    
     """
     
-    def __init__(self, objectDefinitionSource):
-        self.objectDefinitionSource = objectDefinitionSource
+    def __init__(self, obj_def_source):
+        self.obj_def_source = obj_def_source
 
     def lookupAttributes(self, method):
-        if self.objectDefinitionSource:
-            for rule, attr in self.objectDefinitionSource:
+        if self.obj_def_source:
+            for rule, attr in self.obj_def_source:
                 if re.compile(rule).match(method):
                     return attr 
         return None
@@ -166,23 +166,23 @@ class MethodSecurityInterceptor(MethodInterceptor, AbstractSecurityInterceptor):
     def __init__(self):
         MethodInterceptor.__init__(self)
         AbstractSecurityInterceptor.__init__(self)
-        self.validateConfigAttributes = False
-        self.objectDefinitionSource = None
+        self.validate_config_attributes = False
+        self.obj_def_source = None
 
     def __setattr__(self, name, value):
-        if name == "objectDefinitionSource" and value is not None:
+        if name == "obj_def_source" and value is not None:
             self.__dict__[name] = MethodDefinitionMap(value)
         else:
             self.__dict__[name] = value
 
-    def obtainObjectDefinitionSource(self):
-        return self.objectDefinitionSource
+    def obtain_obj_def_source(self):
+        return self.obj_def_source
 
     def invoke(self, invocation):
-        token = self.beforeInvocation(invocation)
+        token = self.before_invocation(invocation)
         results = None
         try:
             results = invocation.proceed()
         finally:
-            results = self.afterInvocation(token, results)
+            results = self.after_invocation(token, results)
         return results

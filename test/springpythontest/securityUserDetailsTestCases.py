@@ -19,8 +19,8 @@ from springpython.security.userdetails import UserDetailsService
 
 class UserDetailsInterfacesTestCase(unittest.TestCase):
     def testUserDetailsServiceInterface(self):
-        userDetailsService = UserDetailsService()
-        self.assertRaises(NotImplementedError, userDetailsService.loadUserByUsername, None)
+        user_details_service = UserDetailsService()
+        self.assertRaises(NotImplementedError, user_details_service.load_user, None)
         
 class UserTestCase(unittest.TestCase):
     def setUp(self):

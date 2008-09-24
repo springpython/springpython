@@ -47,22 +47,22 @@ class DatabaseUserDetailsService(UserDetailsService):
     
     class AuthoritiesByUsernameMapping(RowCallbackHandler):
         """A row handler that processes one granted authority for a given user."""
-        def __init__(self, rolePrefix):
-            self.rolePrefix = rolePrefix
+        def __init__(self, role_prefix):
+            self.role_prefix = role_prefix
             
         def process_row(self, row):
-            return self.rolePrefix + row[1]
+            return self.role_prefix + row[1]
     
     def __init__(self, dataSource = None):
         super(DatabaseUserDetailsService, self).__init__()
         self.usersByUsernameQuery = self.DEF_USERS_BY_USERNAME_QUERY
         self.authoritiesByUsernameQuery = self.DEF_AUTHORITIES_BY_USERNAME_QUERY
         self.dataSource = dataSource
-        self.rolePrefix = ""
+        self.role_prefix = ""
         self.usernameBasedPrimaryKey = True
         self.logger = logging.getLogger("springpython.security.providers.DatabaseUserDetailsService")
         
-    def loadUserByUsername(self, username):
+    def load_user(self, username):
         dt = DatabaseTemplate(self.dataSource)
         
         users = dt.query(self.usersByUsernameQuery, (username,), self.UsersByUsernameMapping())
@@ -71,20 +71,20 @@ class DatabaseUserDetailsService(UserDetailsService):
             raise UsernameNotFoundException("User not found")
 
         user = users[0] # First item in list, first column of tuple, containing no GrantedAuthority[]
-        dbAuths = dt.query(self.authoritiesByUsernameQuery, (user.username,), self.AuthoritiesByUsernameMapping(self.rolePrefix))
-        self.addCustomAuthorities(user.username, dbAuths)
+        dbAuths = dt.query(self.authoritiesByUsernameQuery, (user.username,), self.AuthoritiesByUsernameMapping(self.role_prefix))
+        self.add_custom_authorities(user.username, dbAuths)
 
         if len(dbAuths) == 0:
             raise UsernameNotFoundException("User has no GrantedAuthority")
 
-        arrayAuths = [dbAuth for dbAuth in dbAuths]
-        returnUsername = user.username
+        auths = [dbAuth for dbAuth in dbAuths]
+        return_username = user.username
 
         if not self.usernameBasedPrimaryKey:
-            returnUsername = username
+            return_username = username
             
         self.logger.debug("Just fetched %s from the database" % user)
-        return User(returnUsername, user.password, user.enabled, True, True, True, arrayAuths)
+        return User(return_username, user.password, user.enabled, True, True, True, auths)
     
-    def addCustomAuthorities(self, username, authorities):
+    def add_custom_authorities(self, username, authorities):
         pass

@@ -18,8 +18,9 @@ from springpython.security import AccessDeniedException
 from springpython.security.context import SecurityContext
 from springpython.security.context import SecurityContextHolder
 from springpython.security.providers import AuthenticationManager
-from springpython.security.providers import InMemoryAuthenticationProvider
 from springpython.security.providers import UsernamePasswordAuthenticationToken
+from springpython.security.providers.dao import DaoAuthenticationProvider
+from springpython.security.userdetails import InMemoryUserDetailsService
 from springpython.security.vote import AccessDecisionVoter
 from springpython.security.vote import AccessDecisionManager
 from springpython.security.vote import LabelBasedAclVoter
@@ -37,75 +38,84 @@ class VoteInterfaceTestCase(unittest.TestCase):
         self.assertRaises(NotImplementedError, accessDecisionVoter.vote, None, None, None)
 
     def testAccessDecisionManagerInterface(self):
-        accessDecisionManager = AccessDecisionManager()
-        self.assertRaises(NotImplementedError, accessDecisionManager.supports, None)
-        self.assertRaises(NotImplementedError, accessDecisionManager.decide, None, None, None)
+        access_decision_mgr = AccessDecisionManager()
+        self.assertRaises(NotImplementedError, access_decision_mgr.supports, None)
+        self.assertRaises(NotImplementedError, access_decision_mgr.decide, None, None, None)
         
 class LabelBasedAclVoterTestCase(unittest.TestCase):
     def setupContext(self, username, password):
         applicationContext = XmlApplicationContext("support/labelBasedAclVoterApplicationContext.xml")
         token = UsernamePasswordAuthenticationToken(username, password)
-        authenticationManager = applicationContext.getComponent("authenticationManager")
+        auth_manager = applicationContext.getComponent("auth_manager")
         SecurityContextHolder.setContext(SecurityContext())
-        SecurityContextHolder.getContext().authentication = authenticationManager.authenticate(token)
+        SecurityContextHolder.getContext().authentication = auth_manager.authenticate(token)
         self.sampleService = applicationContext.getComponent("sampleService")
         self.blueblock = SampleBlockOfData("blue")
         self.orangeblock = SampleBlockOfData("orange")
         self.sharedblock = SampleBlockOfData("blue-orange")
 
     def testProgrammaticSetupForUnanimousBased(self):
-        authenticationProvider = InMemoryAuthenticationProvider()
-        authenticationProvider.userMap["blueuser"] = ("password1", ["LABEL_BLUE"], False)
-        authenticationProvider.userMap["superuser"] = ("password2", ["LABEL_SHARED"], False),
-        authenticationProvider.userMap["orangeuser"] = ("password3", ["LABEL_ORANGE"], False),
-        authenticationProvider.userMap["multiuser"] = ("password4", ["LABEL_BLUE", "LABEL_ORANGE"], False)
+        inMemoryUserDetailsService = InMemoryUserDetailsService()
+        inMemoryUserDetailsService.user_dict["blueuser"] = ("password1", ["LABEL_BLUE"], False)
+        inMemoryUserDetailsService.user_dict["superuser"] = ("password2", ["LABEL_SHARED"], False),
+        inMemoryUserDetailsService.user_dict["orangeuser"] = ("password3", ["LABEL_ORANGE"], False),
+        inMemoryUserDetailsService.user_dict["multiuser"] = ("password4", ["LABEL_BLUE", "LABEL_ORANGE"], False)
+        inMemoryDaoAuthenticationProvider = DaoAuthenticationProvider()
+        inMemoryDaoAuthenticationProvider.userDetailsService = inMemoryUserDetailsService
+        authenticationProvider = AuthenticationManager([inMemoryDaoAuthenticationProvider])
 
-        authenticationManager = AuthenticationManager()
-        authenticationManager.authenticationProviderList = [authenticationProvider]
+        auth_manager = AuthenticationManager()
+        auth_manager.authenticationProviderList = [authenticationProvider]
 
         labelBasedAclVoter = LabelBasedAclVoter()
-        labelBasedAclVoter.labelMap["LABEL_BLUE"] = ["blue", "blue-orange"]
-        labelBasedAclVoter.labelMap["LABEL_ORANGE"] = ["orange", "blue-orange"]
-        labelBasedAclVoter.labelMap["LABEL_SHARED"] = ["blue", "orange", "blue-orange"]
-        labelBasedAclVoter.attributeIndicatingLabeledOperation = "LABELED_OPERATION"
-        labelBasedAclVoter.accessDecisionManager = UnanimousBased(accessDecisionVoterList = [labelBasedAclVoter], \
-                                                                  allowIfAllAbstain = False)
+        labelBasedAclVoter.label_dict["LABEL_BLUE"] = ["blue", "blue-orange"]
+        labelBasedAclVoter.label_dict["LABEL_ORANGE"] = ["orange", "blue-orange"]
+        labelBasedAclVoter.label_dict["LABEL_SHARED"] = ["blue", "orange", "blue-orange"]
+        labelBasedAclVoter.attr_indicating_labeled_op = "LABELED_OPERATION"
+        labelBasedAclVoter.access_decision_mgr = UnanimousBased(access_decision_voters = [labelBasedAclVoter], \
+                                                                  allow_if_all_abstain = False)
         
     def testProgrammaticSetupForAffirmativeBased(self):
-        authenticationProvider = InMemoryAuthenticationProvider()
-        authenticationProvider.userMap["blueuser"] = ("password1", ["LABEL_BLUE"], False)
-        authenticationProvider.userMap["superuser"] = ("password2", ["LABEL_SHARED"], False),
-        authenticationProvider.userMap["orangeuser"] = ("password3", ["LABEL_ORANGE"], False),
-        authenticationProvider.userMap["multiuser"] = ("password4", ["LABEL_BLUE", "LABEL_ORANGE"], False)
+        inMemoryUserDetailsService = InMemoryUserDetailsService()
+        inMemoryUserDetailsService.user_dict["blueuser"] = ("password1", ["LABEL_BLUE"], False)
+        inMemoryUserDetailsService.user_dict["superuser"] = ("password2", ["LABEL_SHARED"], False),
+        inMemoryUserDetailsService.user_dict["orangeuser"] = ("password3", ["LABEL_ORANGE"], False),
+        inMemoryUserDetailsService.user_dict["multiuser"] = ("password4", ["LABEL_BLUE", "LABEL_ORANGE"], False)
+        inMemoryDaoAuthenticationProvider = DaoAuthenticationProvider()
+        inMemoryDaoAuthenticationProvider.userDetailsService = inMemoryUserDetailsService
+        authenticationProvider = AuthenticationManager([inMemoryDaoAuthenticationProvider])
 
-        authenticationManager = AuthenticationManager()
-        authenticationManager.authenticationProviderList = [authenticationProvider]
+        auth_manager = AuthenticationManager()
+        auth_manager.authenticationProviderList = [authenticationProvider]
 
         labelBasedAclVoter = LabelBasedAclVoter()
-        labelBasedAclVoter.labelMap["LABEL_BLUE"] = ["blue", "blue-orange"]
-        labelBasedAclVoter.labelMap["LABEL_ORANGE"] = ["orange", "blue-orange"]
-        labelBasedAclVoter.labelMap["LABEL_SHARED"] = ["blue", "orange", "blue-orange"]
-        labelBasedAclVoter.attributeIndicatingLabeledOperation = "LABELED_OPERATION"
-        labelBasedAclVoter.accessDecisionManager = AffirmativeBased(accessDecisionVoterList = [labelBasedAclVoter], \
-                                                                    allowIfAllAbstain = False)
+        labelBasedAclVoter.label_dict["LABEL_BLUE"] = ["blue", "blue-orange"]
+        labelBasedAclVoter.label_dict["LABEL_ORANGE"] = ["orange", "blue-orange"]
+        labelBasedAclVoter.label_dict["LABEL_SHARED"] = ["blue", "orange", "blue-orange"]
+        labelBasedAclVoter.attr_indicating_labeled_op = "LABELED_OPERATION"
+        labelBasedAclVoter.access_decision_mgr = AffirmativeBased(access_decision_voters = [labelBasedAclVoter], \
+                                                                    allow_if_all_abstain = False)
         
     def testProgrammaticSetupForConsensusBased(self):
-        authenticationProvider = InMemoryAuthenticationProvider()
-        authenticationProvider.userMap["blueuser"] = ("password1", ["LABEL_BLUE"], False)
-        authenticationProvider.userMap["superuser"] = ("password2", ["LABEL_SHARED"], False),
-        authenticationProvider.userMap["orangeuser"] = ("password3", ["LABEL_ORANGE"], False),
-        authenticationProvider.userMap["multiuser"] = ("password4", ["LABEL_BLUE", "LABEL_ORANGE"], False)
+        inMemoryUserDetailsService = InMemoryUserDetailsService()
+        inMemoryUserDetailsService.user_dict["blueuser"] = ("password1", ["LABEL_BLUE"], False)
+        inMemoryUserDetailsService.user_dict["superuser"] = ("password2", ["LABEL_SHARED"], False),
+        inMemoryUserDetailsService.user_dict["orangeuser"] = ("password3", ["LABEL_ORANGE"], False),
+        inMemoryUserDetailsService.user_dict["multiuser"] = ("password4", ["LABEL_BLUE", "LABEL_ORANGE"], False)
+        inMemoryDaoAuthenticationProvider = DaoAuthenticationProvider()
+        inMemoryDaoAuthenticationProvider.userDetailsService = inMemoryUserDetailsService
+        authenticationProvider = AuthenticationManager([inMemoryDaoAuthenticationProvider])
 
-        authenticationManager = AuthenticationManager()
-        authenticationManager.authenticationProviderList = [authenticationProvider]
+        auth_manager = AuthenticationManager()
+        auth_manager.authenticationProviderList = [authenticationProvider]
 
         labelBasedAclVoter = LabelBasedAclVoter()
-        labelBasedAclVoter.labelMap["LABEL_BLUE"] = ["blue", "blue-orange"]
-        labelBasedAclVoter.labelMap["LABEL_ORANGE"] = ["orange", "blue-orange"]
-        labelBasedAclVoter.labelMap["LABEL_SHARED"] = ["blue", "orange", "blue-orange"]
-        labelBasedAclVoter.attributeIndicatingLabeledOperation = "LABELED_OPERATION"
-        labelBasedAclVoter.accessDecisionManager = ConsensusBased(accessDecisionVoterList = [labelBasedAclVoter], \
-                                                                  allowIfAllAbstain = False)
+        labelBasedAclVoter.label_dict["LABEL_BLUE"] = ["blue", "blue-orange"]
+        labelBasedAclVoter.label_dict["LABEL_ORANGE"] = ["orange", "blue-orange"]
+        labelBasedAclVoter.label_dict["LABEL_SHARED"] = ["blue", "orange", "blue-orange"]
+        labelBasedAclVoter.attr_indicating_labeled_op = "LABELED_OPERATION"
+        labelBasedAclVoter.access_decision_mgr = ConsensusBased(access_decision_voters = [labelBasedAclVoter], \
+                                                                  allow_if_all_abstain = False)
         
     def testDoingSomethingForBlueUser(self):
         self.setupContext("blueuser", "password1")
@@ -147,9 +157,9 @@ class SecurityInterceptorTestCase(unittest.TestCase):
     def setupContext(self, username, password):
         applicationContext = XmlApplicationContext("support/roleVoterApplicationContext.xml")
         token = UsernamePasswordAuthenticationToken(username, password)
-        authenticationManager = applicationContext.getComponent("authenticationManager")
+        auth_manager = applicationContext.getComponent("auth_manager")
         SecurityContextHolder.setContext(SecurityContext())
-        SecurityContextHolder.getContext().authentication = authenticationManager.authenticate(token)
+        SecurityContextHolder.getContext().authentication = auth_manager.authenticate(token)
         self.sampleService = applicationContext.getComponent("sampleService")
         self.block1 = SampleBlockOfData("block1")
         self.block2 = SampleBlockOfData("block2")
@@ -162,9 +172,9 @@ class RoleVoterTestCase(unittest.TestCase):
     def setupContext(self, username, password):
         applicationContext = XmlApplicationContext("support/roleVoterApplicationContext.xml")
         token = UsernamePasswordAuthenticationToken(username, password)
-        authenticationManager = applicationContext.getComponent("authenticationManager")
+        auth_manager = applicationContext.getComponent("auth_manager")
         SecurityContextHolder.setContext(SecurityContext())
-        SecurityContextHolder.getContext().authentication = authenticationManager.authenticate(token)
+        SecurityContextHolder.getContext().authentication = auth_manager.authenticate(token)
         self.sampleService = applicationContext.getComponent("sampleService")
         self.block1 = SampleBlockOfData("block1")
         self.block2 = SampleBlockOfData("block2")
@@ -185,9 +195,9 @@ class AffirmativeBasedTestCase(unittest.TestCase):
     def setupContext(self, username, password):
         applicationContext = XmlApplicationContext("support/affirmativeBasedApplicationContext.xml")
         token = UsernamePasswordAuthenticationToken(username, password)
-        authenticationManager = applicationContext.getComponent("authenticationManager")
+        auth_manager = applicationContext.getComponent("auth_manager")
         SecurityContextHolder.setContext(SecurityContext())
-        SecurityContextHolder.getContext().authentication = authenticationManager.authenticate(token)
+        SecurityContextHolder.getContext().authentication = auth_manager.authenticate(token)
         self.sampleService = applicationContext.getComponent("sampleService")
         self.block1 = SampleBlockOfData("block1")
         self.block2 = SampleBlockOfData("block2")
@@ -212,9 +222,9 @@ class ConsensusBasedTestCase(unittest.TestCase):
     def setupContext(self, username, password):
         applicationContext = XmlApplicationContext("support/consensusBasedApplicationContext.xml")
         token = UsernamePasswordAuthenticationToken(username, password)
-        authenticationManager = applicationContext.getComponent("authenticationManager")
+        auth_manager = applicationContext.getComponent("auth_manager")
         SecurityContextHolder.setContext(SecurityContext())
-        SecurityContextHolder.getContext().authentication = authenticationManager.authenticate(token)
+        SecurityContextHolder.getContext().authentication = auth_manager.authenticate(token)
         self.sampleService = applicationContext.getComponent("sampleService")
         self.block1 = SampleBlockOfData("block1")
         self.block2 = SampleBlockOfData("block2")
@@ -255,9 +265,9 @@ class UnanimousBasedTestCase(unittest.TestCase):
     def setupContext(self, username, password):
         applicationContext = XmlApplicationContext("support/unanimousBasedApplicationContext.xml")
         token = UsernamePasswordAuthenticationToken(username, password)
-        authenticationManager = applicationContext.getComponent("authenticationManager")
+        auth_manager = applicationContext.getComponent("auth_manager")
         SecurityContextHolder.setContext(SecurityContext())
-        SecurityContextHolder.getContext().authentication = authenticationManager.authenticate(token)
+        SecurityContextHolder.getContext().authentication = auth_manager.authenticate(token)
         self.sampleService = applicationContext.getComponent("sampleService")
         self.block1 = SampleBlockOfData("block1")
         self.block2 = SampleBlockOfData("block2")
