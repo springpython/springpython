@@ -98,12 +98,12 @@ print service.getData("Hello")
     <component id="remoteService" class="Service"/>
 
     <component id="serviceExporter" class="springpython.remoting.pyro.PyroServiceExporter">
-        <property name="serviceName">"ServiceName"</property>
+        <property name="service_name">"ServiceName"</property>
         <property name="service" local="remoteService"/>
     </component>
 
     <component id="service" class="springpython.remoting.pyro.PyroProxyFactory">
-        <property name="serviceUrl">"PYROLOC://localhost:7766/ServiceName"</property>
+        <property name="service_url">"PYROLOC://localhost:7766/ServiceName"</property>
     </component>
 
 </components>
@@ -149,12 +149,12 @@ remoteService = Service()
 
 # Export it via Pyro using Spring Python's utility classes
 serviceExporter = PyroServiceExporter()
-serviceExporter.serviceName = "ServiceName"
+serviceExporter.service_name = "ServiceName"
 serviceExporter.service = remoteService 
 
 # Get a handle on a client-side proxy that will remotely call the service.
 service = PyroProxyFactory()
-service.serviceUrl = "PYROLOC://localhost:7766/ServiceName"
+service.service_url = "PYROLOC://localhost:7766/ServiceName"
 
 # Call the service just you did in the original, simplified version.
 print service.getData("Hello")
@@ -162,7 +162,7 @@ print service.getData("Hello")
 
 				<para>That is effectively the same steps that the IoC container executes. And it is just as easy to split this
 				up between two machines. Chop the script and run the PyroServiceExporter on one machine, and run the PyroProxyFactory
-				on the other. Then all you have to do is edit the <emphasis>serviceUrl</emphasis>.</para>
+				on the other. Then all you have to do is edit the <emphasis>service_url</emphasis>.</para>
 				
 			</section>
 			
@@ -183,7 +183,7 @@ print service.getData("Hello")
 <programlisting><![CDATA[
 pool = []
 for i in range(10):
-    serviceExporter = PyroServiceExporter(serviceName = "ServiceName%s" % i, service = Service())
+    serviceExporter = PyroServiceExporter(service_name = "ServiceName%s" % i, service = Service())
     pool.append(serviceExporter)
 ]]></programlisting>
 
@@ -198,7 +198,7 @@ for i in range(10):
 <programlisting><![CDATA[
 services = []
 for i in range(10):
-    services.append(PyroProxyFactory(serviceUrl = "PYROLOC://localhost:7766/ServiceName%s" % i))
+    services.append(PyroProxyFactory(service_url = "PYROLOC://localhost:7766/ServiceName%s" % i))
 ]]></programlisting>
 
 		<para>Now you have an array of possible services to reach, easily spread between different machines. With a little

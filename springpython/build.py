@@ -96,7 +96,6 @@ def clean(dir):
     # TODO: Make this OS-independent
     os.system("find . -name '*.pyc' -exec rm -f {} \;")
     os.system("find . -name '*.class' -exec rm -f {} \;")
-    os.system("find . -name '*~' -exec rm -f {} \;")
 
 def test(dir):
     os.makedirs(dir)

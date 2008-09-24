@@ -2,7 +2,7 @@
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 	<component id="personService" class="springpython.remoting.hessian.HessianProxyFactory">
-		<property name="serviceUrl">"http://localhost:8080/"</property>
+		<property name="service_url">"http://localhost:8080/"</property>
 	</component>
 
 </components>
