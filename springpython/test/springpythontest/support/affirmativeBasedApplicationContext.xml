@@ -1,42 +1,46 @@
 <components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
             
-	<component id="authenticationProvider" class="springpython.security.providers.InMemoryAuthenticationProvider">
-		<property name="userMap">
+    <component id="user_details_service" class="springpython.security.userdetails.InMemoryUserDetailsService">
+	    <property name="user_dict">
 			{
 				"basicblueuser"  : ("password1", ["ROLE_BASIC", "ASSIGNED_BLUE"], True),
 				"basicorangeuser": ("password2", ["ROLE_BASIC", "ASSIGNED_ORANGE"], True),
 				"otherblueuser"  : ("password3", ["ROLE_OTHER", "ASSIGNED_BLUE"], True),
 				"otherorangeuser": ("password4", ["ROLE_OTHER", "ASSIGNED_ORANGE"], True)
 			}
-		</property>
-	</component>
-		
-	<component id="authenticationManager" class="springpython.security.providers.AuthenticationManager">
-	  <property name="authenticationProviderList">
-	    <list local="authenticationProvider"/>
+        </property>
+    </component>
+
+    <component id="auth_provider" class="springpython.security.providers.dao.DaoAuthenticationProvider">
+	    <property name="user_details_service" local="user_details_service"/>
+    </component>
+
+	<component id="auth_manager" class="springpython.security.providers.AuthenticationManager">
+	  <property name="auth_providers">
+	    <list local="auth_provider"/>
 	  </property>
 	</component>
 	
 	<component id="roleVoter" class="springpython.security.vote.RoleVoter"/>
 
 	<component id="assignedVoter" class="springpython.security.vote.RoleVoter">
-		<property name="rolePrefix">"ASSIGNED"</property>
+		<property name="role_prefix">"ASSIGNED"</property>
 	</component>
 
-	<component id="accessDecisionManager" class="springpython.security.vote.AffirmativeBased">
-		<property name="allowIfAllAbstainDecisions">False</property>
-		<property name="accessDecisionVoterList">
+	<component id="access_decision_mgr" class="springpython.security.vote.AffirmativeBased">
+		<property name="allow_if_all_abstain">False</property>
+		<property name="access_decision_voters">
 			<list local="roleVoter"/>
 			<list local="assignedVoter"/>
 		</property>
 	</component>
 	
 	<component id="securityInteceptor" class="springpython.security.intercept.MethodSecurityInterceptor">
-	  <property name="validateConfigAttributes">False</property>
-	  <property name="authenticationManager" local="authenticationManager"/>
-	  <property name="accessDecisionManager" local="accessDecisionManager"/>
-	  <property name="objectDefinitionSource">
+	  <property name="validate_config_attributes">False</property>
+	  <property name="auth_manager" local="auth_manager"/>
+	  <property name="access_decision_mgr" local="access_decision_mgr"/>
+	  <property name="obj_def_source">
 	    	[
 				("springpythontest.support.testSecurityClasses.SampleService.do.*", ["ROLE_BASIC", "ASSIGNED_BLUE"])
 	      	]
