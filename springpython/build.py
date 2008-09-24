@@ -53,6 +53,7 @@ def usage():
     print "\t--help\t\t\tprint this help message"
     print "\t--clean\t\t\tclean out this build by deleting the %s directory" % p["targetDir"]
     print "\t--test\t\t\trun the test suite, leaving all artifacts in %s" % p["testDir"]
+    print "\t--coverage\t\trun the test suite with coverage analysis, leaving all artifacts in %s" % p["testDir"]
     print "\t--package\t\tpackage everything up into a tarball for release to sourceforge in %s" % p["packageDir"]
     print "\t--build-stamp [tag]\tfor --package, this specifies a special tag, generating version tag '%s-<tag>'" % p["version"]
     print "\t\t\t\tIf this option isn't used, default will be tag will be '%s-<current time>'" % p["version"]
@@ -68,7 +69,7 @@ def usage():
 try:
     optlist, args = getopt.getopt(sys.argv[1:],
                                   "hct",
-                                  ["help", "clean", "test", "package", "build-stamp=", \
+                                  ["help", "clean", "test", "coverage", "package", "build-stamp=", \
                                    "publish", "register", \
                                    "site", "docs-html-multi", "docs-html-single", "docs-pdf", "docs-all"])
 except getopt.GetoptError:
@@ -92,14 +93,18 @@ def clean(dir):
     print "Removing '%s' directory" % dir
     if os.path.exists(dir):
         shutil.rmtree(dir)
+    # TODO: Make this OS-independent
+    os.system("find . -name '*.pyc' -exec rm -f {} \;")
+    os.system("find . -name '*.class' -exec rm -f {} \;")
+    os.system("find . -name '*~' -exec rm -f {} \;")
 
 def test(dir):
     os.makedirs(dir)
     os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s" % dir)
     
-    # TODO(9/5/2008 GLT): Capture coverage data that is visible to bamboo. Does coverage have an API to view .coverage file?
-    # With coverage... (copied from former bamboo.sh, not yet tested in this configuration)
-    #os.system("nosetests --with-nosexunit --with-coverage --xml-report-folder=build --cover-package=springpython")
+def test_coverage(dir):
+    os.makedirs(dir)
+    os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s --with-coverage --cover-package=springpython" % dir)
 
 def package(dir, version):
     os.makedirs(dir)
@@ -239,6 +244,9 @@ for option in optlist:
 
     if option[0] in ("--test"):
         test(p["testDir"])
+
+    if option[0] in ("--coverage"):
+        test_coverage(p["testDir"])
 
     if option[0] in ("--package"):
         package(p["packageDir"], completeVersion)

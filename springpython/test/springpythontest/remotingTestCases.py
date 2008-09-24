@@ -118,15 +118,18 @@ class HessianRemotingTestCase(unittest.TestCase):
         unittest.TestCase.__init__(self, tests)
         os.popen("rm -f org/springframework/springpython/*.class")
         os.popen("javac -cp lib/jetty-6.1.11.jar:lib/jetty-util-6.1.11.jar:lib/servlet-api-2.5-6.1.11.jar:lib/hessian-3.1.6.jar org/springframework/springpython/*.java")
-        self.predelay = 5.0
-        self.postdelay = 4.0
+        self.predelay = 10.0
+        self.postdelay = 10.0
 
-    def testExportingAServiceThroughProgrammatically(self):
+    def run_jetty(self):
         os.popen("java  -cp lib/jetty-6.1.11.jar:lib/jetty-util-6.1.11.jar:lib/servlet-api-2.5-6.1.11.jar:lib/hessian-3.1.6.jar:. org.springframework.springpython.HessianJavaServer &")
 
         # This is the minimum time to wait before starting a new test,
         # allowing the jetty web server to start up.
         time.sleep(self.predelay)
+
+    def testExportingAServiceThroughProgrammatically(self):
+        self.run_jetty()
 
         clientSideProxy = HessianProxyFactory()
         clientSideProxy.serviceUrl = "http://localhost:8080/"
@@ -140,11 +143,7 @@ class HessianRemotingTestCase(unittest.TestCase):
         time.sleep(self.postdelay)
  
     def testExportingAServiceThroughIoC(self):
-        os.popen("java  -cp lib/jetty-6.1.11.jar:lib/jetty-util-6.1.11.jar:lib/servlet-api-2.5-6.1.11.jar:lib/hessian-3.1.6.jar:. org.springframework.springpython.HessianJavaServer &")
-
-        # This is the minimum time to wait before starting a new test,
-        # allowing the jetty web server to start up.
-        time.sleep(self.predelay)
+        self.run_jetty()
 
         appContext = XmlApplicationContext("support/remotingHessianTestApplicationContext.xml")
         clientSideProxy = appContext.getComponent("personService")
