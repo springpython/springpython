@@ -22,9 +22,9 @@ Key links:
 
   {{{source-repository.html}Source Repository}} (also listed on left-hand side) will show you how to browse or checkout the code.
   
-  {{{issue-tracking.html}Source Repository}} (also listed on left-hand side) will show you how to browse our issue tracking system.
+  {{{issue-tracking.html}Issue Tracking}} (also listed on left-hand side) will show you how to browse our issue tracking system.
 
-  {{{team-list.html}Meet the team}} of the Spring Python! These are the people that have commit power. Also read about {{{reference/html/overview.html#overview-team}how to join the team}}.
+  {{{team-list.html}Meet the team}} of Spring Python! These are the people that have commit power. Also read about {{{reference/html/overview.html#overview-team}how to join the team}}.
     
   Read the "Documentation" manual (online or downloaded PDF file) for more detailing information on the project, how to contribute to the project, etc.
 
