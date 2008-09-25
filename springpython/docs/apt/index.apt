@@ -16,7 +16,7 @@ What's Coming?
 
   We are working on the {{{reference/html/components.html}core IoC container}}. Right now, what we have works for simple situations, but in order to make it as powerful and extensible as the original Spring Framework's container, we are overhauling things. The goal is to have this completed by release 1.0.
   
-Key links:
+Key Links
 
   {{{http://forum.springframework.org/forumdisplay.php?f=45}Spring Python community forum}}
 
