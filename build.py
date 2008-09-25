@@ -152,6 +152,8 @@ def sub_version(cur):
 
 def site(version):
     docs_all(version)
+    cur = os.path.abspath(".")
+    shutil.copy(cur + "/docs/spring.ico", p["targetDir"]+"/docs/favicon.ico")
     os.system("mvn -Dspringpython.version=%s site" % version)
 
 def docs_all(version):
