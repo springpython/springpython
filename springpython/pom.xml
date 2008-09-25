@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>springpython.webfactional.com</groupId>
   <artifactId>springpython</artifactId>
-  <version>0.6.0</version>
+  <version>0.7.0</version>
   <name>Spring Python</name>
   <url>http://springpython.webfactional.com</url>
   <description>Spring Python is an offshoot of the Java-based Spring Framework and Spring Security Framework, targeted for Python. Spring provides many useful features, and I wanted those same features available when working with Python.</description>
