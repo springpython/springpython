@@ -17,23 +17,10 @@
 import cherrypy
 import logging
 import os
-import re
-from cherrypy._cpwsgi import wsgiApp
-from cherrypy._cpwsgiserver import CherryPyWSGIServer
-from cherrypy._cpserver import Server
+import noxml
 from springpython.context import XmlApplicationContext
-from springpython.security.context import SecurityContext
+from springpython.security.cherrypy31 import AuthenticationFilter, ContextSessionFilter, SecurityFilter
 from springpython.security.context import SecurityContextHolder
-
-class WSGIServerWithMiddleware(object):
-    def __init__(self, middleware):
-        self.middleware = middleware
-    def __call__(self):
-        return CherryPyWSGIServer(("", 8001), self.middleware[0])
-
-class MiddlewareServer(Server):
-    def start(self, middleware):
-        Server.start(self, initOnly=False, serverClass=WSGIServerWithMiddleware(middleware))
 
 if __name__ == '__main__':
     """This allows the script to be run as a tiny webserver, allowing quick testing and development.
@@ -53,52 +40,68 @@ if __name__ == '__main__':
 
     applicationContext = XmlApplicationContext(configLocation = "applicationContext.xml")
 
-    # Everything below is identical between petclinic.py and petclinic-noxml.py
+    SecurityContextHolder.setStrategy(SecurityContextHolder.MODE_GLOBAL)
+    SecurityContextHolder.getContext()
     
-    SecurityContextHolder.setStrategy(SecurityContextHolder.MODE_THREADLOCAL)
-
-    # CherryPy always starts with cherrypy.root when trying to map request URIs
-    # to objects. In this case, it is being assigned an object that was created in the
-    # IoC container, allowing the web server components to be totally decoupled from the
-    # view component.
-    cherrypy.root = applicationContext.getComponent(componentId = "root")
-    cherrypy.root.login = applicationContext.getComponent(componentId = "loginForm")
-
-    cherrypy.server = MiddlewareServer()
-
-    # Configure cherrypy programmatically.
-    cherrypy.config.update({
-                            "global": {
-                                       "server.socket_port": 8001
-                            },
-                            "/": {
-                                  "static_filter.root": os.getcwd()
-                            },
-                            "/images": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "images"
-                            },
-                            "/html": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "html"
-                            },
-                            "/styles": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "css"
-                            },
-                            "/scripts": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "js"
-                            },
-                            "/login/images": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "images"
-                            }
-                        })
-
-    middleware = applicationContext.getComponent(componentId = "filterChainProxy")
-    middleware.application = wsgiApp
+    def filter_chainer(filters):
+        for f in filters:
+            f.run()
     
-    # Start the CherryPy server.
-    cherrypy.server.start(middleware=[middleware])
+    def make_session_filter():
+        contextSessionFilter = ContextSessionFilter()
+        cherrypy.tools.sessionFilter = cherrypy.Tool('before_handler', filter_chainer, priority=74)
+        return contextSessionFilter
+    
+    def make_authentication_filter(manager):
+        authFilter = AuthenticationFilter(authManager=manager)
+        cherrypy.tools.authFilter = cherrypy.Tool('before_handler', filter_chainer, priority=75)
+        return authFilter
 
+    def make_security_filter(manager):
+        securityFilter = SecurityFilter(authManager=manager, redirectPath="/login")
+        cherrypy.tools.securityFilter = cherrypy.Tool('before_handler', filter_chainer, priority=75)
+        return securityFilter
+    
+    manager = applicationContext.getComponent("authenticationManager")
+    accessDecisionManager = applicationContext.getComponent("accessDecisionManager")
+    objectDefinitionSource = [
+                             ("/vets.*", ["VET_ANY"]),
+                             ("/editOwner.*", ["VET_ANY", "OWNER"]),
+                             ("/.*", ["VET_ANY", "CUSTOMER_ANY"])
+                             ]
+    
+    session_filter = make_session_filter()
+    auth_filter = make_authentication_filter(manager)
+    security_filter = make_security_filter(manager)
+
+    conf = {'/': {'tools.sessions.on': True,
+                  'tools.sessionFilter.on': True,
+                  'tools.sessionFilter.filters': [session_filter, security_filter],
+                  "tools.staticdir.root": os.getcwd()},
+            "/images": {"tools.staticdir.on": True,
+                        "tools.staticdir.dir": "images"},
+            "/html": {"tools.staticdir.on": True,
+                      "tools.staticdir.dir": "html"}
+            }
+    login_conf = {
+            '/': {
+                  'tools.sessions.on': True,
+                  'tools.sessionFilter.on': True,
+                  'tools.sessionFilter.filters': [],
+                  "tools.staticdir.root": os.getcwd()
+                  },
+            "/images": {
+                      "tools.staticdir.on": True,
+                      "tools.staticdir.dir": "images"
+                      },
+            "/html": {
+                    "tools.staticdir.on": True,
+                    "tools.staticdir.dir": "html"
+                    }
+    }
+
+    cherrypy.tree.mount(applicationContext.getComponent(componentId = "root"), '/', config=conf)
+    cherrypy.tree.mount(applicationContext.getComponent(componentId = "loginForm"), '/login', config=login_conf)
+
+    cherrypy.engine.start()
+    cherrypy.engine.block()

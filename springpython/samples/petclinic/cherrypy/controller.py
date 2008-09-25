@@ -304,8 +304,8 @@ class PreencodingUserDetailsService(UserDetailsService):
         self.encoder = encoder
         self.logger = logging.getLogger("springpython.petclinic.controller.PreencodingUserDetailsService")
         
-    def loadUserByUsername(self, username):
-        user = self.wrappedUserDetailsService.loadUserByUsername(username)
+    def load_user(self, username):
+        user = self.wrappedUserDetailsService.load_user(username)
         user.password = self.encoder.encodePassword(user.password, None)
         self.logger.debug("Pre-converting %s's password to hashed format of %s, before authentication happens." % (username, user.password))
         return user
