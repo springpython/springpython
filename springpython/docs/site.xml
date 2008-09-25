@@ -7,7 +7,7 @@
   </bannerLeft>
   <bannerRight>
     <name>Spring Python</name>
-    <src>http://trac.springpython.webfactional.com/chrome/common/logo.png</src>
+    <src>reference/html/images/spring_python_white.png</src>
     <href>http://springpython.webfactional.com/</href>
   </bannerRight>
   <body>
