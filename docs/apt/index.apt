@@ -18,14 +18,14 @@ What's Coming?
   
 Key links:
 
-  {{{http://springpython.webfactional.com}This web site}}
-  
   {{{http://forum.springframework.org/forumdisplay.php?f=45}Spring Python community forum}}
 
-  Click on "Source Repository" link on left-hand side for how to browse or checkout the code.
+  {{{source-repository.html}Source Repository}} (also listed on left-hand side) will show you how to browse or checkout the code.
   
-  Click on "Issue Tracking" link on left-hand side for information on our bug tracking system.
-  
+  {{{issue-tracking.html}Source Repository}} (also listed on left-hand side) will show you how to browse our issue tracking system.
+
+  {{{team-list.html}Meet the team}} of the Spring Python! These are the people that have commit power. Also read about {{{reference/html/overview.html#overview-team}how to join the team}}.
+    
   Read the "Documentation" manual (online or downloaded PDF file) for more detailing information on the project, how to contribute to the project, etc.
 
 News
