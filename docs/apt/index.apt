@@ -11,12 +11,30 @@ Introduction
   You can view this site {{{http://springpython.webfactional.com}in the clear}} or {{{https://springpython.webfactional.com}securely through SSL}}.
 
   This used to be a trac site, but since Spring Python became an official Spring Extension, it has been replaced with a maven-generated one. Documentation stored in various trac articles has been migrated to the documentation set found in left-hand side of this page. You can view either HTML or a PDF document. The old trac site has been archived for historical benefit.
+  
+What's Coming?
+
+  We are working on the {{{reference/html/components.html}core IoC container}}. Right now, what we have works for simple situations, but in order to make it as powerful and extensible as the original Spring Framework's container, we are overhauling things. The goal is to have this completed by release 1.0.
+  
+Key links:
+
+  {{{http://springpython.webfactional.com}This web site}}
+  
+  {{{http://forum.springframework.org/forumdisplay.php?f=45}Spring Python community forum}}
+
+  Click on "Source Repository" link on left-hand side for how to browse or checkout the code.
+  
+  Click on "Issue Tracking" link on left-hand side for information on our bug tracking system.
+  
+  Read the "Documentation" manual (online or downloaded PDF file) for more detailing information on the project, how to contribute to the project, etc.
 
 News
 
+  <<NEWS>> - Spring Python 0.7.0 has been released. This release contains several upgrades and improvements, including scrubbing the APIs to better match {{{http://www.python.org/dev/peps/pep-0008/}PEP-0008}}}. - 9/25/2008 G.Turnquist
+
   <<NEWS>> - Spring Python's web page has been updated. It now uses the maven-generate material, with links to the official documents released earlier. The former trac site is still online and available through a link on the site. While the site may appear low on information, all the main articles of documentation are contained in the reference documents themselves.  - 9/19/2008 G.Turnquist
 
-  <<NEWS>> - Spring Python's official documentation has been staged at {{{http://docs.springpython.webfactional.com}}}. - 9/17/2008 G.Turnquist
+  <<NEWS>> - Spring Python's official documentation has been staged at {{{http://docs.springpython.webfactional.com}http://docs.springpython.webfactional.com}}. - 9/17/2008 G.Turnquist
 
   <<NEWS>> - Spring Python was given as a "sneak peek" into Spring Extensions to the London Spring User's Group at the end of a presentation on Spring.NET given by Russ Miles. If you follow that link to the Spring Python forums, there is another link to see the online video clip. - 9/15/2008 G.Turnquist
 
