@@ -447,7 +447,7 @@ class CherryPyAuthenticationForm:
                         <th><small>Enabled?</small></th>
                     </tr>
                 """ % re.compile("<").sub("&lt;", str(hashedUserDetailsService))
-            for key, value in hashedUserDetailsService.wrappedUserDetailsService.userMap.items():
+            for key, value in hashedUserDetailsService.wrappedUserDetailsService.user_dict.items():
                     results += """
                     <tr>
                         <td><small>%s </small></td>
