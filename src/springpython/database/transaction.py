@@ -293,7 +293,7 @@ class AutoTransactionalComponent(object):
         self.tx_manager = tx_manager
         self.logger = logging.getLogger("springpython.database.transaction.AutoTransactionalComponent")
 
-    def postProcessAfterInitialization(self, container):
+    def post_process_after_initialization(self, container):
         """This setup is run after all objects in the container have been created."""
         for component in container.components:
             # Check every method in the component...

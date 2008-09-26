@@ -72,7 +72,7 @@ print service.getData("Hello")
 				
 <programlisting><![CDATA[
 appContext = XmlApplicationContext("applicationContext.xml")
-service = appContext.getComponent("service")
+service = appContext.get_component("service")
 print service.getData("Hello")
 
 "You got remote data => Hello"

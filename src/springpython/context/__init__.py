@@ -31,7 +31,7 @@ class ApplicationContext(object):
     ApplicationContext is a marker interface, used to identify constructs
     that can serve the role as an IoC container.
     """
-    def getComponent(self, componentId):
+    def get_component(self, componentId):
         """Abstract interface method"""
         raise NotImplementedError()
 
@@ -103,17 +103,17 @@ class DecoratorBasedApplicationContext(ApplicationContext):
         for name, method in inspect.getmembers(self, inspect.ismethod):
             if name not in decoratorBasedApplicationContextMethods:
                 self.logger.debug("Eagerly fetching %s" % name)
-                self.components.append(self.getComponent(name))
+                self.components.append(self.get_component(name))
 
-        # Scan for any postProcessAfterInitialization components
+        # Scan for any post_process_after_initialization components
         for name, method in inspect.getmembers(self, inspect.ismethod):
             if name not in decoratorBasedApplicationContextMethods:
                 component = method()
-                if hasattr(component, "postProcessAfterInitialization"):
-                    self.logger.debug("Component " + name + " appears to have postProcessAfterInitialization, so I'm calling it")
-                    getattr(component, "postProcessAfterInitialization")(self)
+                if hasattr(component, "post_process_after_initialization"):
+                    self.logger.debug("Component " + name + " appears to have post_process_after_initialization, so I'm calling it")
+                    getattr(component, "post_process_after_initialization")(self)
         
-    def getComponent(self, componentId):
+    def get_component(self, componentId):
         return getattr(self, componentId)()
 
 decoratorBasedApplicationContextMethods = [name for (name, method) in inspect.getmembers(DecoratorBasedApplicationContext, inspect.ismethod)]
@@ -133,17 +133,17 @@ class XmlApplicationContext(ApplicationContext):
         self.__pyContainer = PyContainer(config = configLocation)
         self.componentIds = self.__pyContainer.descriptions.keys()
         for componentId in self.componentIds:
-            component = self.getComponent(componentId)
+            component = self.get_component(componentId)
             if hasattr(component, "applicationContext"):
                 component.applicationContext = self
 
             # In case this is wrapping a Pyro method, you can't call the method
             # directly, or it might try to forward the request to a remote software.
-            if "postProcessAfterInitialization" in component.__dict__:
-                print "Component " + componentId + " appears to have postProcessAfterInitialization, so I'm calling it"
-                component.__dict__["postProcessAfterInitialization"]()
+            if "post_process_after_initialization" in component.__dict__:
+                print "Component " + componentId + " appears to have post_process_after_initialization, so I'm calling it"
+                component.__dict__["post_process_after_initialization"]()
 
-    def getComponent(self, componentId):
+    def get_component(self, componentId):
         return self.__pyContainer.getInstance(componentId)
 
     def dispose(self):
@@ -155,7 +155,7 @@ class ApplicationContextAware(object):
         self.applicationContext = None
         
 class ComponentPostProcessor(object):
-    def postProcessAfterInitialization(self):
+    def post_process_after_initialization(self):
         raise NotImplementedError()
     
 class ComponentNameAutoProxyCreator(ApplicationContextAware, ComponentPostProcessor):

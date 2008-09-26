@@ -110,8 +110,8 @@
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 	The scope of this component: typically "singleton" (one shared instance,
-	which will be returned by all calls to getComponent with the given id), or
-	"prototype" (independent instance resulting from each call to getComponent).
+	which will be returned by all calls to get_component with the given id), or
+	"prototype" (independent instance resulting from each call to get_component).
 	Default is "singleton".
 
 	Singletons are most commonly used, and are ideal for multi-threaded

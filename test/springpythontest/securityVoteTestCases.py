@@ -46,10 +46,10 @@ class LabelBasedAclVoterTestCase(unittest.TestCase):
     def setupContext(self, username, password):
         applicationContext = XmlApplicationContext("support/labelBasedAclVoterApplicationContext.xml")
         token = UsernamePasswordAuthenticationToken(username, password)
-        auth_manager = applicationContext.getComponent("auth_manager")
+        auth_manager = applicationContext.get_component("auth_manager")
         SecurityContextHolder.setContext(SecurityContext())
         SecurityContextHolder.getContext().authentication = auth_manager.authenticate(token)
-        self.sampleService = applicationContext.getComponent("sampleService")
+        self.sampleService = applicationContext.get_component("sampleService")
         self.blueblock = SampleBlockOfData("blue")
         self.orangeblock = SampleBlockOfData("orange")
         self.sharedblock = SampleBlockOfData("blue-orange")
@@ -157,10 +157,10 @@ class SecurityInterceptorTestCase(unittest.TestCase):
     def setupContext(self, username, password):
         applicationContext = XmlApplicationContext("support/roleVoterApplicationContext.xml")
         token = UsernamePasswordAuthenticationToken(username, password)
-        auth_manager = applicationContext.getComponent("auth_manager")
+        auth_manager = applicationContext.get_component("auth_manager")
         SecurityContextHolder.setContext(SecurityContext())
         SecurityContextHolder.getContext().authentication = auth_manager.authenticate(token)
-        self.sampleService = applicationContext.getComponent("sampleService")
+        self.sampleService = applicationContext.get_component("sampleService")
         self.block1 = SampleBlockOfData("block1")
         self.block2 = SampleBlockOfData("block2")
 
@@ -172,10 +172,10 @@ class RoleVoterTestCase(unittest.TestCase):
     def setupContext(self, username, password):
         applicationContext = XmlApplicationContext("support/roleVoterApplicationContext.xml")
         token = UsernamePasswordAuthenticationToken(username, password)
-        auth_manager = applicationContext.getComponent("auth_manager")
+        auth_manager = applicationContext.get_component("auth_manager")
         SecurityContextHolder.setContext(SecurityContext())
         SecurityContextHolder.getContext().authentication = auth_manager.authenticate(token)
-        self.sampleService = applicationContext.getComponent("sampleService")
+        self.sampleService = applicationContext.get_component("sampleService")
         self.block1 = SampleBlockOfData("block1")
         self.block2 = SampleBlockOfData("block2")
 
@@ -195,10 +195,10 @@ class AffirmativeBasedTestCase(unittest.TestCase):
     def setupContext(self, username, password):
         applicationContext = XmlApplicationContext("support/affirmativeBasedApplicationContext.xml")
         token = UsernamePasswordAuthenticationToken(username, password)
-        auth_manager = applicationContext.getComponent("auth_manager")
+        auth_manager = applicationContext.get_component("auth_manager")
         SecurityContextHolder.setContext(SecurityContext())
         SecurityContextHolder.getContext().authentication = auth_manager.authenticate(token)
-        self.sampleService = applicationContext.getComponent("sampleService")
+        self.sampleService = applicationContext.get_component("sampleService")
         self.block1 = SampleBlockOfData("block1")
         self.block2 = SampleBlockOfData("block2")
 
@@ -222,10 +222,10 @@ class ConsensusBasedTestCase(unittest.TestCase):
     def setupContext(self, username, password):
         applicationContext = XmlApplicationContext("support/consensusBasedApplicationContext.xml")
         token = UsernamePasswordAuthenticationToken(username, password)
-        auth_manager = applicationContext.getComponent("auth_manager")
+        auth_manager = applicationContext.get_component("auth_manager")
         SecurityContextHolder.setContext(SecurityContext())
         SecurityContextHolder.getContext().authentication = auth_manager.authenticate(token)
-        self.sampleService = applicationContext.getComponent("sampleService")
+        self.sampleService = applicationContext.get_component("sampleService")
         self.block1 = SampleBlockOfData("block1")
         self.block2 = SampleBlockOfData("block2")
 
@@ -265,10 +265,10 @@ class UnanimousBasedTestCase(unittest.TestCase):
     def setupContext(self, username, password):
         applicationContext = XmlApplicationContext("support/unanimousBasedApplicationContext.xml")
         token = UsernamePasswordAuthenticationToken(username, password)
-        auth_manager = applicationContext.getComponent("auth_manager")
+        auth_manager = applicationContext.get_component("auth_manager")
         SecurityContextHolder.setContext(SecurityContext())
         SecurityContextHolder.getContext().authentication = auth_manager.authenticate(token)
-        self.sampleService = applicationContext.getComponent("sampleService")
+        self.sampleService = applicationContext.get_component("sampleService")
         self.block1 = SampleBlockOfData("block1")
         self.block2 = SampleBlockOfData("block2")
 

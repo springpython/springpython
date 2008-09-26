@@ -31,7 +31,7 @@ class InMemoryDaoAuthenticationProviderTestCase(unittest.TestCase):
     def setUp(self):
         SecurityContextHolder.setContext(SecurityContext())
         self.appContext = XmlApplicationContext("support/providerApplicationContext.xml")
-        self.auth_manager = self.appContext.getComponent("inMemoryDaoAuthenticationManager")
+        self.auth_manager = self.appContext.get_component("inMemoryDaoAuthenticationManager")
         
     def __init__(self, methodName='runTest'):
         unittest.TestCase.__init__(self, methodName)
@@ -71,9 +71,9 @@ class DaoAuthenticationProviderHidingUserNotFoundExceptionsTestCase(MockTestCase
     def setUp(self):
         SecurityContextHolder.setContext(SecurityContext())
         self.appContext = XmlApplicationContext("support/providerApplicationContext.xml")
-        self.auth_manager = self.appContext.getComponent("dao_mgr_hiding_exception")
+        self.auth_manager = self.appContext.get_component("dao_mgr_hiding_exception")
         self.mock = self.mock()
-        self.appContext.getComponent("dataSource").stubConnection.mockCursor = self.mock
+        self.appContext.get_component("dataSource").stubConnection.mockCursor = self.mock
         
     def testIoCDaoAuthenticationActiveUserBadPassword(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -162,9 +162,9 @@ class DaoAuthenticationProviderNotHidingUserNotFoundExceptionsTestCase(MockTestC
     def setUp(self):
         SecurityContextHolder.setContext(SecurityContext())
         self.appContext = XmlApplicationContext("support/providerApplicationContext.xml")
-        self.auth_manager = self.appContext.getComponent("dao_mgr_not_hiding_exceptions")
+        self.auth_manager = self.appContext.get_component("dao_mgr_not_hiding_exceptions")
         self.mock = self.mock()
-        self.appContext.getComponent("dataSource").stubConnection.mockCursor = self.mock
+        self.appContext.get_component("dataSource").stubConnection.mockCursor = self.mock
         
     def testIocDaoAuthenticationBadUsersDontHideBadCredentialsDisabledUser(self):
         self.mock.expects(once()).method("execute").id("#1")

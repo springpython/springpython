@@ -230,7 +230,7 @@ if __name__ == "__main__":
         # the channel and the bot that supports it.
         applicationContext = CoilyWebClient()
 
-        cherrypy.root = applicationContext.getComponent(componentId = "root")
+        cherrypy.root = applicationContext.get_component(componentId = "root")
         cherrypy.server = MiddlewareServer()
 
         # Configure cherrypy programmatically.
@@ -243,7 +243,7 @@ if __name__ == "__main__":
                                 "/scripts": {"static_filter.on": True, "static_filter.dir": "js"}
                             })
 
-        middleware = applicationContext.getComponent(componentId = "filterChainProxy")
+        middleware = applicationContext.get_component(componentId = "filterChainProxy")
         middleware.application = wsgiApp
 
         # Start the CherryPy server.
