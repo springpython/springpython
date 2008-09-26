@@ -65,7 +65,7 @@
 
 <programlisting><![CDATA[
 appContext = XmlApplicationContext("myAppContext.xml")
-movieLister = appContext.getComponent("MovieLister")
+movieLister = appContext.get_component("MovieLister")
 ]]></programlisting>
 
 			<para>By injecting components into other components, the program looking up this movieLister

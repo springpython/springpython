@@ -54,7 +54,7 @@ if __name__ == '__main__':
     # to objects. In this case, it is being assigned an object that was created in the
     # IoC container, allowing the web server components to be totally decoupled from the
     # view component.
-    cherrypy.root = applicationContext.getComponent(componentId = "read")
+    cherrypy.root = applicationContext.get_component(componentId = "read")
     
     cherrypy.server = MiddlewareServer()
 
@@ -132,7 +132,7 @@ if __name__ == '__main__':
                             }
                         })
     
-    middleware = applicationContext.getComponent(componentId = "filterChainProxy")
+    middleware = applicationContext.get_component(componentId = "filterChainProxy")
     middleware.application = wsgiApp
     
     # Start the CherryPy server.

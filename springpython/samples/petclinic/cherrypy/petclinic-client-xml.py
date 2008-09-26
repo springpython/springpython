@@ -60,8 +60,8 @@ if __name__ == '__main__':
         cherrypy.tools.securityFilter = cherrypy.Tool('before_handler', filter_chainer, priority=75)
         return securityFilter
     
-    manager = applicationContext.getComponent("authenticationManager")
-    accessDecisionManager = applicationContext.getComponent("accessDecisionManager")
+    manager = applicationContext.get_component("authenticationManager")
+    accessDecisionManager = applicationContext.get_component("accessDecisionManager")
     objectDefinitionSource = [
                              ("/vets.*", ["VET_ANY"]),
                              ("/editOwner.*", ["VET_ANY", "OWNER"]),
@@ -98,8 +98,8 @@ if __name__ == '__main__':
                     }
     }
 
-    cherrypy.tree.mount(applicationContext.getComponent(componentId = "root"), '/', config=conf)
-    cherrypy.tree.mount(applicationContext.getComponent(componentId = "loginForm"), '/login', config=login_conf)
+    cherrypy.tree.mount(applicationContext.get_component(componentId = "root"), '/', config=conf)
+    cherrypy.tree.mount(applicationContext.get_component(componentId = "loginForm"), '/login', config=login_conf)
 
     cherrypy.engine.start()
     cherrypy.engine.block()

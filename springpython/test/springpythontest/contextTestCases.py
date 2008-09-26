@@ -23,21 +23,21 @@ class XmlApplicationContextTestCase(unittest.TestCase):
     def testCreatingAnApplicationContext(self):
         movieAppContainer = XmlApplicationContext("support/contextTestPrimaryApplicationContext.xml")
         self.assertTrue(isinstance(movieAppContainer, ApplicationContext))
-        lister = movieAppContainer.getComponent("MovieLister")
+        lister = movieAppContainer.get_component("MovieLister")
         movieList = lister.finder.findAll()
         self.assertEquals(movieList[0], "The Count of Monte Cristo")
         
     def testLoadingMultipleApplicationContexts(self):
         movieAppContainer = XmlApplicationContext(["support/contextTestPrimaryApplicationContext.xml", "support/contextTestSecondaryApplicationContext.xml"])
         self.assertTrue(isinstance(movieAppContainer, ApplicationContext))
-        lister = movieAppContainer.getComponent("MovieLister")
+        lister = movieAppContainer.get_component("MovieLister")
         movieList = lister.finder.findAll()
         self.assertEquals(movieList[0], "Sta")
 
     def testCreatingXmlBasedIocContainerUsingDirectFunctionCalls(self):
         movieAppContainer = XmlApplicationContext("support/contextSingletonPrototypeCOmponentContext.xml")
         self.assertTrue(isinstance(movieAppContainer, ApplicationContext))
-        lister = movieAppContainer.getComponent("MovieLister")
+        lister = movieAppContainer.get_component("MovieLister")
         movieList = lister.finder.findAll()
         self.assertEquals(movieList[0], "The Count of Monte Cristo")
         self.assertEquals(lister.description.str, "There should only be one copy of this string")
@@ -45,13 +45,13 @@ class XmlApplicationContextTestCase(unittest.TestCase):
         # Create a separate container, which has its own instances of singletons
         movieAppContainer2 = XmlApplicationContext("support/contextSingletonPrototypeCOmponentContext.xml")
         self.assertTrue(isinstance(movieAppContainer2, ApplicationContext))
-        lister2 = movieAppContainer2.getComponent("MovieLister")
+        lister2 = movieAppContainer2.get_component("MovieLister")
         movieList2 = lister2.finder.findAll()
         self.assertEquals(movieList2[0], "The Count of Monte Cristo")
         self.assertEquals(lister2.description.str, "There should only be one copy of this string")
 
         # Create another MovieLister based on the first app context
-        lister3 = movieAppContainer.getComponent("MovieLister")
+        lister3 = movieAppContainer.get_component("MovieLister")
 
         # Identity test. Verify objects were created in separate app contexts, and that
         # singletons exist only once, while prototypes are different on a per instance
@@ -77,13 +77,13 @@ class XmlApplicationContextTestCase(unittest.TestCase):
 class ContextInterfacesTestCase(unittest.TestCase):
     def testInterfaces(self):
         applicationContext = ApplicationContext()
-        self.assertRaises(NotImplementedError, applicationContext.getComponent, "foo")
+        self.assertRaises(NotImplementedError, applicationContext.get_component, "foo")
     
 class DecoratorBasedContextTestCase(unittest.TestCase):
     def testCreatingDecoratorBasedIocContainerUsingAppContextCalls(self):
         movieAppContainer = testSupportClasses.MovieBasedApplicationContext()
         self.assertTrue(isinstance(movieAppContainer, ApplicationContext))
-        lister = movieAppContainer.getComponent("MovieLister")
+        lister = movieAppContainer.get_component("MovieLister")
         movieList = lister.finder.findAll()
         self.assertEquals(movieList[0], "The Count of Monte Cristo")
         self.assertEquals(lister.description.str, "There should only be one copy of this string")
@@ -131,7 +131,7 @@ class DecoratorBasedContextTestCase(unittest.TestCase):
     def testCreatingDuckTypeBasedIocContainerUsingAppContextCalls(self):
         movieAppContainer = testSupportClasses.DuckTypedMovieBasedApplicationContext()
         self.assertFalse(isinstance(movieAppContainer, ApplicationContext))
-        self.assertFalse(hasattr(movieAppContainer, "getComponent"))
+        self.assertFalse(hasattr(movieAppContainer, "get_component"))
 
     def testCreatingDuckTypedBasedIocContainer(self):
         movieAppContainer = testSupportClasses.DuckTypedMovieBasedApplicationContext()
