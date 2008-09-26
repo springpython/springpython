@@ -95,7 +95,7 @@ class FilterChainProxy(Filter, ApplicationContextAware):
             if re.compile(urlPattern).match(environ["PATH_INFO"].lower()):
                 for filter in chainOfFilters:
                         try:
-                            filterChain.addFilter(self.applicationContext.getComponent(filter))
+                            filterChain.addFilter(self.applicationContext.get_component(filter))
                         except AttributeError, e:
                             filterChain.addFilter(filter)
                 break

@@ -33,13 +33,13 @@ class PyroRemotingTestCase(unittest.TestCase):
     def testExportingAServiceThroughIoC(self):
         appContext = XmlApplicationContext("support/remotingPyroTestApplicationContext.xml")
         
-        remoteService1 = appContext.getComponent("remoteServiceServer1")
-        serviceExporter1 = appContext.getComponent("serviceExporter1")
-        clientSideProxy1 = appContext.getComponent("accountServiceClient1")
+        remoteService1 = appContext.get_component("remoteServiceServer1")
+        serviceExporter1 = appContext.get_component("serviceExporter1")
+        clientSideProxy1 = appContext.get_component("accountServiceClient1")
                
-        remoteService2 = appContext.getComponent("remoteServiceServer2")
-        serviceExporter2 = appContext.getComponent("serviceExporter2")
-        clientSideProxy2 = appContext.getComponent("accountServiceClient2")
+        remoteService2 = appContext.get_component("remoteServiceServer2")
+        serviceExporter2 = appContext.get_component("serviceExporter2")
+        clientSideProxy2 = appContext.get_component("accountServiceClient2")
                       
         time.sleep(0.01)
         
@@ -60,11 +60,11 @@ class PyroRemotingTestCase(unittest.TestCase):
     def testExportingAServiceThroughIoCWithoutPullingTheIntermediateComponent(self):
         appContext = XmlApplicationContext("support/remotingPyroTestApplicationContext.xml")
         
-        remoteService1 = appContext.getComponent("remoteServiceServer1")
-        clientSideProxy1 = appContext.getComponent("accountServiceClient1")
+        remoteService1 = appContext.get_component("remoteServiceServer1")
+        clientSideProxy1 = appContext.get_component("accountServiceClient1")
                
-        remoteService2 = appContext.getComponent("remoteServiceServer2")
-        clientSideProxy2 = appContext.getComponent("accountServiceClient2")
+        remoteService2 = appContext.get_component("remoteServiceServer2")
+        clientSideProxy2 = appContext.get_component("accountServiceClient2")
         
         time.sleep(0.01)
         
@@ -146,7 +146,7 @@ class HessianRemotingTestCase(unittest.TestCase):
         self.run_jetty()
 
         appContext = XmlApplicationContext("support/remotingHessianTestApplicationContext.xml")
-        clientSideProxy = appContext.getComponent("personService")
+        clientSideProxy = appContext.get_component("personService")
 
         results = clientSideProxy.transform("Greg Turnquist a,b,c,x,y,z")
 

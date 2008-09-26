@@ -181,7 +181,7 @@ class DatabaseTemplateMockTestCase(MockTestCase):
 
     def testIoCGeneralQuery(self):
         appContext = XmlApplicationContext("support/databaseTestApplicationContext.xml")
-        mockConnectionFactory = appContext.getComponent("mockConnectionFactory")
+        mockConnectionFactory = appContext.get_component("mockConnectionFactory")
         mockConnectionFactory.stubConnection.mockCursor = self.mock
         
         self.mock.expects(once()).method("execute")
@@ -561,7 +561,7 @@ class MySQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
 
     def testIoCGeneralQuery(self):
         appContext = XmlApplicationContext("support/databaseTestMySQLApplicationContext.xml")
-        factory = appContext.getComponent("connection_factory")
+        factory = appContext.get_component("connection_factory")
         
         databaseTemplate = DatabaseTemplate(factory)
         results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowCallbackHandler())
@@ -611,7 +611,7 @@ class PostGreSQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
 
     def testIoCGeneralQuery(self):
         appContext = XmlApplicationContext("support/databaseTestPGApplicationContext.xml")
-        factory = appContext.getComponent("connection_factory")
+        factory = appContext.get_component("connection_factory")
         
         databaseTemplate = DatabaseTemplate(factory)
         results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowCallbackHandler())
@@ -648,7 +648,7 @@ class SqliteDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
 
     def testIoCGeneralQuery(self):
         appContext = XmlApplicationContext("support/databaseTestSqliteApplicationContext.xml")
-        factory = appContext.getComponent("connection_factory")
+        factory = appContext.get_component("connection_factory")
         
         databaseTemplate = DatabaseTemplate(factory)
         results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowCallbackHandler())

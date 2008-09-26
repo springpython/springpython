@@ -118,7 +118,7 @@ class AbstractTransactionTestCase(unittest.TestCase):
 
     def testDeclarativeTransactions(self):
         appContext = DatabaseTxTestAppContext(self.factory)
-        bank = appContext.getComponent("bank")
+        bank = appContext.get_component("bank")
 
         bank.open("Checking")
         bank.open("Savings")
@@ -158,7 +158,7 @@ class AbstractTransactionTestCase(unittest.TestCase):
 
     def testDecoratorBasedTransactions(self):
         appContext = DatabaseTxTestDecorativeTransactions(self.factory)
-        bank = appContext.getComponent("bank")
+        bank = appContext.get_component("bank")
 
         bank.open("Checking")
         bank.open("Savings")
@@ -197,7 +197,7 @@ class AbstractTransactionTestCase(unittest.TestCase):
 
     def testDecoratorBasedTransactionsWithNoArguments(self):
         appContext = DatabaseTxTestDecorativeTransactionsWithNoArguments(self.factory)
-        bank = appContext.getComponent("bank")
+        bank = appContext.get_component("bank")
 
         bank.open("Checking")
         bank.open("Savings")
@@ -237,7 +237,7 @@ class AbstractTransactionTestCase(unittest.TestCase):
         
     def testDecoratorBasedTransactionsWithLotsOfArguments(self):
         appContext = DatabaseTxTestDecorativeTransactionsWithLotsOfArguments(self.factory)
-        bank = appContext.getComponent("bank")
+        bank = appContext.get_component("bank")
 
         bank.open("Checking")
         bank.open("Savings")
@@ -278,7 +278,7 @@ class AbstractTransactionTestCase(unittest.TestCase):
         
     def testOtherPropagationLevels(self):
         appContext = DatabaseTxTestDecorativeTransactionsWithLotsOfArguments(self.factory)
-        bank = appContext.getComponent("bank")
+        bank = appContext.get_component("bank")
 
         # Call a mandatory operation outside a transaction, and verify it fails.
         try:
@@ -302,7 +302,7 @@ class AbstractTransactionTestCase(unittest.TestCase):
 
     def testTransactionProxyMethodFilters(self):
         appContext = DatabaseTxTestAppContext(self.factory)
-        bank = appContext.getComponent("bank")
+        bank = appContext.get_component("bank")
  
         bank.open("Checking")
         bank.open("Savings")
@@ -342,7 +342,7 @@ class AbstractTransactionTestCase(unittest.TestCase):
  
     def testTransactionalBankWithNoAutoTransactionalComponent(self):
         appContext = DatabaseTxTestAppContextWithNoAutoTransactionalComponent(self.factory)
-        bank = appContext.getComponent("bank")
+        bank = appContext.get_component("bank")
  
         bank.open("Checking")
         bank.open("Savings")

@@ -56,7 +56,7 @@ class AopProxyTestCase(unittest.TestCase):
         self.assertEquals("sample", service.attribute)
         
     def testCreatingAProxyFactoryAndAddingAnInterceptorIoC(self):
-        factory = self.appContext.getComponent("factory")
+        factory = self.appContext.get_component("factory")
         service = factory.getProxy()
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
@@ -80,18 +80,18 @@ class AopProxyTestCase(unittest.TestCase):
         self.assertEquals("sample", service.attribute)
 
     def testCreatingAProxyFactoryComponentWithAnInterceptorIoC(self):
-        service = self.appContext.getComponent("sampleService4")
+        service = self.appContext.get_component("sampleService4")
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
 
     def testApplyingASingleConditionalPointcutIoC(self):
-        sampleService = self.appContext.getComponent("sampleService1")
+        sampleService = self.appContext.get_component("sampleService1")
         self.assertEquals(sampleService.doSomething(), "<Wrapped>Alright!</Wrapped>")
         self.assertEquals(sampleService.method("testdata"), "You made it!")
 
     def testApplyingTwoConditionalPointcutsIoC(self):
-        sampleService = self.appContext.getComponent("sampleService2")
+        sampleService = self.appContext.get_component("sampleService2")
         self.assertEquals(sampleService.doSomething(), "BEFORE => <Wrapped>Alright!</Wrapped> <= AFTER")
         self.assertEquals(sampleService.method("testdata"), "You made it!")
         
@@ -119,7 +119,7 @@ class AopProxyTestCase(unittest.TestCase):
         self.assertEquals(sampleService.method("testdata"), "You made it!")
         
     def testCreatingAProxyFactoryComponentWithAnInterceptorByClassNameInsteadOfInstanceIoC(self):
-        service = self.appContext.getComponent("sampleService5")
+        service = self.appContext.get_component("sampleService5")
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
@@ -134,8 +134,8 @@ class AopProxyFactoryCombinedWithPyroTestCase(unittest.TestCase):
         PyroDaemonHolder.shutdown()
 
     def testWrappingPyroProxyOnClientSideIoC(self):
-        remoteService = self.appContext.getComponent("remoteService1")
-        clientService = self.appContext.getComponent("service1")
+        remoteService = self.appContext.get_component("remoteService1")
+        clientService = self.appContext.get_component("service1")
         self.assertEquals("You got remote data => test1", remoteService.getData("test1"))
         self.assertEquals("<Wrapped>You got remote data => test1</Wrapped>", clientService.getData("test1"))
         self.appContext.dispose()
@@ -144,8 +144,8 @@ class AopProxyFactoryCombinedWithPyroTestCase(unittest.TestCase):
     # dependency. Each test works fine when the other is commented out. Must resolve.
     
     #def testWrappingPyroProxyOnServerSideIoC(self):
-    #    remoteService = self.appContext.getComponent("remoteService2")
-    #    clientService = self.appContext.getComponent("service2")
+    #    remoteService = self.appContext.get_component("remoteService2")
+    #    clientService = self.appContext.get_component("service2")
     #    self.assertEquals("<Wrapped>You got remote data => test2</Wrapped>", remoteService.getData("test2"))
     #    self.assertEquals("<Wrapped>You got remote data => test2</Wrapped>", clientService.getData("test2"))
     #    self.appContext.dispose()
