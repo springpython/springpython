@@ -12,11 +12,47 @@ Introduction
 
   This used to be a trac site, but since Spring Python became an official Spring Extension, it has been replaced with a maven-generated one. Documentation stored in various trac articles has been migrated to the documentation set found in left-hand side of this page. You can view either HTML or a PDF document. The old trac site has been archived for historical benefit.
   
+Key Features
+
+	* {{{reference/html/reference/html/components.html}Inversion Of Control}} - The idea is to decouple two classes at
+	the interface level. This lets you build many reusable parts in your
+	software, and your whole application becomes more pluggable. You can
+	use either the XmlApplicationContext or the
+	DecoratorBasedApplicationContext.
+    * {{{reference/html/aop.html}Aspect-oriented Programming}} - Spring Python provides great ways
+	to wrap advice around objects. It is utilized for remoting. Another
+	use is for debug tracers and performance tracing.
+    * {{{reference/html/reference/html/dao.html}Data Access}} - Reading from the database requires a
+	monotonous cycle of opening cursors, reading rows, and closing
+	cursors, along with exception handlers. With this template class, all
+	you need is the SQL query and row-handling function. Spring Python
+	does the rest.
+    * {{{reference/html/reference/html/transaction.html}Transaction Management}} - Wrapping multiple database calls with
+	transactions can make your code hard to read. This module provides
+	multiple ways to define transactions without making things
+	complicated.
+    * {{{reference/html/reference/html/security.html}Security}} - Plugin security interceptors to lock down access to
+	your methods, utilizing both authentication and domain authorization.
+    * {{{reference/html/reference/html/remoting.html}Remoting}} - It is easy to convert your local application into a
+	distributed one. If you have already built your client and server
+	pieces using the IoC container, then going from local to distributed
+	is just a configuration change.
+    * {{{reference/html/reference/html/samples.html}Samples}} - to help demonstrate various features of Spring Python,
+	some sample applications have been created:
+          * {{{reference/html/samples.html#samples-petclinic}PetClinic}} - Everybody's favorite Spring sample application
+			has been rebuilt from the ground up using various web containers
+			including: CherryPy. Go check it out for an example of how to use this
+			framework.
+          * {{{reference/html/samples.html#samples-springwiki}Spring Wiki}} - Wikis are powerful ways to store and manage
+			content, so we created a simple one as a demo!
+          * {{{reference/html/samples.html#samples-springbot}Spring Bot}} - Use Spring Python to build a tiny bot to
+			manage the IRC channel of your open source project. 
+			
 What's Coming?
 
-  We are working on the {{{reference/html/components.html}core IoC container}}. Right now, what we have works for simple situations, but in order to make it as powerful and extensible as the original Spring Framework's container, we are overhauling things. The goal is to have this completed by release 1.0.
+  We are working on improving the {{{reference/html/components.html}core IoC container}}. Right now, what we have works for simple situations, but in order to make it as powerful and extensible as the original Spring Framework's container, we are overhauling things. The goal is to have this completed by release 1.0.
   
-Key Links
+Links
 
   {{{http://forum.springframework.org/forumdisplay.php?f=45}Spring Python community forum}}
 
@@ -30,7 +66,7 @@ Key Links
 
 News
 
-  <<NEWS>> - Spring Python 0.7.0 has been released. This release contains several upgrades and improvements, including scrubbing the APIs to better match {{{http://www.python.org/dev/peps/pep-0008/}PEP-0008}}}. - 9/25/2008 G.Turnquist
+  <<NEWS>> - Spring Python 0.7.0 has been released. This release contains several upgrades and improvements, including scrubbing the APIs to better match {{{http://www.python.org/dev/peps/pep-0008/}PEP-0008}}. - 9/25/2008 G.Turnquist
 
   <<NEWS>> - Spring Python's web page has been updated. It now uses the maven-generate material, with links to the official documents released earlier. The former trac site is still online and available through a link on the site. While the site may appear low on information, all the main articles of documentation are contained in the reference documents themselves.  - 9/19/2008 G.Turnquist
 
