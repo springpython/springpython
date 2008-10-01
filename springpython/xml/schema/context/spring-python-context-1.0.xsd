@@ -151,10 +151,7 @@
 		</xsd:complexType>
 	</xsd:element>
 	
-	<!-- TODO Right now properties are specific with element content, as opposed 
-		to using the value attribute -->
-	<!--type="propertyType" -->
-	<xsd:element name="property" >
+	<xsd:element name="property" type="propertyType" >
 		<xsd:annotation>
 			<xsd:documentation><![CDATA[
 	Component definitions can have zero or more properties.
@@ -169,6 +166,8 @@
 			<xsd:element ref="description" minOccurs="0"/>
 			<xsd:choice minOccurs="0" maxOccurs="1">
 				<xsd:element ref="value"/>
+				<xsd:element ref="ref"/>
+				<xsd:element ref="list"/>
 				<xsd:any namespace="##other" processContents="strict"/>
 			</xsd:choice>
 		</xsd:sequence>
@@ -176,6 +175,13 @@
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 	The name of the property.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="ref" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	A short-cut alternative to a nested "<ref component='...'/>".	
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
@@ -223,6 +229,79 @@
 			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
+	
+	<xsd:element name="ref">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	Defines a reference to another component in this factory or an external
+	factory (parent or included factory).	
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:restriction base="xsd:anyType">
+					<xsd:attribute name="component" type="xsd:string">
+						<xsd:annotation>
+							<xsd:documentation><![CDATA[
+	The name of the referenced bean.
+							]]></xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+					<xsd:attribute name="local" type="xsd:IDREF">
+						<xsd:annotation>
+							<xsd:documentation><![CDATA[
+	The name of the referenced bean. The value must be a bean ID and thus can 
+	be checked by the XML parser. This is therefore the preferred technique 
+	for referencing beans within the same bean factory XML file.						
+							]]></xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+				</xsd:restriction>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="null">
+		<xsd:annotation>
+			<xsd:documentation>
+	Denotes a Python None value. Necessary because an empty "value" tag
+	will resolve to an empty String, which will not be resolved to a
+	None value unless a special PropertyEditor does so.		
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType mixed="true">
+			<xsd:choice minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<!-- Collection Elements -->
+	<xsd:group name="collectionElements">
+		<xsd:sequence>
+			<xsd:choice minOccurs="0" maxOccurs="unbounded">
+				<xsd:element ref="component"/>
+				<xsd:element ref="ref"/>
+				<xsd:element ref="value"/>
+				<xsd:element ref="null"/>
+				<xsd:element ref="list"/>
+			<xsd:any namespace="##other" processContents="strict" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:group>
+	
+	<xsd:element name="list" type="listOrSetType">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	A list can contain multiple inner component, ref, collection, or value
+	elements. The necessary conversion is automatically performed
+	by the ComponentFactory.	
+			]]></xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<!-- 'list' and 'set' collection type -->
+	<xsd:complexType name="listOrSetType">
+		<xsd:group ref="collectionElements"/>
+	</xsd:complexType>
 	
 	<!-- simple internal types -->
 	<xsd:simpleType name="defaultable-boolean">
