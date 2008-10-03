@@ -42,13 +42,9 @@ bash$ cd cherrypy
 bash$ python petclinic.py
 ]]></programlisting>
 
-			<para>This assumes you have <ulink url="http://www.cherrypy.org">CherryPy 2</ulink>
-			installed. It probably <emphasis>won't</emphasis> work if you are using CherryPy 3.
-			If you are using Ubuntu/Linux:</para>
-
-<programlisting><![CDATA[
-bash$ sudo apt-get install python-cherrypy
-]]></programlisting>
+			<para>This assumes you have <ulink url="http://www.cherrypy.org">CherryPy 3</ulink>
+			installed. It probably <emphasis>won't</emphasis> work if you are still using
+			CherryPy 2.</para>
 
 			<para>Finally, after launching it, you should see a nice URL at the bottom: http://localhost:8080.
 			Well, go ahead! Things should look good now!</para>
@@ -115,12 +111,6 @@ bash$ sudo apt-get install python-cherrypy
 
 			<para>This bot also sports a web page using <ulink url="http://cherrypy.org">
 			CherryPy</ulink>. You also need to install that as well.</para>
-
-			<para>For Ubuntu users:</para>
-
-<programlisting><![CDATA[
-% sudo apt-get install python-cherrypy
-]]></programlisting>
 
 			<section id="samples-springbot-articles">
 				<title>Articles</title>
@@ -439,7 +429,7 @@ class CoilyIRCServer(DecoratorBasedApplicationContext):
     @component
     def bot(self):
         exporter = PyroServiceExporter()
-        exporter.serviceName = "bot"
+        exporter.service_name = "bot"
         exporter.service = self.remoteBot()
         return exporter
 ]]></programlisting>
@@ -465,7 +455,7 @@ class CoilyWebClient(DecoratorBasedApplicationContext):
     @component
     def bot(self):
         proxy = PyroProxyFactory()
-        proxy.serviceUrl = "PYROLOC://localhost:7766/bot"
+        proxy.service_url = "PYROLOC://localhost:7766/bot"
         return proxy
 
 

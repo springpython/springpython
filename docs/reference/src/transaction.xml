@@ -35,7 +35,7 @@ def transfer(transfer_amount, source_account_num, target_account_num):
 
 		<para>To wrap this function transactionally, based on DB-2.0 API specifications,
 		we'll add some checks. I have also completed some refactorings and utilized the
-		DatabaseTemplate to clean up my database code.</para>
+		<classname>DatabaseTemplate</classname> to clean up my database code.</para>
 
 <programlisting><![CDATA[
 from springpython.database import *
@@ -47,7 +47,7 @@ class Bank:
         self.dt = DatabaseTemplate(self.factory)
 
     def balance(self, account_num):
-        results = self.dt.queryForList("select BALANCE from ACCOUNT where ACCOUNT_NUM = %s", (account_num,))
+        results = self.dt.query_for_list("select BALANCE from ACCOUNT where ACCOUNT_NUM = %s", (account_num,))
         if len(results) != 1:
             raise InvalidBankAccount("There were %s accounts that matched %s." % (len(results), account_num))
         return results[0][0]
@@ -78,22 +78,23 @@ class Bank:
 
 		<itemizedlist>
  			<listitem><para>This has some extra checks put in to protect from overdrafts and invalid accounts.</para></listitem>
- 			<listitem><para>DatabaseTemplate removes our need to open and close cursors.</para></listitem>
- 			<listitem><para>Unfortunately, we still have to tangle with them as well as the connection in order to handle transactions.</para></listitem>
+ 			<listitem><para><classname>DatabaseTemplate</classname> removes our need to open and close cursors.</para></listitem>
+ 			<listitem><para>Unfortunately, we still have to tangle with them as well as the connection in
+ 			order to handle transactions.</para></listitem>
  		</itemizedlist> 
 
 	</section>
 		
 	<section id="transaction-tx-template">
-		<title>TransactionTemplate</title>
+		<title><classname>TransactionTemplate</classname></title>
 
 		<para>We still have to deal with exceptions. What if another part of the
 		code raised another exception that we didn't trap? It might escape our
 		try-except block of code, and then our data could lose integrity. If we
-		plug in the TransactionTemplate, we can really simplify this and also
+		plug in the <classname>TransactionTemplate</classname>, we can really simplify this and also
 		guarantee management of any exceptions.</para>
 
-		<para>The following code block shows swapping out manual transaction for TransactionTemplate.</para>
+		<para>The following code block shows swapping out manual transaction for <classname>TransactionTemplate</classname>.</para>
 			
 <programlisting><![CDATA[
 from springpython.database.transaction import *
@@ -111,36 +112,36 @@ class Bank:
 ..
     def transfer(self, transfer_amount, source_account_num, target_account_num):
         class txDefinition(TransactionCallbackWithoutResult):
- 	    def doInTransactionWithoutResult(s, status):
-                self.withdraw(transfer_amount, source_account_num)
-                self.deposit(transfer_amount, target_account_num)
+	 	    def doInTransactionWithoutResult(s, status):
+	                self.withdraw(transfer_amount, source_account_num)
+	                self.deposit(transfer_amount, target_account_num)
         try:
             self.txTemplate.execute(txDefinition())
             print "If you made it to here, then your transaction has already been committed."
-       except InvalidBankAccount, InsufficientFunds:
+        except InvalidBankAccount, InsufficientFunds:
             print "If you made it to here, then your transaction has already been rolled back."
 ]]></programlisting>
 
 	<itemizedlist>
 		<listitem>
-			<para>We changed the init function to setup a TransactionManager
-			(based on ConnectionFactory) and also a TransactionTemplate.</para>
+			<para>We changed the init function to setup a <classname>TransactionManager</classname>
+			(based on ConnectionFactory) and also a <classname>TransactionTemplate</classname>.</para>
 		</listitem>
 		<listitem><para>We also rewrote the transfer function to generate a callback.</para></listitem>
 	</itemizedlist> 
 
 	<para>Now you don't have to deal with implicit cursors, commits, and rollbacks.
 	Managing commits and rollbacks can  really complicated especially when dealing
-	with exceptions. By wrapping it into a nice callback, TransactionTemplate does
+	with exceptions. By wrapping it into a nice callback, <classname>TransactionTemplate</classname> does
 	the work for us, and lets us focus on business logic, while encouraging us to
 	continue to define meaningful business logic errors.</para>
 
 	</section>
 	
 	<section id="transaction-at-transactional">
-		<title>@Transactional</title>
+		<title><methodname>@Transactional</methodname></title>
 		
-		<para>Another option is to use the @Transactional decorator, and mark which
+		<para>Another option is to use the <methodname>@Transactional</methodname> decorator, and mark which
 		methods should be wrapped in a transaction when called.</para>
 
 <programlisting><![CDATA[
@@ -161,20 +162,24 @@ class Bank:
         self.deposit(transfer_amount, target_account_num)
 ]]></programlisting>
 
-		<para>This needs to be wired together with a TransactionManager in an
-		ApplicationContext. The following example shows a DecoratorBasedApplicationContext
+		<para>This needs to be wired together with a <classname>TransactionManager</classname> in an
+		<classname>ApplicationContext</classname>. The following example shows a <classname>DecoratorBasedApplicationContext</classname>
 		with three components:</para>
 
 		<itemizedlist>
 			<listitem><para>the bank</para></listitem>
-			<listitem><para>a TransactionManager (in this case ConnectionFactoryTransactionManager)</para></listitem>
 			<listitem>
-				<para>an AutoTransactionalComponent, which checks all components to see
-				if they have @Transactional methods, and if so, links them with the TransactionManager.</para>
+				<para>a <classname>TransactionManager</classname> (in this case
+				<classname>ConnectionFactoryTransactionManager</classname>)</para>
+			</listitem>
+			<listitem>
+				<para>an <classname>AutoTransactionalComponent</classname>, which checks all components to see
+				if they have <methodname>@Transactional</methodname> methods, and if so, links them with the 
+				<classname>TransactionManager</classname>.</para>
 			</listitem>
 		</itemizedlist> 
 	
-		<para>The name of the method (i.e. component name) for AutoTransactionalComponent doesn't matter.</para>
+		<para>The name of the method (i.e. component name) for <classname>AutoTransactionalComponent</classname> doesn't matter.</para>
 
 <programlisting><![CDATA[
 class DatabaseTxTestDecorativeTransactions(DecoratorBasedApplicationContext):
@@ -197,7 +202,7 @@ class DatabaseTxTestDecorativeTransactions(DecoratorBasedApplicationContext):
 ]]></programlisting>
 
 			<section id="transaction-at-transactional-arguments">
-				<title>@Transactional(["PROPAGATION_REQUIRED"])...</title>
+				<title><methodname>@Transactional(["PROPAGATION_REQUIRED"])</methodname>...</title>
 
 				<para>Declarative transactions includes the ability to define transaction propagation.
 				This allows you to define when a transaction should be started, and which operations

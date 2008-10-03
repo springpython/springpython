@@ -26,13 +26,14 @@
 
     <menu name="Support">
       <item name="Discussion Forum" href="http://forum.springframework.org/forumdisplay.php?f=45"/>
-      <item name="Mailing List" href="http://lists.springsource.com/listmanager/listinfo/springpython-users"/>
+      <item name="Mailing List" href="mail-lists.html"/>
     </menu>
 
     <menu name="Documentation">
       <item name="HTML" href="reference/html" />
       <item name="Single HTML" href="reference/html_single"/>
       <item name="PDF" href="reference/pdf/springpython-reference.pdf"/>
+      <item name="XML schema specs" href="schema/context"/>
     </menu>
 
     <menu name="Archived">

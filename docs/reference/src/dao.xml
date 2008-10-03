@@ -45,15 +45,16 @@ return results
 			must write and converting it to a list of objects.</para>
 
 			<para>I know there are many object relational mappers (ORMs) out there, but
-			sometimes you need something simple and sweet. That is where DatabaseTemplate comes in.</para>
+			sometimes you need something simple and sweet. That is where
+			<classname>DatabaseTemplate</classname> comes in.</para>
 
 		</section>
 		
 		<section id="dao-databasetemplate-intro">
 			<title>Database Template</title>
 			
-			<para>The same query above can be written using a DatabaseTemplate. The only
-			thing you must provide is the SQL and a RowCallbackHandler to process one row of
+			<para>The same query above can be written using a <classname>DatabaseTemplate</classname>. The only
+			thing you must provide is the SQL and a <classname>RowCallbackHandler</classname> to process one row of
 			data. The template does the rest.</para>
 
 <programlisting><![CDATA[
@@ -96,10 +97,11 @@ results = dt.query("select title, air_date, episode_number, writer from tv_shows
 			<title>What is a Connection Factory?</title>
 
 			<para>You may have noticed I didn't make a standard connection in the example above.
-			That is because to support DependencyInjection, I need to setup my credentials in an
-			object before making the actual connection. MySQLConnectionFactory holds credentials
+			That is because to support <ulink url="http://en.wikipedia.org/wiki/Dependency_injection">
+			Dependency Injection</ulink>, I need to setup my credentials in an
+			object before making the actual connection. <classname>MySQLConnectionFactory</classname> holds credentials
 			specific to the MySQL DB-API, but contains a common function to actually create the
-			connection. I don't have to use it myself. DatabaseTemplate will use it when necessary
+			connection. I don't have to use it myself. <classname>DatabaseTemplate</classname> will use it when necessary
 			to create a connection, and then proceed to reuse the connection for subsequent database
 			calls.</para>
 
@@ -112,7 +114,8 @@ results = dt.query("select title, air_date, episode_number, writer from tv_shows
 			<title>Creating/altering tables, databases, and other DDL</title>
 			
 			<para>Data Definition Language includes the database statements that involve creating
-			and altering tables, and so forth. DB-API defines an execute function for this. DatabaseTemplate
+			and altering tables, and so forth. DB-API defines an execute function for this.
+			<classname>DatabaseTemplate</classname>
 			offers the same. Using the execute() function will pass through your request to a cursor,
 			along with the extra exception handler and cursor management.</para>
 			
@@ -122,8 +125,9 @@ results = dt.query("select title, air_date, episode_number, writer from tv_shows
 			<title>SQL Injection Attacks</title>
 			
 			<para>You may have noticed in the first three example queries I wrote with the
-			DatabaseTemplate, I embedded a "%s" in the SQL statement. These are called <emphasis>binding
-			variables</emphasis>, and they require a tuple argument be included after the SQL statement.
+			<classname>DatabaseTemplate</classname>, I embedded a "%s" in the SQL statement. These are
+			called <emphasis>binding variables</emphasis>, and they require a tuple argument be included
+			after the SQL statement.
 			Do <emphasis>NOT</emphasis> include quotes around these variables. The database connection will handle
 			that. This style of SQL programming is <emphasis>highly recommended</emphasis> to avoid
 			<ulink url="http://en.wikipedia.org/wiki/SQL_injection">SQL injection attacks</ulink>.</para>
@@ -141,18 +145,52 @@ results = dt.query("select title, air_date, episode_number, writer from tv_shows
 			<para>If you are a user of Java's <ulink url="http://www.springframework.org">Spring framework</ulink>
 			and have used the <ulink url="http://static.springframework.org/spring/docs/1.2.x/api/org/springframework/jdbc/core/JdbcTemplate.html">
 			JdbcTemplate</ulink>, then you will find this template has a familiar feel.</para>
+			
+			<table id="dao-databasetemplate-jdbctemplate-ops">
 
-<programlisting><![CDATA[
- ||execute(sqlStatement, args = None) || execute any statement, return number of rows affected ||
- ||query(sqlQuery, args = None, rowhandler = None) || query, return list converted by rowhandler ||
- ||query_for_list(sqlQuery, args = None) || query, return list of DB-API tuples (or a dictionary if you use [http://sqlwrappy.sourceforge.net/ sqlWrappy]) ||
- ||query_for_int(sqlQuery, args = None) || query for a single column of a single row, and return an integer (throws exception otherwise) ||
- ||query_for_long(sqlQuery, args = None) || query for a single column of a single row, and return a long (throws exception otherwise) ||
- ||query_for_object(sqlQuery, args = None, requiredType = None) || query for a single column of a single row, and return the object with possibly no checking ||
- ||update(sqlStatement, args = None) || update the database, return number of rows updated ||
-]]></programlisting>
+				<title><classname>JdbcTemplate</classname> operations also found in <classname>DatabaseTemplate</classname></title>
+				
+				<tgroup cols="2">
+				
+					<tbody>
+						<row>
+							<entry><methodname>execute(sql_statement, args = None)</methodname></entry>
+							<entry>execute any statement, return number of rows affected</entry>
+ 						</row>
+ 						<row>
+							<entry><methodname>query(sql_query, args = None, rowhandler = None)</methodname></entry>
+							<entry>query, return list converted by rowhandler</entry>
+ 						</row>
+ 						<row>
+							<entry><methodname>query_for_list(sql_query, args = None)</methodname></entry>
+							<entry>query, return list of DB-API tuples (or a dictionary if you use
+							<ulink url="http://sqlwrappy.sourceforge.net">sqlWrappy</ulink>)</entry>
+ 						</row>
+ 						<row>
+							<entry><methodname>query_for_int(sql_query, args = None)</methodname></entry>
+							<entry>query for a single column of a single row, and return an integer
+							(throws exception otherwise)</entry>
+ 						</row>
+ 						<row>
+							<entry><methodname>query_for_long(sql_query, args = None)</methodname></entry>
+							<entry>query for a single column of a single row, and return a long
+							(throws exception otherwise)</entry>
+ 						</row>
+ 						<row>
+							<entry><methodname>query_for_object(sql_query, args = None, required_type = None)</methodname></entry>
+							<entry>query for a single column of a single row, and return the object
+							with possibly no checking</entry>
+						</row>
+						<row>
+							<entry><methodname>update(sql_statement, args = None)</methodname></entry>
+							<entry>update the database, return number of rows updated</entry>
+ 						</row>
+ 					</tbody>
+ 				</tgroup>
+ 			</table>
 
-			<para><emphasis>Inserts</emphasis> are implemented through the execute() function, just like in JdbcTemplate.</para>
+			<para><emphasis>Inserts</emphasis> are implemented through the execute() function, just
+			like in JdbcTemplate.</para>
 		</section>
 		
 	</section>
