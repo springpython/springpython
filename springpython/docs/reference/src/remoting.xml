@@ -2,7 +2,7 @@
 <chapter id="remoting">
 	<title>Remoting</title>
 	
-	<para>Coupling AspectOrientedProgramming with different types of Python remoting services makes it easy
+	<para>Coupling Aspect Oriented Programming with different types of Python remoting services makes it easy
 	to convert your local application into a distributed one. Technically, the remoting segment of Spring Python
 	doesn't use AOP. However, it is very similar in the concept that you won't have to modify either your servers
 	or your clients.</para>
@@ -43,7 +43,7 @@
 				
 <programlisting><![CDATA[
 class Service(object):
-    def getData(self, param):
+    def get_data(self, param):
         return "You got remote data => %s" % param
 ]]></programlisting>
 
@@ -51,13 +51,13 @@ class Service(object):
 				
 <programlisting><![CDATA[
 service = Service()
-print service.getData("Hello")
+print service.get_data("Hello")
 
 "You got remote data => Hello"
 ]]></programlisting>
 
 				<para>Okay, imagine that you want to relocate this service to another instance of Python, or perhaps
-				another machine on your network. To make this easy, let's utilize InversionOfControl, and transform
+				another machine on your network. To make this easy, let's utilize Inversion Of Control, and transform
 				this service into a Spring service. First, we need to define an application context. We will create a
 				file called <emphasis>applicationContext.xml</emphasis>.</para>
 				
@@ -73,7 +73,7 @@ print service.getData("Hello")
 <programlisting><![CDATA[
 appContext = XmlApplicationContext("applicationContext.xml")
 service = appContext.get_component("service")
-print service.getData("Hello")
+print service.get_data("Hello")
 
 "You got remote data => Hello"
 ]]></programlisting>
@@ -87,7 +87,7 @@ print service.getData("Hello")
 				<title>Exporting a Spring Service Using InversionOfControl</title>
 				
 				<para>In order to reach our service remotely, we have to export it. Spring Python
-				provides PyroServiceExporter to export your service through
+				provides <classname>PyroServiceExporter</classname> to export your service through
 				<ulink url="http://pyro.sourceforge.net/">Pyro</ulink>. Add this to your
 				application context.</para>
 
@@ -97,7 +97,7 @@ print service.getData("Hello")
             
     <component id="remoteService" class="Service"/>
 
-    <component id="serviceExporter" class="springpython.remoting.pyro.PyroServiceExporter">
+    <component id="service_exporter" class="springpython.remoting.pyro.PyroServiceExporter">
         <property name="service_name">"ServiceName"</property>
         <property name="service" local="remoteService"/>
     </component>
@@ -115,7 +115,7 @@ print service.getData("Hello")
 						<para>Our original service's component name has been changed to <emphasis>remoteService</emphasis>.</para>
 					</listitem>
 					<listitem>
-						<para>Another component was introduced called <emphasis>serviceExporter</emphasis>. It references component
+						<para>Another component was introduced called <emphasis>service_exporter</emphasis>. It references component
 						<emphasis>remoteService</emphasis>, and provides a proxied interface through a Pyro URL.</para>
 					</listitem>
 					<listitem>
@@ -124,8 +124,9 @@ print service.getData("Hello")
 					</listitem>
  				</orderedlist>
 
-				<para>Now when the client runs, it will fetch the PyroProxyFactory, which will use Pyro to look up the exported
-				module, and end up calling our remote Spring service. And notice how neither our service nor the client have changed!</para>
+				<para>Now when the client runs, it will fetch the <classname>PyroProxyFactory</classname>, which will use Pyro
+				to look up the exported module, and end up calling our remote Spring service. And notice how neither our service
+				nor the client have changed!</para>
 
 				<para>We can now split up this application into two components. Running the remote service on another server only
 				requires us to edit the client's application context, changing the URL to get to the service. All without telling
@@ -141,28 +142,29 @@ print service.getData("Hello")
 				<para>To do the same configuration as shown above looks like this:</para>
 				
 <programlisting><![CDATA[
-from springpython.remoting.pyro import PyroServiceExport
+from springpython.remoting.pyro import PyroServiceExporter
 from springpython.remoting.pyro import PyroProxyFactory
 
 # Create the service
 remoteService = Service()
 
 # Export it via Pyro using Spring Python's utility classes
-serviceExporter = PyroServiceExporter()
-serviceExporter.service_name = "ServiceName"
-serviceExporter.service = remoteService 
+service_exporter = PyroServiceExporter()
+service_exporter.service_name = "ServiceName"
+service_exporter.service = remoteService 
 
 # Get a handle on a client-side proxy that will remotely call the service.
 service = PyroProxyFactory()
 service.service_url = "PYROLOC://localhost:7766/ServiceName"
 
 # Call the service just you did in the original, simplified version.
-print service.getData("Hello")
+print service.get_data("Hello")
 ]]></programlisting>
 
 				<para>That is effectively the same steps that the IoC container executes. And it is just as easy to split this
-				up between two machines. Chop the script and run the PyroServiceExporter on one machine, and run the PyroProxyFactory
-				on the other. Then all you have to do is edit the <emphasis>service_url</emphasis>.</para>
+				up between two machines. Chop the script and run the <classname>PyroServiceExporter</classname> on one machine,
+				and run the <classname>PyroProxyFactory</classname> on the other. Then all you have to do is edit the
+				<emphasis>service_url</emphasis>.</para>
 				
 			</section>
 			
@@ -183,8 +185,8 @@ print service.getData("Hello")
 <programlisting><![CDATA[
 pool = []
 for i in range(10):
-    serviceExporter = PyroServiceExporter(service_name = "ServiceName%s" % i, service = Service())
-    pool.append(serviceExporter)
+    service_exporter = PyroServiceExporter(service_name = "ServiceName%s" % i, service = Service())
+    pool.append(service_exporter)
 ]]></programlisting>
 
 		<para>(Yeah, I know, you can probably do this in one line with a list
@@ -206,26 +208,26 @@ for i in range(10):
 
 <programlisting><![CDATA[
 class HighAvailabilityService(object):
-    def __init__(self, servicePool):
-        self.servicePool = servicePool
+    def __init__(self, service_pool):
+        self.service_pool = service_pool
         self.index = 0
-    def getData(self, param):
-        self.index = (self.index+1) % len(self.servicePool)
+    def get_data(self, param):
+        self.index = (self.index+1) % len(self.service_pool)
         try:
-            return self.servicePool[self.index].getData(param)
+            return self.service_pool[self.index].get_data(param)
         except:
-            del(self.servicePool[i])
-            return self.getData(param)
+            del(self.service_pool[i])
+            return self.get_data(param)
 
-service = HighAvailabilityService(servicePool = services)
-service.getData("Hello")
-service.getData("World")
+service = HighAvailabilityService(service_pool = services)
+service.get_data("Hello")
+service.get_data("World")
 ]]></programlisting>
 
-		<para>Notice how each call to the HighAvailabilityService class causes the internal index to increment and roll over.
-		If a service doesn't appear to be reachable, it is deleted from the list and attempted again. A little more sophisticated
-		error handling should be added in case there are no services available. And there needs to be a way to grow the services.
-		But this gets us off to a good start.</para>
+		<para>Notice how each call to the <classname>HighAvailabilityService</classname> class causes the internal index to
+		increment and roll over. If a service doesn't appear to be reachable, it is deleted from the list and attempted again.
+		A little more sophisticated error handling should be added in case there are no services available. And there needs to
+		be a way to grow the services. But this gets us off to a good start.</para>
 		
 	</section>
 	

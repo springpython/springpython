@@ -22,11 +22,12 @@
 				<para><link linkend="components">Inversion Of Control</link> - The idea is to
 				decouple two classes at the interface level. This lets you build many reusable
 				parts in your software, and your whole application becomes more pluggable. You
-				can use either the XmlApplicationContext or the DecoratorBasedApplicationContext.</para>
+				can use either the <classname>XmlApplicationContext</classname> or the
+				<classname>DecoratorBasedApplicationContext</classname>.</para>
 			</listitem>
 		
 			<listitem>
-				<para><link linkend="aop">Aspect-oriented Programming</link> - Spring Python
+				<para><link linkend="aop">Aspect Oriented Programming</link> - Spring Python
 				provides great ways to wrap advice around objects. It is utilized for remoting.
 				Another use is for debug tracers and performance tracing.</para>
 			</listitem>

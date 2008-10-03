@@ -166,7 +166,7 @@ class CoilyWebClient(DecoratorBasedApplicationContext):
     @component
     def bot(self):
         proxy = PyroProxyFactory()
-        proxy.serviceUrl = "PYROLOC://localhost:7766/bot"
+        proxy.service_url = "PYROLOC://localhost:7766/bot"
         return proxy
 
 
@@ -196,7 +196,7 @@ class CoilyIRCServer(DecoratorBasedApplicationContext):
     @component
     def bot(self):
         exporter = PyroServiceExporter()
-        exporter.serviceName = "bot"
+        exporter.service_name = "bot"
         exporter.service = self.remoteBot()
         return exporter
 

@@ -134,7 +134,11 @@ def setup(root, stylesheets=True):
          p["doc.ref.dir"]+"/src/images/",
          root + "/images/",
          ["*.gif", "*.svg", "*.jpg", "*.png"])
-    
+
+    docbook_images_dir = p["targetDir"] + "/" + p["dist.ref.dir"] + "/images"
+    if not os.path.exists(docbook_images_dir):
+        shutil.copytree(p["doc.ref.dir"]+"/images/", docbook_images_dir)
+
     if stylesheets:
         copy(
              p["doc.ref.dir"]+"/styles/",

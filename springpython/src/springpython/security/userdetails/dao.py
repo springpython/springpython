@@ -55,23 +55,23 @@ class DatabaseUserDetailsService(UserDetailsService):
     
     def __init__(self, dataSource = None):
         super(DatabaseUserDetailsService, self).__init__()
-        self.usersByUsernameQuery = self.DEF_USERS_BY_USERNAME_QUERY
-        self.authoritiesByUsernameQuery = self.DEF_AUTHORITIES_BY_USERNAME_QUERY
+        self.users_by_username_query = self.DEF_USERS_BY_USERNAME_QUERY
+        self.auth_by_username_query = self.DEF_AUTHORITIES_BY_USERNAME_QUERY
         self.dataSource = dataSource
         self.role_prefix = ""
-        self.usernameBasedPrimaryKey = True
-        self.logger = logging.getLogger("springpython.security.providers.DatabaseUserDetailsService")
+        self.username_based_pk = True
+        self.logger = logging.getLogger("springpython.security.userdetails.DatabaseUserDetailsService")
         
     def load_user(self, username):
         dt = DatabaseTemplate(self.dataSource)
         
-        users = dt.query(self.usersByUsernameQuery, (username,), self.UsersByUsernameMapping())
+        users = dt.query(self.users_by_username_query, (username,), self.UsersByUsernameMapping())
 
         if len(users) == 0:
             raise UsernameNotFoundException("User not found")
 
         user = users[0] # First item in list, first column of tuple, containing no GrantedAuthority[]
-        dbAuths = dt.query(self.authoritiesByUsernameQuery, (user.username,), self.AuthoritiesByUsernameMapping(self.role_prefix))
+        dbAuths = dt.query(self.auth_by_username_query, (user.username,), self.AuthoritiesByUsernameMapping(self.role_prefix))
         self.add_custom_authorities(user.username, dbAuths)
 
         if len(dbAuths) == 0:
@@ -80,7 +80,7 @@ class DatabaseUserDetailsService(UserDetailsService):
         auths = [dbAuth for dbAuth in dbAuths]
         return_username = user.username
 
-        if not self.usernameBasedPrimaryKey:
+        if not self.username_based_pk:
             return_username = username
             
         self.logger.debug("Just fetched %s from the database" % user)
