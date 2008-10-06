@@ -113,7 +113,7 @@ class ConnectionFactoryTestCase(MockTestCase):
                 WHERE (lklabelsys.oid = impcarrcfg.lklabelsys_oid)
                 and (carr.oid = impcarrcfg.carr_oid )
                 and (carr.oid = ? and lklabelsys.oid = ?) 
-            """, (5, 5), testSupportClasses.ImpFilePropsRowCallbackHandler())
+            """, (5, 5), testSupportClasses.ImpFilePropsRowMapper())
 
         del(sys.modules["cx_Oracle"])
 
@@ -143,7 +143,7 @@ class ConnectionFactoryTestCase(MockTestCase):
                 and (carr.oid = :carr_oid and lklabelsys.oid = :lklabelsys_oid) 
             """,
             {'carr_oid':5, 'lklabelsys_oid':5},
-            testSupportClasses.ImpFilePropsRowCallbackHandler())
+            testSupportClasses.ImpFilePropsRowMapper())
 
         del(sys.modules["cx_Oracle"])
 
@@ -189,15 +189,15 @@ class DatabaseTemplateMockTestCase(MockTestCase):
         
 
         databaseTemplate = DatabaseTemplate(connection_factory = mockConnectionFactory)
-        results = databaseTemplate.query("select * from foobar", rowhandler=testSupportClasses.SampleRowCallbackHandler())
+        results = databaseTemplate.query("select * from foobar", rowhandler=testSupportClasses.SampleRowMapper())
         
     def testProgrammaticStaticQuery(self):
-        self.assertRaises(ArgumentMustBeNamed, self.databaseTemplate.query, "select * from animal", testSupportClasses.AnimalRowCallbackHandler())
+        self.assertRaises(ArgumentMustBeNamed, self.databaseTemplate.query, "select * from animal", testSupportClasses.AnimalRowMapper())
 
         self.mock.expects(once()).method("execute").id("#1")
         self.mock.expects(once()).method("fetchall").will(return_value([('snake', 'reptile', 1), ('racoon', 'mammal', 1)])).id("#2").after("#1")
 
-        animals = self.databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.AnimalRowCallbackHandler())
+        animals = self.databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.AnimalRowMapper())
         self.assertEquals(animals[0].name, "snake")
         self.assertEquals(animals[0].category, "reptile")
         self.assertEquals(animals[1].name, "racoon")
@@ -209,11 +209,11 @@ class DatabaseTemplateMockTestCase(MockTestCase):
         self.mock.expects(once()).method("execute").id("#3").after("#2")
         self.mock.expects(once()).method("fetchall").will(return_value([('snake', 'reptile', 1)])).id("#4").after("#3")
 
-        animals = self.databaseTemplate.query("select * from animal where name = %s", ("snake",), testSupportClasses.AnimalRowCallbackHandler())
+        animals = self.databaseTemplate.query("select * from animal where name = %s", ("snake",), testSupportClasses.AnimalRowMapper())
         self.assertEquals(animals[0].name, "snake")
         self.assertEquals(animals[0].category, "reptile")
 
-        animals = self.databaseTemplate.query("select * from animal where name = ?", ("snake",), testSupportClasses.AnimalRowCallbackHandler())
+        animals = self.databaseTemplate.query("select * from animal where name = ?", ("snake",), testSupportClasses.AnimalRowMapper())
         self.assertEquals(animals[0].name, "snake")
         self.assertEquals(animals[0].category, "reptile")
         
@@ -407,20 +407,20 @@ class AbstractDatabaseTemplateTestCase(unittest.TestCase):
         results = self.databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.ValidHandler())
 
     def testProgrammaticStaticQuery(self):
-        self.assertRaises(ArgumentMustBeNamed, self.databaseTemplate.query, "select * from animal", testSupportClasses.AnimalRowCallbackHandler())
+        self.assertRaises(ArgumentMustBeNamed, self.databaseTemplate.query, "select * from animal", testSupportClasses.AnimalRowMapper())
 
-        animals = self.databaseTemplate.query("select name, category from animal", rowhandler=testSupportClasses.AnimalRowCallbackHandler())
+        animals = self.databaseTemplate.query("select name, category from animal", rowhandler=testSupportClasses.AnimalRowMapper())
         self.assertEquals(animals[0].name, "snake")
         self.assertEquals(animals[0].category, "reptile")
         self.assertEquals(animals[1].name, "racoon")
         self.assertEquals(animals[1].category, "mammal")
         
     def testProgrammaticQueryWithBoundArguments(self):
-        animals = self.databaseTemplate.query("select name, category from animal where name = %s", ("snake",), testSupportClasses.AnimalRowCallbackHandler())
+        animals = self.databaseTemplate.query("select name, category from animal where name = %s", ("snake",), testSupportClasses.AnimalRowMapper())
         self.assertEquals(animals[0].name, "snake")
         self.assertEquals(animals[0].category, "reptile")
 
-        animals = self.databaseTemplate.query("select name, category from animal where name = ?", ("snake",), testSupportClasses.AnimalRowCallbackHandler())
+        animals = self.databaseTemplate.query("select name, category from animal where name = ?", ("snake",), testSupportClasses.AnimalRowMapper())
         self.assertEquals(animals[0].name, "snake")
         self.assertEquals(animals[0].category, "reptile")
         
@@ -564,7 +564,7 @@ class MySQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
         factory = appContext.get_component("connection_factory")
         
         databaseTemplate = DatabaseTemplate(factory)
-        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowCallbackHandler())
+        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
         
 class PostGreSQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
     def __init__(self, methodName='runTest'):
@@ -614,7 +614,7 @@ class PostGreSQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
         factory = appContext.get_component("connection_factory")
         
         databaseTemplate = DatabaseTemplate(factory)
-        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowCallbackHandler())
+        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
 
 class SqliteDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
     def __init__(self, methodName='runTest'):
@@ -651,5 +651,5 @@ class SqliteDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
         factory = appContext.get_component("connection_factory")
         
         databaseTemplate = DatabaseTemplate(factory)
-        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowCallbackHandler())
+        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
 

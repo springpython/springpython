@@ -91,7 +91,7 @@ class DatabaseTemplate(object):
         if args and not rowhandler:
             raise ArgumentMustBeNamed(arg_name="rowhandler")
 
-        return [rowhandler.process_row(row) for row in self.query_for_list(sql_query, args)]
+        return [rowhandler.map_row(row) for row in self.query_for_list(sql_query, args)]
     
     def query_for_list(self, sql_query, args = None):
         """Execute a query for a result list, given static SQL. If args is provided, bind the arguments 
@@ -175,10 +175,10 @@ class DatabaseTemplate(object):
         return self.execute(sql_statement, args)
     
     
-class RowCallbackHandler(object):
+class RowMapper(object):
     """
     This is an interface to handle one row of data.
     """
-    def process_row(self, row):
+    def map_row(self, row):
         raise NotImplementedError()
 

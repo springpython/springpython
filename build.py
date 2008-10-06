@@ -116,7 +116,6 @@ def publish():
     print "+++ Upload the tarballs using sftp manually to <user>@frs.sourceforge.net, into dir uploads and create a release."
 
 def register(version):
-    """TODO(8/28/2008 GLT): Test this part when making official release and registering to PyPI."""
     os.system("cd src     ; python setup.py --version %s register" % version)
     os.system("cd samples ; python setup.py --version %s register" % version)
 
