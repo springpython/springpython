@@ -15,7 +15,7 @@
 """
 import logging
 from springpython.database.core import DatabaseTemplate
-from springpython.database.core import RowCallbackHandler
+from springpython.database.core import RowMapper
 from springpython.security import UsernameNotFoundException
 from springpython.security.userdetails import User
 from springpython.security.userdetails import UserDetailsService
@@ -37,20 +37,20 @@ class DatabaseUserDetailsService(UserDetailsService):
     DEF_USERS_BY_USERNAME_QUERY = "SELECT username,password,enabled FROM users WHERE username = ?"
     DEF_AUTHORITIES_BY_USERNAME_QUERY = "SELECT username,authority FROM authorities WHERE username = ?"
 
-    class UsersByUsernameMapping(RowCallbackHandler):
+    class UsersByUsernameMapping(RowMapper):
         """A row handler that processes one user entry."""
-        def process_row(self, row):
+        def map_row(self, row):
             username = row[0]
             password = row[1]
             enabled = row[2]
             return User(username, password, enabled, True, True, True, ["HOLDER"])
     
-    class AuthoritiesByUsernameMapping(RowCallbackHandler):
+    class AuthoritiesByUsernameMapping(RowMapper):
         """A row handler that processes one granted authority for a given user."""
         def __init__(self, role_prefix):
             self.role_prefix = role_prefix
             
-        def process_row(self, row):
+        def map_row(self, row):
             return self.role_prefix + row[1]
     
     def __init__(self, dataSource = None):

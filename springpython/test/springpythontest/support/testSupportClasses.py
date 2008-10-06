@@ -22,7 +22,7 @@ from springpython.context import component
 from springpython.context import scope
 from springpython.database.core import DaoSupport
 from springpython.database.core import DatabaseTemplate
-from springpython.database.core import RowCallbackHandler
+from springpython.database.core import RowMapper
 from springpython.database.factory import ConnectionFactory
 from springpython.database.factory import MySQLConnectionFactory
 from springpython.database import transaction
@@ -43,23 +43,23 @@ class Animal(object):
         self.name = name
         self.category = category
         
-class SampleRowCallbackHandler(RowCallbackHandler):
-    def process_row(self, row):
+class SampleRowMapper(RowMapper):
+    def map_row(self, row):
         return Person(name = row[0], phone = row[1])
 
-class AnimalRowCallbackHandler(RowCallbackHandler):
-    def process_row(self, row):
+class AnimalRowMapper(RowMapper):
+    def map_row(self, row):
         return Animal(name = row[0], category = row[1])
 
 class InvalidCallbackHandler(object):
     pass
 
 class ImproperCallbackHandler(object):
-    def process_row(self):
+    def map_row(self):
         raise Exception("You should not have made it this far.")
 
 class ValidHandler(object):
-    def process_row(self, row):
+    def map_row(self, row):
         return {row[0]:row[1]}
 
 class MovieLister(object):
@@ -193,8 +193,8 @@ class ImpFileProps(object):
         self.paystat_archive_dir = paystat_archive_dir
         self.oid = oid
 
-class ImpFilePropsRowCallbackHandler(RowCallbackHandler):
-    def process_row(self, row):
+class ImpFilePropsRowMapper(RowMapper):
+    def map_row(self, row):
         return ImpFileProps(row[0], row[1], row[2], row[3])
 
 class BankException(Exception):
