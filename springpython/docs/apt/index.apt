@@ -16,6 +16,9 @@ Introduction
   
 Key Features
 
+	This section lists the features provided by Spring Python, including links to the reference documentation
+	where you can more details and examples.
+
 	* {{{reference/html/components.html}Inversion Of Control}} - The idea is to decouple two classes at
 	the interface level. This lets you build many reusable parts in your
 	software, and your whole application becomes more pluggable. You can
