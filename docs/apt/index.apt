@@ -6,11 +6,13 @@
 
 Introduction
 
-  Spring Python is an offshoot of the Java-based Spring Framework and Spring Security, targeted for Python. Spring provides many useful features, and I wanted those same features available when working with Python.
+  Spring Python is an offshoot of the Java-based Spring Framework and Spring Security, targeted for Python. Spring
+  provides many useful features, and I wanted those same features available when working with Python.
 
-  You can view this site {{{http://springpython.webfactional.com}in the clear}} or {{{https://springpython.webfactional.com}securely through SSL}}.
-
-  This used to be a trac site, but since Spring Python became an official Spring Extension, it has been replaced with a maven-generated one. Documentation stored in various trac articles has been migrated to the documentation set found in left-hand side of this page. You can view either HTML or a PDF document. The old trac site has been archived for historical benefit.
+  This used to be a trac site, but since Spring Python became an official Spring Extension, it has been replaced
+  with a maven-generated one. Documentation stored in various trac articles has been migrated to the documentation
+  set found in left-hand side of this page. You can view either HTML or a PDF document. The old trac site has been
+  archived for historical benefit.
   
 Key Features
 
@@ -18,46 +20,39 @@ Key Features
 	the interface level. This lets you build many reusable parts in your
 	software, and your whole application becomes more pluggable. You can
 	use either the XmlApplicationContext or the DecoratorBasedApplicationContext.
-
     * {{{reference/html/aop.html}Aspect-oriented Programming}} - Spring Python provides great ways
 	to wrap advice around objects. It is utilized for remoting. Another
 	use is for debug tracers and performance tracing.
-
     * {{{reference/html/dao.html}Data Access}} - Reading from the database requires a
 	monotonous cycle of opening cursors, reading rows, and closing
 	cursors, along with exception handlers. With this template class, all
 	you need is the SQL query and row-handling function. Spring Python
 	does the rest.
-
     * {{{reference/html/transaction.html}Transaction Management}} - Wrapping multiple
     database calls with	transactions can make your code hard to read. This module provides
 	multiple ways to define transactions without making things complicated.
-
     * {{{reference/html/security.html}Security}} - Plugin security interceptors to
     lock down access to	your methods, utilizing both authentication and domain authorization.
-
     * {{{reference/html/remoting.html}Remoting}} - It is easy to convert your local application into a
 	distributed one. If you have already built your client and server
 	pieces using the IoC container, then going from local to distributed
 	is just a configuration change.
-
     * {{{reference/html/samples.html}Samples}} - to help demonstrate various features of Spring Python,
 	some sample applications have been created:
-	
           * {{{reference/html/samples.html#samples-petclinic}PetClinic}} - Everybody's favorite Spring
           	sample application has been rebuilt from the ground up using various web containers
 			including: CherryPy. Go check it out for an example of how to use this
 			framework.
-			
           * {{{reference/html/samples.html#samples-springwiki}Spring Wiki}} - Wikis are powerful ways
           	to store and manage	content, so we created a simple one as a demo!
-			
           * {{{reference/html/samples.html#samples-springbot}Spring Bot}} - Use Spring Python to build
           	a tiny bot to manage the IRC channel of your open source project. 
 			
 What's Coming?
 
-  We are working on improving the {{{reference/html/components.html}core IoC container}}. Right now, what we have works for simple situations, but in order to make it as powerful and extensible as the original Spring Framework's container, we are overhauling things. The goal is to have this completed by release 1.0.
+  We are working on improving the {{{reference/html/components.html}core IoC container}}. Right now, what we have
+  works for simple situations, but in order to make it as powerful and extensible as the original Spring Framework's container,
+  we are overhauling things. The goal is to have this completed by release 1.0.
   
 Links
 
@@ -67,23 +62,45 @@ Links
   
   {{{issue-tracking.html}Issue Tracking}} (also listed on left-hand side) will show you how to browse our issue tracking system.
 
-  {{{team-list.html}Meet the team}} of Spring Python! These are the people that have commit power. Also read about {{{reference/html/overview.html#overview-team}how to join the team}}.
+  {{{team-list.html}Meet the team}} of Spring Python! These are the people that have commit power. Also read about
+  {{{reference/html/overview.html#overview-team}how to join the team}}.
     
-  Read the "Documentation" manual (online or downloaded PDF file) for more detailing information on the project, how to contribute to the project, etc.
+  Read the "Documentation" manual (online or downloaded PDF file) for more detailing information on the project, how to
+  contribute to the project, etc.
 
 News
 
-  <<NEWS>> - Spring Python 0.7.0 has been released. This release contains several upgrades and improvements, including scrubbing the APIs to better match {{{http://www.python.org/dev/peps/pep-0008/}PEP-0008}}. - 9/25/2008 G.Turnquist
+  <<NEWS>> - Spring Python 0.7.0 has been released. This release contains several upgrades and improvements, including
+  scrubbing the APIs to better match {{{http://www.python.org/dev/peps/pep-0008/}PEP-0008}}. - 9/25/2008 G.Turnquist
 
-  <<NEWS>> - Spring Python's web page has been updated. It now uses the maven-generate material, with links to the official documents released earlier. The former trac site is still online and available through a link on the site. While the site may appear low on information, all the main articles of documentation are contained in the reference documents themselves.  - 9/19/2008 G.Turnquist
+  <<NEWS>> - Spring Python's web page has been updated. It now uses the maven-generate material, with links to the official
+  documents released earlier. The former trac site is still online and available through a link on the site. While the site
+  may appear low on information, all the main articles of documentation are contained in the reference documents themselves. 
+  - 9/19/2008 G.Turnquist
 
-  <<NEWS>> - Spring Python's official documentation has been staged at {{{http://docs.springpython.webfactional.com}http://docs.springpython.webfactional.com}}. - 9/17/2008 G.Turnquist
+  <<NEWS>> - Spring Python's official documentation has been staged at
+  {{{http://docs.springpython.webfactional.com}http://docs.springpython.webfactional.com}}. - 9/17/2008 G.Turnquist
 
-  <<NEWS>> - Spring Python was given as a "sneak peek" into Spring Extensions to the London Spring User's Group at the end of a presentation on Spring.NET given by Russ Miles. If you follow that link to the Spring Python forums, there is another link to see the online video clip. - 9/15/2008 G.Turnquist
+  <<NEWS>> - Spring Python was given as a "sneak peek" into Spring Extensions to the London Spring User's Group at the
+  end of a presentation on Spring.NET given by Russ Miles. If you follow that link to the Spring Python forums, there is another
+  link to see the online video clip. - 9/15/2008 G.Turnquist
 
-  <<NEWS>> - Spring Python 0.6.0 has been released. This is the release with Spring Python as an official Spring Extension. The primary task was quality, and the first step was to integrate all the unit tests with SpringSource's build team and a continuous integration server. This has been accomplished and one sample of such a run can be found at http://build.springframework.org/browse/EXT-PYQUICK-19. A couple cosmetic issues were closed at the same time. Also, a new email distribution list has been created (mailto:springpython-users@lists.springsource.com), hosted by SpringSource, and existing members have been migrated to it. - 9/5/2008 G.Turnquist
+  <<NEWS>> - Spring Python 0.6.0 has been released. This is the release with Spring Python as an official Spring Extension.
+  The primary task was quality, and the first step was to integrate all the unit tests with SpringSource's build team and a
+  continuous integration server. This has been accomplished and one sample of such a run can be found at
+  http://build.springframework.org/browse/EXT-PYQUICK-19. A couple cosmetic issues were closed at the same time. Also, a
+  new email distribution list has been created (mailto:springpython-users@lists.springsource.com), hosted by SpringSource,
+  and existing members have been migrated to it. - 9/5/2008 G.Turnquist
 
-  <<NEWS>> - SpringSource has noticed Spring Python! Russ Miles from Spring Source recently contacted me and invited Spring Python to become an official Spring Extension. Russ is in charge of the Spring Extensions project, a process they are setting up to incubate projects that can potentially become official parts of Spring Source's software portfolio. Read more on our new discussion forum. - 8/11/2008 G.Turnquist
+  <<NEWS>> - SpringSource has noticed Spring Python! Russ Miles from Spring Source recently contacted me and invited Spring
+  Python to become an official Spring Extension. Russ is in charge of the Spring Extensions project, a process they are
+  setting up to incubate projects that can potentially become official parts of Spring Source's software portfolio. Read more
+  on our new discussion forum. - 8/11/2008 G.Turnquist
 
-  <<NEWS>> - Spring Python 0.5.0 has been released. This includes declarative transactions you can put into your DecoratorBasedApplicationContext and support for defining propagation levels. Much more testing has been put into verifying that DatabaseTemplate and DatabaseTransactions support MySQL, PostgreSQL, and Sqlite. We also have preliminary support for Oracle. Also, Spring Python has been re-licensed under Apache License 2.0. The sample applications are still under the old licenses, but the core library of Spring Python has been turned business friendly. You can read my my blog article for more information about this. - 5/30/2008 G.Turnquist
+  <<NEWS>> - Spring Python 0.5.0 has been released. This includes declarative transactions you can put into your
+  DecoratorBasedApplicationContext and support for defining propagation levels. Much more testing has been put into verifying
+  that DatabaseTemplate and DatabaseTransactions support MySQL, PostgreSQL, and Sqlite. We also have preliminary support for
+  Oracle. Also, Spring Python has been re-licensed under Apache License 2.0. The sample applications are still under the old
+  licenses, but the core library of Spring Python has been turned business friendly. You can read my my blog article for more
+  information about this. - 5/30/2008 G.Turnquist
 
