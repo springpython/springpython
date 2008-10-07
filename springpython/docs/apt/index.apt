@@ -20,31 +20,40 @@ Key Features
 	the interface level. This lets you build many reusable parts in your
 	software, and your whole application becomes more pluggable. You can
 	use either the XmlApplicationContext or the DecoratorBasedApplicationContext.
+	
     * {{{reference/html/aop.html}Aspect-oriented Programming}} - Spring Python provides great ways
 	to wrap advice around objects. It is utilized for remoting. Another
 	use is for debug tracers and performance tracing.
+	
     * {{{reference/html/dao.html}Data Access}} - Reading from the database requires a
 	monotonous cycle of opening cursors, reading rows, and closing
 	cursors, along with exception handlers. With this template class, all
 	you need is the SQL query and row-handling function. Spring Python
 	does the rest.
+	
     * {{{reference/html/transaction.html}Transaction Management}} - Wrapping multiple
     database calls with	transactions can make your code hard to read. This module provides
 	multiple ways to define transactions without making things complicated.
+	
     * {{{reference/html/security.html}Security}} - Plugin security interceptors to
     lock down access to	your methods, utilizing both authentication and domain authorization.
+    
     * {{{reference/html/remoting.html}Remoting}} - It is easy to convert your local application into a
 	distributed one. If you have already built your client and server
 	pieces using the IoC container, then going from local to distributed
 	is just a configuration change.
+	
     * {{{reference/html/samples.html}Samples}} - to help demonstrate various features of Spring Python,
 	some sample applications have been created:
+	
           * {{{reference/html/samples.html#samples-petclinic}PetClinic}} - Everybody's favorite Spring
           	sample application has been rebuilt from the ground up using various web containers
 			including: CherryPy. Go check it out for an example of how to use this
 			framework.
+			
           * {{{reference/html/samples.html#samples-springwiki}Spring Wiki}} - Wikis are powerful ways
           	to store and manage	content, so we created a simple one as a demo!
+          	
           * {{{reference/html/samples.html#samples-springbot}Spring Bot}} - Use Spring Python to build
           	a tiny bot to manage the IRC channel of your open source project. 
 			
@@ -54,21 +63,7 @@ What's Coming?
   works for simple situations, but in order to make it as powerful and extensible as the original Spring Framework's container,
   we are overhauling things. The goal is to have this completed by release 1.0.
   
-Links
-
-  {{{http://forum.springframework.org/forumdisplay.php?f=45}Spring Python community forum}}
-
-  {{{source-repository.html}Source Repository}} (also listed on left-hand side) will show you how to browse or checkout the code.
-  
-  {{{issue-tracking.html}Issue Tracking}} (also listed on left-hand side) will show you how to browse our issue tracking system.
-
-  {{{team-list.html}Meet the team}} of Spring Python! These are the people that have commit power. Also read about
-  {{{reference/html/overview.html#overview-team}how to join the team}}.
-    
-  Read the "Documentation" manual (online or downloaded PDF file) for more detailing information on the project, how to
-  contribute to the project, etc.
-
-News
+Spring Python News
 
   <<NEWS>> - Spring Python 0.7.0 has been released. This release contains several upgrades and improvements, including
   scrubbing the APIs to better match {{{http://www.python.org/dev/peps/pep-0008/}PEP-0008}}. - 9/25/2008 G.Turnquist
