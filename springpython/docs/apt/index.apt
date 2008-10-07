@@ -43,8 +43,7 @@ Key Features
 
           * {{{reference/html/samples.html#samples-petclinic}PetClinic}} - Everybody's favorite Spring
           	sample application has been rebuilt from the ground up using various web containers
-			including: CherryPy. Go check it out for an example of how to use this
-			framework.
+			including: CherryPy. Go check it out for an example of how to use this framework.
 			
           * {{{reference/html/samples.html#samples-springwiki}Spring Wiki}} - Wikis are powerful ways
           	to store and manage	content, so we created a simple one as a demo!
