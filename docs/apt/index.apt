@@ -16,7 +16,9 @@ Introduction
   
 Key Features
 
-    * {{{reference/html/components.html}Inversion Of Control}} - The idea is to decouple two classes at	the interface level. This lets you build many reusable parts in your software, and your whole application becomes more pluggable. You can use either the XmlApplicationContext or the DecoratorBasedApplicationContext.	
+    * {{{reference/html/components.html}Inversion Of Control}} - The idea is to decouple two classes at	the
+    interface level. This lets you build many reusable parts in your software, and your whole application becomes
+    more pluggable. You can use either the XmlApplicationContext or the DecoratorBasedApplicationContext.	
 
     * {{{reference/html/aop.html}Aspect-oriented Programming}} - Spring Python provides great ways to wrap advice around objects. It is utilized for remoting. Another use is for debug tracers and performance tracing.	
 
