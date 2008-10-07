@@ -2,14 +2,13 @@
 <project name="Spring Python">
   <bannerLeft>
     <name>Spring Python</name>
-    <src>http://sourceforge.net/sflogo.php?group_id=104215&amp;type=5</src>
-    <href>http://sourceforge.net/projects/springpython/</href>
-  </bannerLeft>
-  <bannerRight>
-    <name>Spring Python</name>
     <src>reference/html/images/spring_python_white.png</src>
     <href>http://springpython.webfactional.com/</href>
-  </bannerRight>
+  </bannerLeft>
+  <!--<bannerRight>
+    <name>Spring Python</name>
+    <src>reference/html/images/springsource-banner-rhs.png</src>
+  </bannerRight>-->
   <body>
     <links>
       <item name="SpringSource" href="http://springsource.com" />
