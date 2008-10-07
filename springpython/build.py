@@ -158,6 +158,7 @@ def site(version):
     cur = os.path.abspath(".")
     shutil.copy(cur + "/docs/spring.ico", p["targetDir"]+"/docs/favicon.ico")
     os.system("mvn -Dspringpython.version=%s site" % version)
+    os.system("cp docs/resources/css/* target/docs/css/")
 
 def docs_all(version):
     copy("xml/schema/context/", p["targetDir"] + "/docs/schema/context/", ["*.xsd"])
