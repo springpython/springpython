@@ -13,13 +13,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
+
 import cherrypy
 import logging
 import os
 import noxml
+from springpython.context import XmlApplicationContext
 from springpython.security.cherrypy31 import AuthenticationFilter, ContextSessionFilter, SecurityFilter
 from springpython.security.context import SecurityContextHolder
-from springpython.context import XmlApplicationContext
 
 if __name__ == '__main__':
     """This allows the script to be run as a tiny webserver, allowing quick testing and development.
@@ -35,6 +36,9 @@ if __name__ == '__main__':
     formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s") 
     ch.setFormatter(formatter)
     logger.addHandler(ch)
+
+    # This sample loads the IoC container from an XML file. The XML-based application context
+    # automatically resolves all dependencies and order of instantiation for you. 
 
     applicationContext = XmlApplicationContext(configLocation = "applicationContext-client.xml")
     
