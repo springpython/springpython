@@ -82,7 +82,7 @@ class DatabaseTemplate(object):
         return rows_affected
     
     def query(self, sql_query, args = None, rowhandler = None):
-        """Execute a query given static SQL, reading the ResultSet on a per-row basis with a RowCallbackHandler.
+        """Execute a query given static SQL, reading the ResultSet on a per-row basis with a RowMapper.
         If args is provided, bind the arguments (to avoid SQL injection attacks)."""
 
         # This is the case where only two, non-named arguments were provided, the sql_query and one other.

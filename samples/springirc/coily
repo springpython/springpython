@@ -19,29 +19,12 @@ import logging
 import os
 import re
 import sys
-from cherrypy._cpserver import Server
-from cherrypy._cpwsgi import wsgiApp
-from cherrypy._cpwsgiserver import CherryPyWSGIServer
 from optparse import OptionParser
 from springbot import DictionaryBot
 from springpython.context import DecoratorBasedApplicationContext
 from springpython.context import component
 from springpython.remoting.pyro import PyroProxyFactory
 from springpython.remoting.pyro import PyroServiceExporter
-from springpython.security.web import FilterChainProxy
-from springpython.security.web import MiddlewareFilter
-
-class WSGIServerWithMiddleware(object):
-    """Server component needed to jumpstart a Spring Python/CherryPy web app."""
-    def __init__(self, middleware):
-        self.middleware = middleware
-    def __call__(self):
-        return CherryPyWSGIServer(("", 9001), self.middleware[0])
-
-class MiddlewareServer(Server):
-    """Server component needed to jumpstart a Spring Python/CherryPy web app."""
-    def start(self, middleware):
-        Server.start(self, initOnly=False, serverClass=WSGIServerWithMiddleware(middleware), blocking=False)
 
 def header():
     """Standard header used for all pages"""
@@ -75,7 +58,7 @@ def footer():
         <hr>
         <table style="width:100%"><tr>
                 <td><A href="/">Home</A></td>
-                <td style="text-align:right;color:silver">Coily :: a <a href="https://springpython.webfactional.com">Spring Python</a> IRC bot (powered by <A HREF="http://www.cherrypy.org">CherryPy</A>)</td>
+                <td style="text-align:right;color:silver">Coily :: a <a href="http://springpython.webfactional.com">Spring Python</a> IRC bot (powered by <A HREF="http://www.cherrypy.org">CherryPy</A>)</td>
         </tr></table>
         
         </body>
@@ -169,21 +152,6 @@ class CoilyWebClient(DecoratorBasedApplicationContext):
         proxy.service_url = "PYROLOC://localhost:7766/bot"
         return proxy
 
-
-    @component
-    def exceptionFilter(self):
-        filter = MiddlewareFilter()
-        filter.clazz = "paste.evalexception.middleware.EvalException"
-        filter.appAttribute = "application"
-        return filter 
-
-    @component
-    def filterChainProxy(self):
-        return FilterChainProxy(filterInvocationDefinitionSource = 
-            [
-            ("/.*",       [self.exceptionFilter(), ])
-            ])
-
 class CoilyIRCServer(DecoratorBasedApplicationContext):
     """This container represents the context of the IRC bot. It needs to export information, so the web app can get it."""
     def __init__(self):
@@ -230,24 +198,22 @@ if __name__ == "__main__":
         # the channel and the bot that supports it.
         applicationContext = CoilyWebClient()
 
-        cherrypy.root = applicationContext.get_component(componentId = "root")
-        cherrypy.server = MiddlewareServer()
-
         # Configure cherrypy programmatically.
-        cherrypy.config.update({
-                                "global": {"server.socket_port": 9001},
-                                "/": {"static_filter.root": os.getcwd()},
-                                "/images": {"static_filter.on": True, "static_filter.dir": "images"},
-                                "/html": {"static_filter.on": True, "static_filter.dir": "html"},
-                                "/styles": {"static_filter.on": True, "static_filter.dir": "css"},
-                                "/scripts": {"static_filter.on": True, "static_filter.dir": "js"}
-                            })
+        conf = {"/":                {"tools.staticdir.root": os.getcwd()},
+	            "/images":          {"tools.staticdir.on": True,
+	                                 "tools.staticdir.dir": "images"},
+	            "/html":            {"tools.staticdir.on": True,
+	                                 "tools.staticdir.dir": "html"},
+	            "/styles":          {"tools.staticdir.on": True,
+	                                 "tools.staticdir.dir": "css"}
+	            }
 
-        middleware = applicationContext.get_component(componentId = "filterChainProxy")
-        middleware.application = wsgiApp
-
-        # Start the CherryPy server.
-        cherrypy.server.start(middleware=[middleware])
+        cherrypy.config.update({'server.socket_port': 9001})
+	    
+        cherrypy.tree.mount(applicationContext.get_component(componentId = "root"), '/', config=conf)
+	
+        cherrypy.engine.start()
+        cherrypy.engine.block()
     
     if options.irc:
         # This runs the IRC bot that connects to a channel and then responds to various events.

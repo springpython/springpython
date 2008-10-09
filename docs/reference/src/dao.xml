@@ -54,7 +54,7 @@ return results
 			<title>Database Template</title>
 			
 			<para>The same query above can be written using a <classname>DatabaseTemplate</classname>. The only
-			thing you must provide is the SQL and a <classname>RowCallbackHandler</classname> to process one row of
+			thing you must provide is the SQL and a <classname>RowMapper</classname> to process one row of
 			data. The template does the rest.</para>
 
 <programlisting><![CDATA[
@@ -63,15 +63,15 @@ from springpython.database import *
 connectionFactory = MySQLConnectionFactory(username="me", password"secret", hostname="localhost", db="springpython")
 dt = DatabaseTemplate(connectionFactory)
 
-class TvShowCallbackHandler(RowCallbackHandler):
+class TvShowMapper(RowCallbackHandler):
     """This will handle one row of database. It can be reused for many queries if they
        are returning the same columns."""
-    def process_row(self, row):
+    def map_row(self, row):
         return TvShow(title=row[0], airDate=row[1], episodeNumber=row[2], writer=row[3])
 
 
 results = dt.query("select title, air_date, episode_number, writer from tv_shows where name = %s", \
-                   ("Monty Python",), TvShowCallbackHandler())
+                   ("Monty Python",), TvShowMapper())
 ]]></programlisting>
 
 			<para>Well, no sign of a cursor anywhere. If you didn't have to worry about opening it,
@@ -81,11 +81,11 @@ results = dt.query("select title, air_date, episode_number, writer from tv_shows
 
 <programlisting><![CDATA[
 results = dt.query("select title, air_date, episode_number, writer from tv_shows where episode_number < %s", \
-                   (100,), TvShowCallbackHandler())
+                   (100,), TvShowMapper())
 results = dt.query("select title, air_date, episode_number, writer from tv_shows where upper(title) like %s", \
-                   ("%CHEESE%",), TvShowCallbackHandler())
+                   ("%CHEESE%",), TvShowMapper())
 results = dt.query("select title, air_date, episode_number, writer from tv_shows where writer in ('Cleese', 'Graham')",
-                   rowhandler=TvShowCallbackHandler())
+                   rowhandler=TvShowMapper())
 ]]></programlisting>
 
 			<para>You don't have to reimplement the rowhandler. For these queries, you can focus

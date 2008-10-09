@@ -26,6 +26,8 @@ if __name__ == '__main__':
     """This allows the script to be run as a tiny webserver, allowing quick testing and development.
     For more scalable performance, integration with Apache web server would be a good choice."""
 
+    # Logging is turned on to allow user to see everything Spring Python is doing in background.
+
     logger = logging.getLogger("springpython")
     loggingLevel = logging.DEBUG
     logger.setLevel(loggingLevel)

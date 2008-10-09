@@ -19,7 +19,7 @@ import types
 from datetime import date
 from springpython.database.core import DaoSupport
 from springpython.database.core import DatabaseTemplate
-from springpython.database.core import RowCallbackHandler
+from springpython.database.core import RowMapper
 from springpython.security import UsernameNotFoundException
 from springpython.security.userdetails import UserDetailsService
 from model import Owner
@@ -46,7 +46,7 @@ class PetClinicController(DaoSupport):
                 first_name,
                 last_name
             FROM vets
-        """, rowhandler=VetRowCallbackHandler())
+        """, rowhandler=VetRowMapper())
         
     def getOwners(self, lastName = ""):
         """Return a list of owners, filtered by partial lastname."""
@@ -60,7 +60,7 @@ class PetClinicController(DaoSupport):
                 telephone
             FROM owners
             WHERE upper(last_name) like ?
-            """, ("%"+lastName.upper()+"%",), OwnerRowCallbackHandler())
+            """, ("%"+lastName.upper()+"%",), OwnerRowMapper())
         
     def getOwner(self, id):
         """Return one owner."""
@@ -74,7 +74,7 @@ class PetClinicController(DaoSupport):
                 telephone
             FROM owners
             WHERE id = ?
-            """, (id,), OwnerRowCallbackHandler())[0]
+            """, (id,), OwnerRowMapper())[0]
 
     def addOwner(self, **kwargs):
         """Add an owner to the database."""
@@ -110,7 +110,7 @@ class PetClinicController(DaoSupport):
             WHERE owners.id = ?
             AND owners.id = pets.owner_id
             AND types.id = pets.type_id
-            """, (owner.id,), PetRowCallbackHandler())
+            """, (owner.id,), PetRowMapper())
 
     def getPet(self, id):
         """Return pets belonging to a particular owner."""
@@ -123,7 +123,7 @@ class PetClinicController(DaoSupport):
             FROM pets, types
             WHERE pets.id = ?
             AND types.id = pets.type_id
-            """, (id,), PetRowCallbackHandler())[0]
+            """, (id,), PetRowMapper())[0]
 
     def getVisits(self, pet):
         """Return visits associated with a particular pet."""
@@ -134,7 +134,7 @@ class PetClinicController(DaoSupport):
             FROM pets, visits
             WHERE pets.id = ?
             AND pets.id = visits.pet_id
-            """, (pet.id,), VisitRowCallbackHandler())
+            """, (pet.id,), VisitRowMapper())
 
     def addPet(self, id, name, birthDate, type):
         """Store a new pet in the database."""
@@ -151,7 +151,7 @@ class PetClinicController(DaoSupport):
         return self.database_template.query("""
             SELECT types.id, types.name
             FROM types
-            """, rowhandler=PetTypeRowCallbackHandler())
+            """, rowhandler=PetTypeRowMapper())
 
     def visitClinic(self, petId, description):
         """Record a visit to the clinic."""
@@ -173,7 +173,7 @@ class PetClinicController(DaoSupport):
                 WHERE vets.id = vet_specialties.vet_id
                 AND vet_specialties.specialty_id = specialties.id
                 AND vets.id = ?
-            """, (vet.id,), SpecialtyRowCallbackHandler())
+            """, (vet.id,), SpecialtyRowMapper())
 
     def getUsername(self, id):
         """Look up the username associated with a user id"""
@@ -194,20 +194,20 @@ class PetClinicController(DaoSupport):
             users[i] = (users[i][0], users[i][1], authorities, users[i][3])
         return users
         
-class VetRowCallbackHandler(RowCallbackHandler):
+class VetRowMapper(RowMapper):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a Vet-oriented query by mapping a Vet-record."""
-    def process_row(self, row):
+    def map_row(self, row):
         vet = Vet()
         vet.id = row[0]
         vet.firstName = row[1]
         vet.lastName = row[2]
         return vet
 
-class OwnerRowCallbackHandler(RowCallbackHandler):
+class OwnerRowMapper(RowMapper):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from an owner-oriented query by mapping an Owner-record."""
-    def process_row(self, row):
+    def map_row(self, row):
         owner = Owner()
         owner.id = row[0]
         owner.firstName = row[1]
@@ -217,10 +217,10 @@ class OwnerRowCallbackHandler(RowCallbackHandler):
         owner.telephone = row[5]
         return owner
 
-class PetRowCallbackHandler(RowCallbackHandler):
+class PetRowMapper(RowMapper):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a pet-oriented query by mapping an Pet-record."""
-    def process_row(self, row):
+    def map_row(self, row):
         pet = Pet()
         pet.id = row[0]
         pet.name = row[1]
@@ -228,28 +228,28 @@ class PetRowCallbackHandler(RowCallbackHandler):
         pet.type = row[3]
         return pet
 
-class PetTypeRowCallbackHandler(RowCallbackHandler):
+class PetTypeRowMapper(RowMapper):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a visit-oriented query by mapping an Visit-record."""
-    def process_row(self, row):
+    def map_row(self, row):
         petType = PetType()
         petType.id = row[0]
         petType.name = row[1]
         return petType
 
-class SpecialtyRowCallbackHandler(RowCallbackHandler):
+class SpecialtyRowMapper(RowMapper):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a visit-oriented query by mapping an Visit-record."""
-    def process_row(self, row):
+    def map_row(self, row):
         specialty = Specialty()
         specialty.id = row[0]
         specialty.name = row[1]
         return specialty
 
-class VisitRowCallbackHandler(RowCallbackHandler):
+class VisitRowMapper(RowMapper):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a visit-oriented query by mapping an Visit-record."""
-    def process_row(self, row):
+    def map_row(self, row):
         visit = Visit()
         visit.date = row[0]
         visit.description = row[1]
