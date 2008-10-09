@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="transaction">
+	<title>Transaction Management</title>
+	
+	<para>When writing a program with database operations, you may need to use
+	transactions. Your code can get ugly, and it often becomes hard to read the
+	business logic due to starting, committing, or rolling back for various reasons.
+	Another risk is that some of the transaction management code you write will
+	have all the necessary steps, while you may forget some important steps in
+	others. Spring Python offers a key level of abstraction that can remove that
+	burden and allow you to focus on the business logic.</para>
+
+	<section id="transaction-solutions">
+		<title>Solutions requiring transactions</title>
+		
+		<para>For simple transactions, you can embed them programmatically.</para>
+
+		<para>Seen anything like this before?</para>
+
+<programlisting><![CDATA[
+def transfer(transfer_amount, source_account_num, target_account_num):
+    conn = MySQLdb.connection("springpython", "springpython", "localhost", "springpython")
+    cursor = conn.cursor()
+    cursor.execute("update ACCOUNT set BALANCE = BALANCE - %s where ACCOUNT_NUM = %s", (transfer_amount, source_account_num))
+    cursor.execute("update ACCOUNT set BALANCE = BALANCE + %s where ACCOUNT_NUM = %s", (transfer_amount, target_account_num))
+    cursor.close()
+]]></programlisting>
+
+		<para>This business method defines a transfer between bank accounts. Notice
+		any issues here? What happens if the target account doesn't exist? What
+		about transferring a negative balance? What if the transfer amount exceeded
+		the source account's balance? All these things require checks, and if something
+		is wrong the entire transfer must be aborted, or you find the first bank account
+		leaking money.</para>
+
+		<para>To wrap this function transactionally, based on DB-2.0 API specifications,
+		we'll add some checks. I have also completed some refactorings and utilized the
+		<classname>DatabaseTemplate</classname> to clean up my database code.</para>
+
+<programlisting><![CDATA[
+from springpython.database import *
+from springpython.database.core import *
+import types
+class Bank:
+    def __init__(self):
+        self.factory = factory.MySQLConnectionFactory("springpython", "springpython", "localhost", "springpython")
+        self.dt = DatabaseTemplate(self.factory)
+
+    def balance(self, account_num):
+        results = self.dt.query_for_list("select BALANCE from ACCOUNT where ACCOUNT_NUM = %s", (account_num,))
+        if len(results) != 1:
+            raise InvalidBankAccount("There were %s accounts that matched %s." % (len(results), account_num))
+        return results[0][0]
+
+    def checkForSufficientFunds(self, source_balance, amount):
+        if source_balance < amount:
+            raise InsufficientFunds("Account %s did not have enough funds to transfer %s" % (source_account_num, amount))
+
+    def withdraw(self, amount, source_account_num):
+        self.checkForSufficientFunds(self.balance(source_account_num), amount)
+        self.dt.execute("update ACCOUNT set BALANCE = BALANCE - %s where ACCOUNT_NUM = %s", (amount, source_account_num))
+
+    def deposit(self, amount, target_account_num):
+        # Implicitly testing for valid account number
+        self.balance(target_account_num)
+        self.dt.execute("update ACCOUNT set BALANCE = BALANCE + %s where ACCOUNT_NUM = %s", (amount, target_account_num))
+
+    def transfer(self, transfer_amount, source_account_num, target_account_num):
+        try:
+            cursor = self.factory.getConnection().cursor() # DB-2.0 API spec says that creating a cursor implicitly starts a transaction
+            self.withdraw(transfer_amount, source_account_num)
+            self.deposit(transfer_amount, target_account_num)
+            self.factory.getConnection().commit()
+            cursor.close() # There wasn't anything in this cursor, but it is good to close an opened cursor
+        except InvalidBankAccount, InsufficientFunds:
+            self.factory.getConnection().rollback()
+]]></programlisting>
+
+		<itemizedlist>
+ 			<listitem><para>This has some extra checks put in to protect from overdrafts and invalid accounts.</para></listitem>
+ 			<listitem><para><classname>DatabaseTemplate</classname> removes our need to open and close cursors.</para></listitem>
+ 			<listitem><para>Unfortunately, we still have to tangle with them as well as the connection in
+ 			order to handle transactions.</para></listitem>
+ 		</itemizedlist> 
+
+	</section>
+		
+	<section id="transaction-tx-template">
+		<title><classname>TransactionTemplate</classname></title>
+
+		<para>We still have to deal with exceptions. What if another part of the
+		code raised another exception that we didn't trap? It might escape our
+		try-except block of code, and then our data could lose integrity. If we
+		plug in the <classname>TransactionTemplate</classname>, we can really simplify this and also
+		guarantee management of any exceptions.</para>
+
+		<para>The following code block shows swapping out manual transaction for <classname>TransactionTemplate</classname>.</para>
+			
+<programlisting><![CDATA[
+from springpython.database.transaction import *
+..
+..
+..
+class Bank:
+    def __init__(self):
+        self.factory = factory.MySQLConnectionFactory("springpython", "springpython", "localhost", "springpython")
+        self.dt = DatabaseTemplate(self.factory)
+        self.txManager = ConnectionFactoryTransactionManager(self.factory)
+        self.txTemplate = TransactionTemplate(self.txManager)
+..
+..
+..
+    def transfer(self, transfer_amount, source_account_num, target_account_num):
+        class txDefinition(TransactionCallbackWithoutResult):
+	 	    def doInTransactionWithoutResult(s, status):
+	                self.withdraw(transfer_amount, source_account_num)
+	                self.deposit(transfer_amount, target_account_num)
+        try:
+            self.txTemplate.execute(txDefinition())
+            print "If you made it to here, then your transaction has already been committed."
+        except InvalidBankAccount, InsufficientFunds:
+            print "If you made it to here, then your transaction has already been rolled back."
+]]></programlisting>
+
+	<itemizedlist>
+		<listitem>
+			<para>We changed the init function to setup a <classname>TransactionManager</classname>
+			(based on ConnectionFactory) and also a <classname>TransactionTemplate</classname>.</para>
+		</listitem>
+		<listitem><para>We also rewrote the transfer function to generate a callback.</para></listitem>
+	</itemizedlist> 
+
+	<para>Now you don't have to deal with implicit cursors, commits, and rollbacks.
+	Managing commits and rollbacks can  really complicated especially when dealing
+	with exceptions. By wrapping it into a nice callback, <classname>TransactionTemplate</classname> does
+	the work for us, and lets us focus on business logic, while encouraging us to
+	continue to define meaningful business logic errors.</para>
+
+	</section>
+	
+	<section id="transaction-at-transactional">
+		<title><methodname>@Transactional</methodname></title>
+		
+		<para>Another option is to use the <methodname>@Transactional</methodname> decorator, and mark which
+		methods should be wrapped in a transaction when called.</para>
+
+<programlisting><![CDATA[
+from springpython.database.transaction import *
+..
+..
+..
+class Bank:
+    def __init__(self, connectionFactory):
+        self.factory = connectionFactory):
+        self.dt = DatabaseTemplate(self.factory)
+..
+..
+..
+    @Transactional
+    def transfer(self, transfer_amount, source_account_num, target_account_num):
+        self.withdraw(transfer_amount, source_account_num)
+        self.deposit(transfer_amount, target_account_num)
+]]></programlisting>
+
+		<para>This needs to be wired together with a <classname>TransactionManager</classname> in an
+		<classname>ApplicationContext</classname>. The following example shows a <classname>DecoratorBasedApplicationContext</classname>
+		with three components:</para>
+
+		<itemizedlist>
+			<listitem><para>the bank</para></listitem>
+			<listitem>
+				<para>a <classname>TransactionManager</classname> (in this case
+				<classname>ConnectionFactoryTransactionManager</classname>)</para>
+			</listitem>
+			<listitem>
+				<para>an <classname>AutoTransactionalComponent</classname>, which checks all components to see
+				if they have <methodname>@Transactional</methodname> methods, and if so, links them with the 
+				<classname>TransactionManager</classname>.</para>
+			</listitem>
+		</itemizedlist> 
+	
+		<para>The name of the method (i.e. component name) for <classname>AutoTransactionalComponent</classname> doesn't matter.</para>
+
+<programlisting><![CDATA[
+class DatabaseTxTestDecorativeTransactions(DecoratorBasedApplicationContext):
+    def __init__(self, factory):
+        self.factory = factory
+        DecoratorBasedApplicationContext.__init__(self)
+
+    @component
+    def transactionalComponent(self):
+        return AutoTransactionalComponent(self.transactionManager())
+
+    @component
+    def transactionManager(self):
+        return ConnectionFactoryTransactionManager(self.factory)
+
+    @component
+    def bank(self):
+        results = TransactionalBank(self.factory)
+        return results
+]]></programlisting>
+
+			<section id="transaction-at-transactional-arguments">
+				<title><methodname>@Transactional(["PROPAGATION_REQUIRED"])</methodname>...</title>
+
+				<para>Declarative transactions includes the ability to define transaction propagation.
+				This allows you to define when a transaction should be started, and which operations
+				need to be part of transactions. There are several levels of propagation defined:</para>
+		
+				<itemizedlist>
+					<listitem><para>PROPAGATION_REQUIRED - If there is no current transaction, one will be started.</para></listitem>
+					<listitem><para>PROPAGATION_REQUIRED - If there is no current transaction, one will be started.</para></listitem>
+					<listitem><para>PROPAGATION_MANDATORY - Code MUST be run inside an already started transaction.</para></listitem>
+					<listitem><para>PROPAGATION_NEVER - Code must NOT be run inside an existing transaction.</para></listitem>
+				</itemizedlist> 
+		
+				<para>The following code is a revision of the Bank class, with this attribute plugged in:</para>
+		
+<programlisting><![CDATA[
+class TransactionalBankWithLotsOfTransactionalArguments(object):
+    """This sample application can be used to demonstrate the value of atomic operations. The transfer operation
+    must be wrapped in a transaction in order to perform correctly. Otherwise, any errors in the deposit will
+    allow the from-account to leak assets."""
+    def __init__(self, factory):
+        self.logger = logging.getLogger("springpython.test.testSupportClasses.TransactionalBankWithLotsOfTransactionalArguments")
+        self.dt = DatabaseTemplate(factory)
+
+    @Transactional(["PROPAGATION_REQUIRED"])
+    def open(self, accountNum):
+        self.logger.debug("Opening account %s with $0 balance." % accountNum)
+        self.dt.execute("INSERT INTO account (account_num, balance) VALUES (?,?)", (accountNum, 0))
+
+    @Transactional(["PROPAGATION_REQUIRED"])
+    def deposit(self, amount, accountNum):
+        self.logger.debug("Depositing $%s into %s" % (amount, accountNum))
+        rows = self.dt.execute("UPDATE account SET balance = balance + ? WHERE account_num = ?", (amount, accountNum))
+        if rows == 0:
+            raise BankException("Account %s does NOT exist" % accountNum)
+
+    @Transactional(["PROPAGATION_REQUIRED"])
+    def withdraw(self, amount, accountNum):
+        self.logger.debug("Withdrawing $%s from %s" % (amount, accountNum))
+        rows = self.dt.execute("UPDATE account SET balance = balance - ? WHERE account_num = ?", (amount, accountNum))
+        if rows == 0:
+            raise BankException("Account %s does NOT exist" % accountNum)
+        return amount
+
+    @Transactional(["PROPAGATION_SUPPORTS","readOnly"])
+    def balance(self, accountNum):
+        self.logger.debug("Checking balance for %s" % accountNum)
+        return self.dt.queryForObject("SELECT balance FROM account WHERE account_num = ?", (accountNum,), types.FloatType)
+
+    @Transactional(["PROPAGATION_REQUIRED"])
+    def transfer(self, amount, fromAccountNum, toAccountNum):
+        self.logger.debug("Transferring $%s from %s to %s." % (amount, fromAccountNum, toAccountNum))
+        self.withdraw(amount, fromAccountNum)
+        self.deposit(amount, toAccountNum)
+
+    @Transactional(["PROPAGATION_NEVER"])
+    def nonTransactionalOperation(self):
+        self.logger.debug("Executing non-transactional operation.")
+
+    @Transactional(["PROPAGATION_MANDATORY"])
+    def mandatoryOperation(self):
+        self.logger.debug("Executing mandatory transactional operation.")
+
+    @Transactional(["PROPAGATION_REQUIRED"])
+    def mandatoryOperationTransactionalWrapper(self):
+        self.mandatoryOperation()
+        self.mandatoryOperation()
+
+    @Transactional(["PROPAGATION_REQUIRED"])
+    def nonTransactionalOperationTransactionalWrapper(self):
+        self.nonTransactionalOperation()
+]]></programlisting>
+
+				<para>You will notice several levels are being utilized. This class was pulled
+				directly from the test suite, so some of the functions are deliberately written
+				to generate controlled failures.</para>
+
+				<para>If you look closely at <emphasis>withdraw</emphasis>, <emphasis>deposit</emphasis>,
+				and <emphasis>transfer</emphasis>, which are all set to PROPAGATION_REQUIRED, you can see
+				what this means. If you use	<emphasis>withdraw</emphasis> or <emphasis>deposit</emphasis>
+				by themselves, which require transactions, each will start and complete a transaction.
+				However, <emphasis>transfer</emphasis> works by re-using these business methods. 
+				<emphasis>Transfer</emphasis> itself needs to be an entire transaction, so it starts one.
+				When it calls <emphasis>withdraw</emphasis> and <emphasis>deposit</emphasis>, those methods
+				don't need to start another transaction because they are already inside one. In comparison,
+				<emphasis>balance</emphasis> is defined as PROPAGATION_SUPPORTS. Since it doesn't update anything,
+				it can run by itself without a transaction. However, if it is called in the middle of another
+				transaction, it will play along.</para>
+
+				<para>You may have noticed that <emphasis>balance</emphasis> also has "readOnly" defined. In the
+				future, this may be passed onto the RDBMS in case the relational engine can optimize
+				the query given its read-only nature.</para>
+				
+			</section>
+	</section>
+</chapter>

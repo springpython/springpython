@@ -1,0 +1,247 @@
+/*
+HTML elements
+*/
+body {
+    margin: 0;
+    padding: 0;
+    font-size: 86%;
+}
+
+body, p, td, li, ul, ol {
+    font-family: Verdana, Helvetica, Arial, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: Verdana, Arial, Helvetica, SunSans-Regular, sans-serif;
+    margin: 0;
+}
+
+a:link {
+    text-decoration: none;
+    font-weight: bold;
+    color: #3A816C;
+}
+
+a:visited {
+    text-decoration: none;
+    font-weight: bold;
+    color: #62a2a6;
+}
+
+a:hover {
+    font-weight: bold;
+    color: #7BB401;
+    text-decoration: underline;
+}
+
+a:active {
+    font-weight: bold;
+    color: #7BB401;
+    text-decoration: underline;
+}
+
+p {
+    margin: 0 0 1.3em 0;
+    padding: 0;
+}
+
+p span.box {
+  border: 1px solid #b8b7b7;
+  background:#e2d5cf;
+  color: #5c5c5c;
+  padding:0 4px;
+}
+
+/* inside a list a paragraph should not stand out */
+li p {
+    margin: 0.2em 0 0 0;
+    padding: 0;
+}
+
+blockquote {
+    border-left: 4px solid #69c;
+    padding: 0 15px 0 15px;
+    margin: 25px 100px 25px 50px;
+    color: #727C4D;
+    text-align: left;
+    font-size: 1.2em;
+    line-height: 1.3em;
+    font-family: Geneva, Verdana, Arial, Helvetica, SunSans-Regular, sans-serif;
+}
+
+pre {
+    background-color: #eee;
+    padding: 0.75em 1.5em;
+    font-size: 1.2em;
+    border: 1px solid #ddd;
+}
+
+div.breakout {
+    background-color: #eee;
+    padding: 0.75em 1.5em;
+    font-size: 1.2em;
+    border: 1px solid #ddd;
+    margin-bottom: 0.5em; 
+}
+
+/* breakout paragraphs are always one per div, so no need for margin */
+div.breakout p {
+    margin: 0 0 0 0;
+}
+
+tt {
+    font-size: 1.2em;
+}
+
+table.bodyTable {
+    border-collapse: collapse;
+    table-layout: auto;
+    margin: 1em 0 1em 1.5em;
+}
+
+table.bodyTable th {
+    color: #5F6C30;
+    background-color: #E5EEC4;
+    font-weight: bold;
+}
+
+table.bodyTable tr, table.bodyTable td {
+    padding: 2px 5px;
+    border: 1px solid #CDDE8E;
+}
+
+dt {
+    color: #5F6C30;
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 0.25em;
+}
+
+/*
+Page layout blocks / IDs
+*/
+#banner {
+    min-height: 77px;
+    background: url(../images/banner.png) top right no-repeat;
+    background-color: #778831;
+}
+
+* html #banner {
+	/* IE only */
+	height: 77px;
+}
+
+#bannerLeft {
+    width: 524px;
+    display: block;
+    color: white;
+    text-decoration: none;
+}
+
+#bannerRight img {
+    float: right;
+}
+
+#breadcrumbs {
+    padding: 0;
+    border-collapse: separate;
+    background-color: #BACE87;
+    border-top: 1px solid #434320;
+    border-bottom: 1px solid #434320;
+    font-size: 0.85em;
+}
+
+#breadcrumbs a:link, #breadcrumbs a:visited {
+    color: #000;
+    font-weight: normal;
+    padding: 0 6px;
+    border-right: 1px solid #BACE87;
+    border-left: 1px solid #BACE87;
+}
+
+#breadcrumbs a:hover {
+    color: #000;
+    background-color: #E2F3B8;
+    border-right: 1px solid #000;
+    border-left: 1px solid #000;
+    text-decoration: none;
+}
+
+#leftColumn {
+    background: #E2F3B8;
+    border-right: 1px solid #434320;
+    border-bottom: 1px solid #434320;
+    float: left;
+}
+
+#navcolumn {
+    font-size: 0.75em;
+    padding: 0 10px 75px 10px;
+    vertical-align: top;
+}
+
+#navcolumn h5 {
+    border-bottom: 1px solid #ABBA75;
+    color: #658A16;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 5px 0 0 1px;
+    margin-bottom: .25em;
+    margin-top: 1.5em;
+}
+
+#contentBox {
+    padding: 30px 35px 50px 35px;
+    background: transparent url( ../images/background.png ) center center no-repeat;
+    position: relative;
+    text-align: left;
+    font-size: 0.85em;
+    line-height: 1.3em;
+}
+
+#contentBox h2, h3, h4 {
+    margin-bottom: 0.5em;
+}
+
+#contentBox h2 {
+    color: #658a16;
+    font-size: 1.3em;
+}
+
+#contentBox h3 {
+    padding: 2px 5px;
+    color: #5F6C30;
+    font-size: 1.2em;
+    background-color: #E5EEC4;
+    border: 1px solid #CDDE8E;
+}
+
+#contentBox h4 {
+    color: #AF9D6F;
+    font-size: 1.1em;
+    border-bottom: 1px dotted #AF9D6F;
+}
+
+#contentBox h5 {
+    color: #AF9D6F;
+    font-style: italic;
+    font-size: 1.1em;
+}
+
+#footer {
+    padding: 0;
+    margin-top: 0.5em;
+    background-color: #BACE87;
+    border-top: 1px solid #434320;
+    border-bottom: 1px solid #434320;
+    font-size: 0.85em;
+}
+
+#poweredBy img {
+  display: inline;
+  border: none;
+}
+
+#poweredBy {
+  margin-top: 8px;
+}

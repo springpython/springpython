@@ -16,56 +16,56 @@
 import threading
 import Pyro.core, Pyro.naming
 
-pyroThread = None
+pyro_thread = None
 serviceList = {}
 
-def register(pyroObj, serviceName, verbose = False):
+def register(pyroObj, service_name, verbose = False):
     """
     Register the pyro object and its service name with the daemon.
     Also add the service to a dictionary of objects. This allows the
     PyroDaemonHolder to intelligently know when to start and stop the
     daemon thread.
     """
-    global pyroThread
+    global pyro_thread
     
-    if verbose: print "Registering %s with the Pyro server" % serviceName
+    if verbose: print "Registering %s with the Pyro server" % service_name
     
-    serviceList[serviceName] = pyroObj
-    if pyroThread is None:
+    serviceList[service_name] = pyroObj
+    if pyro_thread is None:
         
         if verbose: print "Pyro thread needs to be started"
         
-        pyroThread = _PyroThread()
-        pyroThread.start()
+        pyro_thread = _PyroThread()
+        pyro_thread.start()
         
-    uri = pyroThread.daemon.connect(pyroObj, serviceName)
+    uri = pyro_thread.daemon.connect(pyroObj, service_name)
     
     if verbose: print uri
 
-def deregister(serviceName, verbose = False):
+def deregister(service_name, verbose = False):
     """
     Deregister the named service by removing it from the list of
     managed services and also disconnect from the daemon.
     """
-    if verbose: print "Deregistering %s from the Pyro server" % serviceName
+    if verbose: print "Deregistering %s from the Pyro server" % service_name
     
-    pyroThread.daemon.disconnect(serviceList[serviceName])
-    del(serviceList[serviceName])
+    pyro_thread.daemon.disconnect(serviceList[service_name])
+    del(serviceList[service_name])
     if len(serviceList) == 0:       
         shutdown(verbose)
 
 def shutdown(verbose = False):
     """This provides a hook so an application can deliberately shutdown the
     daemon thread."""
-    global pyroThread
+    global pyro_thread
     
     if verbose: print "We no longer have any services. Shutting down pyro daemon."
     
     try:
-        pyroThread.shutdown()
+        pyro_thread.shutdown()
     except:
         pass
-    pyroThread = None
+    pyro_thread = None
 
 class _PyroThread(threading.Thread):
     """

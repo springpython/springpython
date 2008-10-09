@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="dao">
+	<title>Data Access</title>
+	
+	<section id="dao-databasetemplate">
+		<title>DatabaseTemplate</title>
+		
+		<para>Writing SQL-based programs has a familiar pattern that must be repeated
+		over and over. The DatabaseTemplate resolves that by handling the plumbing of
+		these operations while leaving you in control of the part that matters the most,
+		the SQL.</para>
+
+		<section id="dao-databasetemplate-traditional-sql">
+			<title>Traditional Database Query</title>
+			
+			<para>If you have written a database SELECT statement following Python's
+			<ulink url="http://www.python.org/dev/peps/pep-0249/">DB-API 2.0</ulink>,
+			it would something like this (MySQL example):</para>
+
+<programlisting><![CDATA[
+conn = MySQL.connection(username="me", password"secret", hostname="localhost", db="springpython")
+cursor = conn.cursor()
+results = []
+try:
+    cursor.execute("select title, air_date, episode_number, writer from tv_shows where name = %s", ("Monty Python",))
+    for row in cursor.fetchall():
+        tvShow = TvShow(title=row[0], airDate=row[1], episodeNumber=row[2], writer=row[3])
+        results.append(tvShow)
+finally:
+    try:
+        cursor.close()
+    except Exception:
+        pass
+conn.close()
+return results
+]]></programlisting>
+
+			<para>I know, you don't have to open and close a connection for every query,
+			but let's look past that part. In every definition of a SQL query, you must
+			create a new cursor, execute against the cursor, loop through the results, and
+			most importantly (and easy to forget) <emphasis>close the cursor</emphasis>. Of course you will
+			wrap this in a method instead of plugging in this code where ever you need the
+			information. But every time you need another query, you have to repeat this dull
+			pattern over and over again. The only thing different is the actual SQL code you
+			must write and converting it to a list of objects.</para>
+
+			<para>I know there are many object relational mappers (ORMs) out there, but
+			sometimes you need something simple and sweet. That is where
+			<classname>DatabaseTemplate</classname> comes in.</para>
+
+		</section>
+		
+		<section id="dao-databasetemplate-intro">
+			<title>Database Template</title>
+			
+			<para>The same query above can be written using a <classname>DatabaseTemplate</classname>. The only
+			thing you must provide is the SQL and a <classname>RowCallbackHandler</classname> to process one row of
+			data. The template does the rest.</para>
+
+<programlisting><![CDATA[
+""" The following part only has to be done once."""
+from springpython.database import *
+connectionFactory = MySQLConnectionFactory(username="me", password"secret", hostname="localhost", db="springpython")
+dt = DatabaseTemplate(connectionFactory)
+
+class TvShowCallbackHandler(RowCallbackHandler):
+    """This will handle one row of database. It can be reused for many queries if they
+       are returning the same columns."""
+    def process_row(self, row):
+        return TvShow(title=row[0], airDate=row[1], episodeNumber=row[2], writer=row[3])
+
+
+results = dt.query("select title, air_date, episode_number, writer from tv_shows where name = %s", \
+                   ("Monty Python",), TvShowCallbackHandler())
+]]></programlisting>
+
+			<para>Well, no sign of a cursor anywhere. If you didn't have to worry about opening it,
+			you don't have to worry about closing it. I know this is about the same amount of code
+			as the traditional example. Where DatabaseTemplate starts to shine is when you want to
+			write ten different TV_SHOW queries.</para>
+
+<programlisting><![CDATA[
+results = dt.query("select title, air_date, episode_number, writer from tv_shows where episode_number < %s", \
+                   (100,), TvShowCallbackHandler())
+results = dt.query("select title, air_date, episode_number, writer from tv_shows where upper(title) like %s", \
+                   ("%CHEESE%",), TvShowCallbackHandler())
+results = dt.query("select title, air_date, episode_number, writer from tv_shows where writer in ('Cleese', 'Graham')",
+                   rowhandler=TvShowCallbackHandler())
+]]></programlisting>
+
+			<para>You don't have to reimplement the rowhandler. For these queries, you can focus
+			on the SQL you want to write, not the mind-numbing job of managing database cursors.</para>
+
+		</section>
+		
+		<section id="dao-databasetemplate-connectionfactory">
+			<title>What is a Connection Factory?</title>
+
+			<para>You may have noticed I didn't make a standard connection in the example above.
+			That is because to support <ulink url="http://en.wikipedia.org/wiki/Dependency_injection">
+			Dependency Injection</ulink>, I need to setup my credentials in an
+			object before making the actual connection. <classname>MySQLConnectionFactory</classname> holds credentials
+			specific to the MySQL DB-API, but contains a common function to actually create the
+			connection. I don't have to use it myself. <classname>DatabaseTemplate</classname> will use it when necessary
+			to create a connection, and then proceed to reuse the connection for subsequent database
+			calls.</para>
+
+			<para>That way, I don't manage database connections and cursors directly, but instead
+			let Spring Python do the heavy lifting for me.</para>
+
+		</section>
+		
+		<section id="dao-databasetemplate-DDL">
+			<title>Creating/altering tables, databases, and other DDL</title>
+			
+			<para>Data Definition Language includes the database statements that involve creating
+			and altering tables, and so forth. DB-API defines an execute function for this.
+			<classname>DatabaseTemplate</classname>
+			offers the same. Using the execute() function will pass through your request to a cursor,
+			along with the extra exception handler and cursor management.</para>
+			
+		</section>
+
+		<section id="dao-databasetemplate-sql-injection-attacks">
+			<title>SQL Injection Attacks</title>
+			
+			<para>You may have noticed in the first three example queries I wrote with the
+			<classname>DatabaseTemplate</classname>, I embedded a "%s" in the SQL statement. These are
+			called <emphasis>binding variables</emphasis>, and they require a tuple argument be included
+			after the SQL statement.
+			Do <emphasis>NOT</emphasis> include quotes around these variables. The database connection will handle
+			that. This style of SQL programming is <emphasis>highly recommended</emphasis> to avoid
+			<ulink url="http://en.wikipedia.org/wiki/SQL_injection">SQL injection attacks</ulink>.</para>
+
+			<para>For users who are familiar with Java database APIs, the binding variables are
+			cited using "?" instead of "%s". To make both parties happy and help pave the way
+			for existing Java programmers to use this framework, I have included support for both.
+			You can mix-and-match these two binding variable types as you wish, and things will still work.</para>
+
+		</section>
+		
+		<section id="dao-databasetemplate-jdbctemplate">
+			<title>Have you used Spring Framework's JdbcTemplate?</title>
+			
+			<para>If you are a user of Java's <ulink url="http://www.springframework.org">Spring framework</ulink>
+			and have used the <ulink url="http://static.springframework.org/spring/docs/1.2.x/api/org/springframework/jdbc/core/JdbcTemplate.html">
+			JdbcTemplate</ulink>, then you will find this template has a familiar feel.</para>
+			
+			<table id="dao-databasetemplate-jdbctemplate-ops">
+
+				<title><classname>JdbcTemplate</classname> operations also found in <classname>DatabaseTemplate</classname></title>
+				
+				<tgroup cols="2">
+				
+					<tbody>
+						<row>
+							<entry><methodname>execute(sql_statement, args = None)</methodname></entry>
+							<entry>execute any statement, return number of rows affected</entry>
+ 						</row>
+ 						<row>
+							<entry><methodname>query(sql_query, args = None, rowhandler = None)</methodname></entry>
+							<entry>query, return list converted by rowhandler</entry>
+ 						</row>
+ 						<row>
+							<entry><methodname>query_for_list(sql_query, args = None)</methodname></entry>
+							<entry>query, return list of DB-API tuples (or a dictionary if you use
+							<ulink url="http://sqlwrappy.sourceforge.net">sqlWrappy</ulink>)</entry>
+ 						</row>
+ 						<row>
+							<entry><methodname>query_for_int(sql_query, args = None)</methodname></entry>
+							<entry>query for a single column of a single row, and return an integer
+							(throws exception otherwise)</entry>
+ 						</row>
+ 						<row>
+							<entry><methodname>query_for_long(sql_query, args = None)</methodname></entry>
+							<entry>query for a single column of a single row, and return a long
+							(throws exception otherwise)</entry>
+ 						</row>
+ 						<row>
+							<entry><methodname>query_for_object(sql_query, args = None, required_type = None)</methodname></entry>
+							<entry>query for a single column of a single row, and return the object
+							with possibly no checking</entry>
+						</row>
+						<row>
+							<entry><methodname>update(sql_statement, args = None)</methodname></entry>
+							<entry>update the database, return number of rows updated</entry>
+ 						</row>
+ 					</tbody>
+ 				</tgroup>
+ 			</table>
+
+			<para><emphasis>Inserts</emphasis> are implemented through the execute() function, just
+			like in JdbcTemplate.</para>
+		</section>
+		
+	</section>
+</chapter>

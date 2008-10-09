@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="components">
+	<title>The IoC container</title>
+
+  	  <sidebar id="background-ioc">
+	    <title>Background</title>
+	
+	    <para>In early 2004, Martin Fowler asked the readers of his site: when
+	    talking about Inversion of Control: <quote><emphasis>the question is, what
+	    aspect of control are [they] inverting?</emphasis></quote>. Fowler then
+	    suggested renaming the principle (or at least giving it a more
+	    self-explanatory name), and started to use the term <firstterm>Dependency
+	    Injection</firstterm>. His article then continued to explain the ideas
+	    underpinning the Inversion of Control (<acronym>IoC</acronym>) and
+	    Dependency Injection (<acronym>DI</acronym>) principle.</para>
+	
+	    <para>If you need a decent insight into IoC and DI, please do refer to
+	    said article : <ulink
+	    url="http://martinfowler.com/articles/injection.html">http://martinfowler.com/articles/injection.html</ulink>.</para>
+	  </sidebar>
+
+	<para>Inversion Of Control (IoC), also known as <emphasis>dependency injection</emphasis> is
+	more of an architectural pattern than a simple coding pattern.</para>
+
+	<para>The idea is to decouple classes that depend on each other from inheriting
+	other dependencies, and instead link them only at the interfacing level. This
+	requires some sort of 3rd party software component to instantiate the concrete
+	components and "inject" them into the class that needs to call them.</para>
+
+	<section id="components-appcontext">
+		<title>ApplicationContext</title>
+		
+		<para>An ApplicationContext is a container that holds wiring information about
+		components. The idea is to have all your components defined in well segmented
+		areas, and then use an ApplicationContext to put things together.</para>
+
+		<section id="compoents-appcontext-xml">
+			<title>XmlApplicationContext</title>
+			
+			<para>There are many different ways to implement this, but the initial
+			solution from Spring was to utilize an XML-wiring definition. This has been
+			adapted to something very similar in Spring Python.</para>
+
+<programlisting><![CDATA[
+<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <component id="MovieLister" class="springpython.test.support.testSupportClasses.MovieLister">
+        <property name="finder" local="MovieFinder" />
+    </component>
+    <component id="MovieFinder" class="springpython.test.support.testSupportClasses.ColonMovieFinder">
+        <property name="filename">"support/movies1.txt"</property>
+    </component>
+</components>
+]]></programlisting>
+
+			<para>In Java, these are referred to as <ulink url="http://en.wikipedia.org/wiki/Javabean">
+			Javabeans</ulink>. For Spring Python, they are called <emphasis>components</emphasis>. In this example,
+			there are two components, a <classname>MovieLister</classname> and a <classname>MovieFinder</classname>.
+			The <classname>MovieFinder</classname> has one attribute, <emphasis>filename</emphasis>, which is assigned
+			a string value after initialization. The <classname>MovieLister</classname> has one attribute,
+			<emphasis>finder</emphasis>, which is assigned "local" reference to the	component named "MovieFinder".</para>
+
+			<para>Now, someone, usually a <methodname>main</methodname> function, will need to instantiate the
+			<classname>XmlApplicationContext</classname> using this file.</para>
+
+<programlisting><![CDATA[
+appContext = XmlApplicationContext("myAppContext.xml")
+movieLister = appContext.get_component("MovieLister")
+]]></programlisting>
+
+			<para>By injecting components into other components, the program looking up this <classname>MovieLister</classname>
+			doesn't have to know it it he colon-based movie lister.</para>
+
+			<para>Each component has an identifier and a class declaration. The default policy of
+			<classname>XmlApplicationContext</classname> is to instantiate all the components listed. It
+			is possible to include an override of the "lazy-init" attribute on any component, and only
+			instantiate the components as needed.</para>
+
+		</section>
+	</section>
+	
+	<section id="components-using-xml">
+		<title>Do I have to use XML?</title>
+		
+		<para>No. While can practice dependency injection on your own, it is pretty easy to use the
+		<classname>DecoratorBasedApplicationContext</classname> to use python code and decorators to
+		mark up a container.</para>
+
+	</section>
+	
+	<section id="components-python-interfaces">
+		<title>Interfaces in Python</title>
+		
+		<para>Using Spring with Java makes it very useful to design to interfaces as opposed to
+		concrete classes. Python, with its dynamic nature may not appear to have the same return
+		on investment. Python supports <ulink url="http://en.wikipedia.org/wiki/Duck_typing">
+		duck typing</ulink>, which means that if you implement two classes with the same method
+		signatures, they are interchangeable with any 3rd party module, regardless of inheritance
+		hierarchy. Basically, if it talks like a duck, its a duck.</para>
+
+		<para>Still, it may be useful to define interface classes in Python, to help mark out
+		the contract.</para>
+
+<programlisting><![CDATA[
+class MyInterface:
+    def someMethod(self, someData):
+        raise NotImplementedError()
+]]></programlisting>
+
+		<para>You can implement code that is based on this interface. Then, if anyone ever extends
+		your code, they have a clear definition of what is expected.</para>
+
+<programlisting><![CDATA[
+class MyConcreteClass(MyInterface):
+    def someMethod(self, someData):
+        return self.someData
+]]></programlisting>
+
+	</section>
+
+</chapter>

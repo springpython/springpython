@@ -20,9 +20,11 @@ from springpython.security.providers.encoding import PasswordEncoder
 from springpython.security.userdetails import User
 
 class SaltedUser(User):
+    """This class is used to demonstrate a reflective salt source that is given a method name."""
     def __init__(self, username, password, enabled):
         super(SaltedUser, self).__init__(username, password, enabled)
     def getUserId(self):
+        """This method is used to demonstrate the reflective salt source."""
         return self.username
 
 class EncodingInterfacesTestCase(unittest.TestCase):
@@ -37,19 +39,19 @@ class ReflectionSaltSourceErrorTestCase(unittest.TestCase):
         self.user = SaltedUser("user1", "testPassword", True)
 
     def testEncodingWithReflectionSaltSourceNoSuchMethod(self):
-        saltSource = self.appContext.getComponent("reflectionSaltSource2")
-        self.assertRaises(AuthenticationServiceException, saltSource.getSalt, self.user)
+        saltSource = self.appContext.get_component("reflectionSaltSource2")
+        self.assertRaises(AuthenticationServiceException, saltSource.get_salt, self.user)
         
     def testEncodingWithReflectionSaltSourceLeftEmpty(self):
-        saltSource = self.appContext.getComponent("reflectionSaltSource3")
-        self.assertRaises(AuthenticationServiceException, saltSource.getSalt, self.user)
+        saltSource = self.appContext.get_component("reflectionSaltSource3")
+        self.assertRaises(AuthenticationServiceException, saltSource.get_salt, self.user)
         
 class PlaintextPasswordEncodingTestCase(unittest.TestCase):
     
     def setUp(self):
         self.appContext = XmlApplicationContext("support/encodingApplicationContext.xml")
         self.user = SaltedUser("user1", "testPassword", True)
-        self.encoder = self.appContext.getComponent("plainEncoder")
+        self.encoder = self.appContext.get_component("plainEncoder")
         
     def testEncodingWithNoPasswordAndNoSaltSource(self):
         encodedPassword = self.encoder.encodePassword(None, None)
@@ -66,35 +68,35 @@ class PlaintextPasswordEncodingTestCase(unittest.TestCase):
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, None))
         
     def testEncodingWithSystemWideSaltSourceLeftEmpty(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         
     def testEncodingWithSystemWideSaltSourceConfigured(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource2")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource2")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         
     def testEncodingWithSystemWideSaltSourceInvalidLeftBrace(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource3")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource3")
+        salt = saltSource.get_salt(self.user)
         self.assertRaises(ValueError, self.encoder.encodePassword, self.user.password, salt)
         
     def testEncodingWithSystemWideSaltSourceInvalidRightBrace(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource4")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource4")
+        salt = saltSource.get_salt(self.user)
         self.assertRaises(ValueError, self.encoder.encodePassword, self.user.password, salt)
         
     def testEncodingWithSystemWideSaltSourceInvalidBothBraces(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource5")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource5")
+        salt = saltSource.get_salt(self.user)
         self.assertRaises(ValueError, self.encoder.encodePassword, self.user.password, salt)
         
     def testEncodingWithReflectionSaltSourceConfigured(self):
-        saltSource = self.appContext.getComponent("reflectionSaltSource")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("reflectionSaltSource")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         
@@ -103,7 +105,7 @@ class Md5PasswordEncodingTestCase(unittest.TestCase):
     def setUp(self):
         self.appContext = XmlApplicationContext("support/encodingApplicationContext.xml")
         self.user = SaltedUser("user1", "testPassword", True)
-        self.encoder = self.appContext.getComponent("md5Encoder")
+        self.encoder = self.appContext.get_component("md5Encoder")
 
     def testEncodingWithNoPasswordAndNoSaltSource(self):
         encodedPassword = self.encoder.encodePassword(None, None)
@@ -120,38 +122,38 @@ class Md5PasswordEncodingTestCase(unittest.TestCase):
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, None))
         
     def testEncodingWithSystemWideSaltSourceLeftEmpty(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         
     def testEncodingWithSystemWideSaltSourceConfigured(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource2")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource2")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         
     def testEncodingWithSystemWideSaltSourceInvalidLeftBrace(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource3")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource3")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         
     def testEncodingWithSystemWideSaltSourceInvalidRightBrace(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource4")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource4")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         
     def testEncodingWithSystemWideSaltSourceInvalidBothBraces(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource5")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource5")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         
     def testEncodingWithReflectionSaltSourceConfigured(self):
-        saltSource = self.appContext.getComponent("reflectionSaltSource")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("reflectionSaltSource")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
 
@@ -160,7 +162,7 @@ class ShaPasswordEncodingTestCase(unittest.TestCase):
     def setUp(self):
         self.appContext = XmlApplicationContext("support/encodingApplicationContext.xml")
         self.user = SaltedUser("user1", "testPassword", True)
-        self.encoder = self.appContext.getComponent("shaEncoder")
+        self.encoder = self.appContext.get_component("shaEncoder")
 
     def testEncodingWithNoPasswordAndNoSaltSource(self):
         encodedPassword = self.encoder.encodePassword(None, None)
@@ -177,38 +179,38 @@ class ShaPasswordEncodingTestCase(unittest.TestCase):
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, None))
         
     def testEncodingWithSystemWideSaltSourceLeftEmpty(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         
     def testEncodingWithSystemWideSaltSourceConfigured(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource2")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource2")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         
     def testEncodingWithSystemWideSaltSourceInvalidLeftBrace(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource3")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource3")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         
     def testEncodingWithSystemWideSaltSourceInvalidRightBrace(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource4")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource4")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         
     def testEncodingWithSystemWideSaltSourceInvalidBothBraces(self):
-        saltSource = self.appContext.getComponent("systemWideSaltSource5")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("systemWideSaltSource5")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         
     def testEncodingWithReflectionSaltSourceConfigured(self):
-        saltSource = self.appContext.getComponent("reflectionSaltSource")
-        salt = saltSource.getSalt(self.user)
+        saltSource = self.appContext.get_component("reflectionSaltSource")
+        salt = saltSource.get_salt(self.user)
         encodedPassword = self.encoder.encodePassword(self.user.password, salt)
         self.assertTrue(self.encoder.isPasswordValid(encodedPassword, self.user.password, salt))
         

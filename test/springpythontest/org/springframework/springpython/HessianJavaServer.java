@@ -39,10 +39,10 @@ public class HessianJavaServer extends HessianServlet implements SampleService {
 		// This thread is a fall back to make sure the test server shuts down eventually.
     	Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
 			public void run() {
-				log.warn("Jetty did not shut down normally!", null, null);
+				log.warn("Forced shutdown. Jetty did not shut down normally!", null, null);
 				System.exit(0);
 			}
-    	}, 6, TimeUnit.SECONDS);
+    	}, 15, TimeUnit.SECONDS);
 
 		root.addServlet(new ServletHolder(new HessianJavaServer()), "/*");
 		server.start();
@@ -51,10 +51,10 @@ public class HessianJavaServer extends HessianServlet implements SampleService {
     public Person transform(String input) {
     	Executors.newSingleThreadScheduledExecutor().schedule(new Runnable() {
 			public void run() {
-				log.warn("Jetty is now shutting down.", null, null);
+				log.warn("Received message. Jetty is now shutting down.", null, null);
 				System.exit(0);
 			}
-    	}, 1, TimeUnit.SECONDS);
+    	}, 2, TimeUnit.SECONDS);
     	
     	Person results = new Person();
 		results.setFirstName(input.split(" ")[0]);

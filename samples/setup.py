@@ -19,16 +19,29 @@
 NOTE: This setup.py lists two licenses, Apache Server License and GPL. That is because
 the stylesheet inside SpringWiki is GPL. Everything else is ASL.
 """
-
+import re
+import sys
 from distutils.core import setup
+from optparse import OptionParser
 
-setup(name='springpython-examples',
-      version='0.6.0',
-      description='Spring Python examples',
-      long_description='A collection of small examples utilizing the features of Spring Python.',
+parser = OptionParser(usage="usage: %prog [-h|--help] [options]")
+parser.add_option("", "--version", action="store", dest="version", help="Define the version of this build.")
+(options, args) = parser.parse_args()
+
+if re.match(r"\d\.\d", options.version):
+    # Remove version argument
+    sys.argv = [sys.argv[0]] + sys.argv[-1:]
+else:
+    print "Version not correctly specified => version = %s Arguments => %s" % (options.version, sys.argv)
+    sys.exit(1)
+
+setup(name='springpython-samples',
+      version=options.version,
+      description='Spring Python samples',
+      long_description='A collection of small samples utilizing the features of Spring Python.',
       author='Greg L. Turnquist',
       author_email='gregturn at mindspring dot com',
-      url='https://springpython.webfactional.com',
+      url='http://springpython.webfactional.com',
       license='Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
       packages=['petclinic', 
                 'petclinic.cherrypy',

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="aop">
+	<title>Aspect Oriented Programming</title>
+	
+	<para><emphasis>Aspect oriented programming</emphasis> (AOP) is a horizontal
+	programming paradigm, where some type of behavior is applied to several classes
+	that don't share the same vertical, object-oriented inheritance. In AOP, programmers
+	implement these <emphasis>cross cutting concerns</emphasis> by writing an
+	<emphasis>aspect</emphasis> then applying it  conditionally based on a <emphasis>join
+	point</emphasis>. This is referred to as applying <emphasis>advice</emphasis>. This
+	section shows how to use the AOP module of Spring Python.</para>
+
+	<section id="aop-interceptors">
+		<title>Interceptors</title>
+		
+		<para>Spring Python implements AOP advice using <emphasis>proxies</emphasis> and
+		<emphasis>method interceptors</emphasis>. NOTE: Interceptors only apply to method
+		calls. Any request for attributes are passed directly to the target without AOP
+		intervention.</para>
+
+		<para>Here is a sample service. Our goal is to wrap the results with "wrapped" tags,
+		without modifying the service's code.</para>
+		
+<programlisting><![CDATA[
+class SampleService:
+    def method(self, data):
+        return "You sent me '%s'" % data
+    def doSomething(self):
+        return "Okay, I'm doing something"
+]]></programlisting>
+
+		<para>If we instantiate and call this service directly, the results are straightforward.</para>
+
+<programlisting><![CDATA[
+service = SampleService()
+print service.method("something")
+
+"You sent me 'something'"
+]]></programlisting>
+
+		<para>Now, let's write an interceptor that will catch any results, and wrap them
+		with <![CDATA[<Wrapped>]]> tags.</para>
+		
+<programlisting><![CDATA[
+from springpython.aop import *
+class WrappingInterceptor(MethodInterceptor):
+    def invoke(self, invocation):
+        results = "<Wrapped>" + invocation.proceed() + "</Wrapped>"
+        return results
+]]></programlisting>
+
+		<para><methodname>invoke(self, invocation)</methodname> is a dispatching method defined
+		abstractly in the <classname>MethodInterceptor</classname> base class. <methodname>invocation
+		</methodname> holds the target method name, any input arguments, and also the callable
+		target function. In this case, we aren't interested in the method name or the arguments.
+		So we call the actual function using <methodname>invocation.proceed()</methodname>, and than
+		catch its results. Then we can manipulate these results, and return them back to the caller.</para> 
+
+		<para>In order to apply this advice to a service, a stand-in <emphasis>proxy</emphasis>
+		must be created and given to the client. One way to create this is by creating a 
+		<classname>ProxyFactory</classname>. The factory is used to identify the target service
+		that is being intercepted. It is used to create the dynamic proxy object to give back to
+		the client.</para>
+		
+<programlisting><![CDATA[
+from springpython.aop import *
+factory = ProxyFactory()
+factory.target = SampleService()
+factory.interceptors.append(WrappingInterceptor())
+service = factory.getProxy()
+]]></programlisting>
+
+		<para>Now, the client can call <emphasis>service</emphasis>, and all function calls will
+		be routed to <classname>SampleService</classname> with one simple detour through
+		<classname>WrappingInterceptor</classname>.</para>
+
+<programlisting><![CDATA[
+print service.method("something")
+
+"<Wrapped>You sent me 'something'</Wrapped>"
+]]></programlisting>
+
+		<para>Notice how I didn't have to edit the original service at all? I didn't even
+		have to introduce Spring Python into that module. Thanks to the power of Python's
+		dynamic nature, Spring Python AOP gives you the power to wrap your own source code
+		as well as other 3rd party modules.</para>
+		
+	</section>
+	
+	<section id="aop-proxy-factory-components">
+		<title>Proxy Factory Components</title>
+		
+		<para>The earlier usage of a <classname>ProxyFactory</classname> is useful, but often
+		times we only need the factory to create one proxy. There is a shortcut called
+		<classname>ProxyFactoryComponent</classname>.</para>
+		
+<programlisting><![CDATA[
+from springpython.aop import *
+service = ProxyFactoryComponent()
+service.target = SampleService()
+service.interceptors = [WrappingInterceptor()]
+print service.method(" proxy factory component")
+
+"You sent me a 'proxy factory component'"
+]]></programlisting>
+
+		<para>In this case, the <classname>ProxyFactoryComponent</classname> acts as both a proxy
+		and a factory. As a proxy, it behaves just like the target service would, and it also provides
+		the ability to wrap the service with aspects. It saved us a step of coding, but more importantly,
+		the <classname>ProxyFactoryComponent</classname> took on the persona of being our service
+		right from the beginning.</para>
+
+		<para>To be more pythonic, Spring Python also allows you to initialize everything at once.</para>
+		
+<programlisting><![CDATA[
+from springpython.aop import *
+service = ProxyFactoryComponent(target = SampleService(), interceptors = [WrappingInterceptor()])
+]]></programlisting>
+
+	</section>
+	
+	<section id="aop-pointcuts">
+		<title>Pointcuts</title>
+		
+		<para>Sometimes we only want to apply advice to certain methods. This requires
+		definition of a <emphasis>join point</emphasis>. Join points are composed of rules
+		referred to as <emphasis>point cuts</emphasis>.</para>
+
+		<para>In this case, we want to only apply our <classname>WrappingInterceptor</classname>
+		to methods that start with "do".</para>
+		
+<programlisting><![CDATA[
+from springpython.aop import *
+pointcutAdvisor = RegexpMethodPointcutAdvisor(advice = [WrappingInterceptor()], patterns = [".*do.*"])
+service = ProxyFactoryComponent(target = SampleService(), interceptors = pointcutAdvisor)
+print service.method("nothing changed here")
+
+"You sent me 'nothing changed here'"
+
+print service.doSomething()
+
+"<Wrapped>Okay, I'm doing something</Wrapped"
+]]></programlisting>
+
+		<note>
+			<title>The power of <classname>RegexpMethodPointAdvisor</classname></title>
+			
+			<para><classname>RegexpMethodPointAdvisor</classname> is a powerful component in
+			Spring Python that acts as <emphasis>pointcut</emphasis>, a <emphasis>join point</emphasis>,
+			and a <emphasis>method interceptor</emphasis>. It fetches the fullpath of the target's
+			module, class, and method name, and then checks to see if it matches any of the patterns
+			in the <emphasis>patterns</emphasis> list using Python's regular expression module.</para>
+		</note>
+
+		<para>By plugging this into a <classname>ProxyFactoryComponent</classname> as an interceptor, it evaluates
+		whether to route method calls through the advice, or directly to the target service.</para>
+
+	</section>
+	
+	<section id="aop-interceptor-chain">
+		<title>Interceptor Chain</title>
+		
+		<para>You may have noticed by now that the <classname>WrappingInterceptor</classname>
+	 	is being specified inside a Python list. That is because you can apply more than one piece of advice.
+		When an interceptor calls <methodname>invocation.proceed()</methodname>, it is actually
+		calling the next interceptor in the chain, until it gets to the end. Then it calls
+		the actual target service. When the target method returns back, everything backtracks
+		back out the set of nested interceptors.</para>
+
+		<para>Spring Python is coded to intelligently detect if you are assigning a single
+		interceptor to the <emphasis>interceptors</emphasis> property, or a list. A single
+		interceptor gets converted into a list of one. So, you can do either of the following:</para>
+		
+<programlisting><![CDATA[
+service = ProxyFactoryComponent()
+service.interceptors = WrappingInterceptor()
+]]></programlisting>
+
+or
+
+<programlisting><![CDATA[
+service = ProxyFactoryComponent()
+factory.interceptors = [WrappingInterceptor()]
+]]></programlisting>
+
+It produces the same thing.
+
+	</section>
+
+</chapter>

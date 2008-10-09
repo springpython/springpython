@@ -23,14 +23,14 @@ from springpython.context.pycontainer import utils
 
 class Pointcut(object):
     """Interface defining where to apply an aspect."""
-    def getClassFilter(self):
+    def class_filter(self):
         raise NotImplementedError()
-    def getMethodMatcher(self):
+    def method_matcher(self):
         raise NotImplementedError()
 
 class MethodMatcher(object):
     """Interface defining how to apply aspects based on methods."""
-    def matchesMethodAndTarget(self, method, targetClass, args):
+    def matches_method_and_target(self, method, targetClass, args):
         raise NotImplementedError()
 
 class MethodInterceptor(object):
@@ -41,32 +41,32 @@ class MethodInterceptor(object):
 class MethodInvocation(object):
     """Encapsulation of invoking a method on a proxied service. It iterates throgh the list of interceptors by using
     a generator."""
-    def __init__(self, instance, methodName, args, kwargs, interceptors):
+    def __init__(self, instance, method_name, args, kwargs, interceptors):
         self.instance = instance
-        self.methodName = methodName
+        self.method_name = method_name
         self.args = args
         self.kwargs = kwargs
-        self.interceptorStack = interceptors
-        self.interceptorStack.append(FinalInterceptor()) 
+        self.intercept_stack = interceptors
+        self.intercept_stack.append(FinalInterceptor()) 
         self.logger = logging.getLogger("springpython.aop.MethodInvocation")
 
     def getInterceptor(self):
         """This is a generator to proceed through the stack of interceptors. By using generator convention, code may
         proceed in a nested fashion, versus a for-loop which would act in a chained fashion."""
-        for interceptor in self.interceptorStack:
+        for interceptor in self.intercept_stack:
             yield interceptor
 
     def proceed(self):
         """This is the method every interceptor should call in order to continue down the chain of interceptors."""
         interceptor = self.iterator.next()
-        self.logger.debug("Calling %s.%s(%s, %s)" % (interceptor.__class__.__name__, self.methodName, self.args, self.kwargs))
+        self.logger.debug("Calling %s.%s(%s, %s)" % (interceptor.__class__.__name__, self.method_name, self.args, self.kwargs))
         return interceptor.invoke(self)
 
     def __getattr__(self, name):
         """This only deals with method invocations. Attributes are dealt with by the AopProxy, and don't every reach this
         block of code."""
         self.iterator = self.getInterceptor()
-        self.methodName = name
+        self.method_name = name
         return self
 
     def __call__ (self, *args, **kwargs):
@@ -76,44 +76,15 @@ class MethodInvocation(object):
         self.kwargs = kwargs
         return self.proceed()
 
-    def dumpInterceptors(self, level = logging.INFO):
+    def dump_interceptors(self, level = logging.INFO):
         """DEBUG: Method used to dump the stack of interceptors in order of execution."""
-        for interceptor in self.interceptorStack:
+        for interceptor in self.intercept_stack:
             self.logger.log(level, "Interceptor stack: %s" % interceptor.__class__.__name__)
 
 class RegexpMethodPointcutAdvisor(Pointcut, MethodMatcher, MethodInterceptor):
     """
     This is a combination PointCut/MethodMatcher/MethodInterceptor. It allows associating one or more
     defined advices with a set of regular expression patterns.
-
-    The following block shows how to configure one using IoC.
-
-    <components>
-
-	<component id="wrappingInterceptor" class="springpython.test.support.testSupportClasses.WrappingInterceptor"/>
-
-	<component id="beginEndInterceptor" class="springpython.test.support.testSupportClasses.BeforeAndAfterInterceptor"/>
-
-	<component id="pointcutTest" class="springpython.aop.RegexpMethodPointcutAdvisor">
-		<property name="advice">
-			<list local="beginEndInterceptor"/>
-			<list local="wrappingInterceptor"/>
-		</property>
-		<property name="patterns">[".*do.*"]</property>
-	</component>
-
-	<component id="targetService" class="springpython.test.support.testSupportClasses.SampleService">
-		<interceptor-ref name="pointcutTest"/>
-	</component>
-    
-    <component id="sampleService" class="springpython.aop.ProxyFactoryComponent">
-        <property name="target" local="targetService"/>
-        <property name="advice">
-            <list local="pointcutTest"/>
-        </property>
-    </component>
-    
-    </components>
     """
     def __init__(self, advice = None, patterns = None):
         Pointcut.__init__(self)
@@ -125,26 +96,26 @@ class RegexpMethodPointcutAdvisor(Pointcut, MethodMatcher, MethodInterceptor):
             self.patterns = patterns
         self.logger = logging.getLogger("springpython.aop.RegexpMethodPointcut")
 
-    def initPatternRepresentation(self):
+    def init_patterns(self):
         """Precompile the regular expression pattern matcher list."""
-        self.compiledPatterns = {}
+        self.compiled_patterns = {}
         for pattern in self.patterns:
-            self.compiledPatterns[pattern] = re.compile(pattern)
+            self.compiled_patterns[pattern] = re.compile(pattern)
 
-    def matchesMethodAndTarget(self, method, targetClass, args):
-        """Iterate through all patterns, checking for a match. Calls the pattern matcher against "class.methodname"."""
-        for pointcutPattern in self.patterns:
-            if (self.matchesPattern(targetClass + "." + method, pointcutPattern)):
+    def matches_method_and_target(self, method, target_class, args):
+        """Iterate through all patterns, checking for a match. Calls the pattern matcher against "class.method_name"."""
+        for pointcut_pattern in self.patterns:
+            if (self.matches_pattern(target_class + "." + method, pointcut_pattern)):
                 return True
         return False
 
-    def matchesPattern(self, methodName, pointcutPattern):
+    def matches_pattern(self, method_name, pointcut_pattern):
         """Uses a pre-built dictionary of regular expression patterns to check for a matcch."""
-        if self.compiledPatterns[pointcutPattern].match(methodName):
+        if self.compiled_patterns[pointcut_pattern].match(method_name):
             matched = True
         else:
             matched = False
-        self.logger.debug("Candidate is [%s]; pattern is [%s]; matched=%s" % (methodName, pointcutPattern, matched))
+        self.logger.debug("Candidate is [%s]; pattern is [%s]; matched=%s" % (method_name, pointcut_pattern, matched))
         return matched
 
     def invoke(self, invocation):
@@ -154,17 +125,19 @@ class RegexpMethodPointcutAdvisor(Pointcut, MethodMatcher, MethodInterceptor):
 
         className = invocation.instance.__class__.__name__
 
-        if self.matchesMethodAndTarget(invocation.methodName, className, invocation.args):
+        if self.matches_method_and_target(invocation.method_name, className, invocation.args):
+            # This constant is not class level, because it is a hack solution, and should only be used
+            # used here, and not known outside the scope of this block of code. --G.Turnquist (9/22/2008)
             ASSUME_THIS_ADVISOR_WAS_FIRST = 1
-            invocation.interceptorStack[ASSUME_THIS_ADVISOR_WAS_FIRST:ASSUME_THIS_ADVISOR_WAS_FIRST] = self.advice
+            invocation.intercept_stack[ASSUME_THIS_ADVISOR_WAS_FIRST:ASSUME_THIS_ADVISOR_WAS_FIRST] = self.advice
 
             self.logger.debug("We have a match, passing through to the advice.")
-            invocation.dumpInterceptors(logging.DEBUG)
+            invocation.dump_interceptors(logging.DEBUG)
 
             return invocation.proceed()
         else:
             self.logger.debug("No match, bypassing advice, going straight to targetClass.")
-            return getattr(invocation.instance, invocation.methodName)(invocation.args)
+            return getattr(invocation.instance, invocation.method_name)(invocation.args)
 
     def __setattr__(self, name, value):
         """If "advice", make sure it is a list. Anything else, pass through to simple assignment.
@@ -176,7 +149,7 @@ class RegexpMethodPointcutAdvisor(Pointcut, MethodMatcher, MethodInterceptor):
             self.__dict__[name] = value
 
         if name == "patterns":
-            self.initPatternRepresentation()
+            self.init_patterns()
 
 class FinalInterceptor(MethodInterceptor):
     """
@@ -188,7 +161,7 @@ class FinalInterceptor(MethodInterceptor):
         self.logger = logging.getLogger("springpython.aop.FinalInterceptor")
 
     def invoke(self, invocation):
-        return getattr(invocation.instance, invocation.methodName)(*invocation.args, **invocation.kwargs)
+        return getattr(invocation.instance, invocation.method_name)(*invocation.args, **invocation.kwargs)
 
 class AopProxy(object):
     """AopProxy acts like the target component by dispatching all method calls to the target through a MethodInvocation.
@@ -208,23 +181,23 @@ class AopProxy(object):
     def dispatch(self, *args, **kwargs):
         """This method is returned to the caller through __getattr__, to emulate all function calls being sent to the 
         target object. This allow this object to serve as a proxying agent for the target object."""
-        self.logger.debug("Calling AopProxy.%s(%s)" % (self.methodName, args))
-        invocation = MethodInvocation(self.target, self.methodName, args, kwargs, self.interceptors)
-        return getattr(invocation, self.methodName)(*args, **kwargs)
+        self.logger.debug("Calling AopProxy.%s(%s)" % (self.method_name, args))
+        invocation = MethodInvocation(self.target, self.method_name, args, kwargs, self.interceptors)
+        return invocation.__getattr__(self.method_name)(*args, **kwargs)
 
     def __getattr__(self, name):
         """If any of the parameters are local objects, they are immediately retrieved. Callables cause the dispatch method
         to be return, which forwards callables through the interceptor stack. Target attributes are retrieved directly from
         the target object."""
-        if name in ["target", "interceptors", "methodName"]:
+        if name in ["target", "interceptors", "method_name"]:
             return self.__dict__[name]
         else:
             attr = getattr(self.target, name)
             if not callable(attr):
                return attr
-            self.methodName = name
+            self.method_name = name
             return self.dispatch
-
+        
 class ProxyFactory(object):
     """This object helps to build AopProxy objects programmatically. It allows configuring advice and target objects.
     Then it will produce an AopProxy when needed. To use similar behavior in an IoC environment, see ProxyFactoryComponent."""
@@ -238,9 +211,6 @@ class ProxyFactory(object):
             self.interceptors = interceptors
         else:
             self.interceptors = [interceptors]
-
-    def addInterceptor(self, interceptor):
-        self.interceptors.append(interceptor)
 
     def getProxy(self):
         """Generate an AopProxy given the current target and list of interceptors. Any changes to the factory after
@@ -257,8 +227,11 @@ class ProxyFactoryComponent(ProxyFactory, AopProxy):
     """This class acts as both a ProxyFactory to build and an AopProxy. It makes itself look like the target object.
     Any changes to the target and list of interceptors is immediately seen when using this as a proxy."""
     def __init__(self, target = None, interceptors = None):
-        self.logger = logging.getLogger("springpython.aop.ProxyFactoryComponent")
         ProxyFactory.__init__(self, target, interceptors)
+        self.logger = logging.getLogger("springpython.aop.ProxyFactoryComponent")
+        
+    def __str__(self):
+        return self.__getattr__("__str__")()
 
 class PerformanceMonitorInterceptor(MethodInterceptor):
     def __init__(self, prefix = None, level = logging.DEBUG):

@@ -13,10 +13,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
-import warnings
-warnings.warn("Expect three deprecation warnings: mysql, postgresql, and Sqlite have moved to the factory module.",
-    stacklevel=2)
-
 import logging
 import os
 import sys
@@ -29,9 +25,6 @@ from springpython.database import DataAccessException
 from springpython.database import InvalidArgumentType
 from springpython.database.core import DatabaseTemplate
 from springpython.database import factory
-from springpython.database import mysql
-from springpython.database import postgresql
-from springpython.database import Sqlite
 from springpythontest.support import testSupportClasses
 
 logger = logging.getLogger("springpythontest.databaseCoreTestCases")
@@ -43,8 +36,8 @@ class ConnectionFactoryTestCase(MockTestCase):
         sys.modules["MySQLdb"] = self.mock()
         sys.modules["MySQLdb"].expects(once()).method("connect")
         
-        connectionFactory = mysql.MySQLConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
-        connection = connectionFactory.connect()
+        connection_factory = mysql.MySQLConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
+        connection = connection_factory.connect()
 
         del(sys.modules["MySQLdb"])
 
@@ -52,8 +45,8 @@ class ConnectionFactoryTestCase(MockTestCase):
         sys.modules["pgdb"] = self.mock()
         sys.modules["pgdb"].expects(once()).method("connect")
         
-        connectionFactory = postgresql.PgdbConnectionFactory(user="foo", password="bar", host="localhost", database="mock")
-        connection = connectionFactory.connect()
+        connection_factory = postgresql.PgdbConnectionFactory(user="foo", password="bar", host="localhost", database="mock")
+        connection = connection_factory.connect()
 
         del(sys.modules["pgdb"])
         
@@ -61,8 +54,8 @@ class ConnectionFactoryTestCase(MockTestCase):
         sys.modules["sqlite"] = self.mock()
         sys.modules["sqlite"].expects(once()).method("connect")
         
-        connectionFactory = Sqlite.SqliteConnectionFactory(db="/tmp/foobar")
-        connection = connectionFactory.connect()
+        connection_factory = Sqlite.SqliteConnectionFactory(db="/tmp/foobar")
+        connection = connection_factory.connect()
 
         del(sys.modules["sqlite"])
 
@@ -70,8 +63,8 @@ class ConnectionFactoryTestCase(MockTestCase):
         sys.modules["MySQLdb"] = self.mock()
         sys.modules["MySQLdb"].expects(once()).method("connect")
         
-        connectionFactory = factory.MySQLConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
-        connection = connectionFactory.connect()
+        connection_factory = factory.MySQLConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
+        connection = connection_factory.connect()
 
         del(sys.modules["MySQLdb"])
 
@@ -79,8 +72,8 @@ class ConnectionFactoryTestCase(MockTestCase):
         sys.modules["pgdb"] = self.mock()
         sys.modules["pgdb"].expects(once()).method("connect")
         
-        connectionFactory = factory.PgdbConnectionFactory(user="foo", password="bar", host="localhost", database="mock")
-        connection = connectionFactory.connect()
+        connection_factory = factory.PgdbConnectionFactory(user="foo", password="bar", host="localhost", database="mock")
+        connection = connection_factory.connect()
 
         del(sys.modules["pgdb"])
         
@@ -88,8 +81,8 @@ class ConnectionFactoryTestCase(MockTestCase):
         sys.modules["sqlite"] = self.mock()
         sys.modules["sqlite"].expects(once()).method("connect")
         
-        connectionFactory = factory.SqliteConnectionFactory(db="/tmp/foobar")
-        connection = connectionFactory.connect()
+        connection_factory = factory.Sqlite3ConnectionFactory(db="/tmp/foobar")
+        connection = connection_factory.connect()
 
         del(sys.modules["sqlite"])
 
@@ -98,8 +91,8 @@ class ConnectionFactoryTestCase(MockTestCase):
         sys.modules["cx_Oracle"] = self.mock()
         sys.modules["cx_Oracle"].expects(once()).method("connect")
         
-        connectionFactory = factory.cxoraConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
-        connection = connectionFactory.connect()
+        connection_factory = factory.cxoraConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
+        connection = connection_factory.connect()
 
         del(sys.modules["cx_Oracle"])
 
@@ -107,8 +100,8 @@ class ConnectionFactoryTestCase(MockTestCase):
         sys.modules["cx_Oracle"] = self.mock()
         sys.modules["cx_Oracle"].expects(once()).method("connect")
         
-        connectionFactory = factory.cxoraConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
-        dt = DatabaseTemplate(connectionFactory)
+        connection_factory = factory.cxoraConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
+        dt = DatabaseTemplate(connection_factory)
 
         self.assertRaises(InvalidArgumentType, dt.query, """ 
                 SELECT
@@ -120,7 +113,7 @@ class ConnectionFactoryTestCase(MockTestCase):
                 WHERE (lklabelsys.oid = impcarrcfg.lklabelsys_oid)
                 and (carr.oid = impcarrcfg.carr_oid )
                 and (carr.oid = ? and lklabelsys.oid = ?) 
-            """, (5, 5), testSupportClasses.ImpFilePropsRowCallbackHandler())
+            """, (5, 5), testSupportClasses.ImpFilePropsRowMapper())
 
         del(sys.modules["cx_Oracle"])
 
@@ -135,8 +128,8 @@ class ConnectionFactoryTestCase(MockTestCase):
         sys.modules["cx_Oracle"] = self.mock()
         sys.modules["cx_Oracle"].expects(once()).method("connect").will(return_value(conn))
         
-        connectionFactory = factory.cxoraConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
-        dt = DatabaseTemplate(connectionFactory)
+        connection_factory = factory.cxoraConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
+        dt = DatabaseTemplate(connection_factory)
 
         dt.query(""" 
                 SELECT
@@ -150,7 +143,7 @@ class ConnectionFactoryTestCase(MockTestCase):
                 and (carr.oid = :carr_oid and lklabelsys.oid = :lklabelsys_oid) 
             """,
             {'carr_oid':5, 'lklabelsys_oid':5},
-            testSupportClasses.ImpFilePropsRowCallbackHandler())
+            testSupportClasses.ImpFilePropsRowMapper())
 
         del(sys.modules["cx_Oracle"])
 
@@ -160,9 +153,9 @@ class DatabaseTemplateMockTestCase(MockTestCase):
 
     def setUp(self):
         self.mock = self.mock()
-        connectionFactory = testSupportClasses.StubDBFactory()
-        connectionFactory.stubConnection.mockCursor = self.mock
-        self.databaseTemplate = DatabaseTemplate(connectionFactory)
+        connection_factory = testSupportClasses.StubDBFactory()
+        connection_factory.stubConnection.mockCursor = self.mock
+        self.databaseTemplate = DatabaseTemplate(connection_factory)
 
     def testProgrammaticallyInstantiatingAnAbstractDatabaseTemplate(self):
         emptyTemplate = DatabaseTemplate()
@@ -188,27 +181,27 @@ class DatabaseTemplateMockTestCase(MockTestCase):
 
     def testIoCGeneralQuery(self):
         appContext = XmlApplicationContext("support/databaseTestApplicationContext.xml")
-        mockConnectionFactory = appContext.getComponent("mockConnectionFactory")
+        mockConnectionFactory = appContext.get_component("mockConnectionFactory")
         mockConnectionFactory.stubConnection.mockCursor = self.mock
         
         self.mock.expects(once()).method("execute")
         self.mock.expects(once()).method("fetchall").will(return_value([("me", "myphone")]))
         
 
-        databaseTemplate = DatabaseTemplate(connectionFactory = mockConnectionFactory)
-        results = databaseTemplate.query("select * from foobar", rowhandler=testSupportClasses.SampleRowCallbackHandler())
+        databaseTemplate = DatabaseTemplate(connection_factory = mockConnectionFactory)
+        results = databaseTemplate.query("select * from foobar", rowhandler=testSupportClasses.SampleRowMapper())
         
     def testProgrammaticStaticQuery(self):
-        self.assertRaises(ArgumentMustBeNamed, self.databaseTemplate.query, "select * from animal", testSupportClasses.AnimalRowCallbackHandler())
+        self.assertRaises(ArgumentMustBeNamed, self.databaseTemplate.query, "select * from animal", testSupportClasses.AnimalRowMapper())
 
         self.mock.expects(once()).method("execute").id("#1")
         self.mock.expects(once()).method("fetchall").will(return_value([('snake', 'reptile', 1), ('racoon', 'mammal', 1)])).id("#2").after("#1")
 
-        animalList = self.databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.AnimalRowCallbackHandler())
-        self.assertEquals(animalList[0].name, "snake")
-        self.assertEquals(animalList[0].category, "reptile")
-        self.assertEquals(animalList[1].name, "racoon")
-        self.assertEquals(animalList[1].category, "mammal")
+        animals = self.databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.AnimalRowMapper())
+        self.assertEquals(animals[0].name, "snake")
+        self.assertEquals(animals[0].category, "reptile")
+        self.assertEquals(animals[1].name, "racoon")
+        self.assertEquals(animals[1].category, "mammal")
         
     def testProgrammaticQueryWithBoundArguments(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -216,23 +209,23 @@ class DatabaseTemplateMockTestCase(MockTestCase):
         self.mock.expects(once()).method("execute").id("#3").after("#2")
         self.mock.expects(once()).method("fetchall").will(return_value([('snake', 'reptile', 1)])).id("#4").after("#3")
 
-        animalList = self.databaseTemplate.query("select * from animal where name = %s", ("snake",), testSupportClasses.AnimalRowCallbackHandler())
-        self.assertEquals(animalList[0].name, "snake")
-        self.assertEquals(animalList[0].category, "reptile")
+        animals = self.databaseTemplate.query("select * from animal where name = %s", ("snake",), testSupportClasses.AnimalRowMapper())
+        self.assertEquals(animals[0].name, "snake")
+        self.assertEquals(animals[0].category, "reptile")
 
-        animalList = self.databaseTemplate.query("select * from animal where name = ?", ("snake",), testSupportClasses.AnimalRowCallbackHandler())
-        self.assertEquals(animalList[0].name, "snake")
-        self.assertEquals(animalList[0].category, "reptile")
+        animals = self.databaseTemplate.query("select * from animal where name = ?", ("snake",), testSupportClasses.AnimalRowMapper())
+        self.assertEquals(animals[0].name, "snake")
+        self.assertEquals(animals[0].category, "reptile")
         
     def testProgrammaticStaticQueryForList(self):
         self.mock.expects(once()).method("execute").id("#1")
         self.mock.expects(once()).method("fetchall").will(return_value([('snake', 'reptile', 1), ('racoon', 'mammal', 1)])).id("#2").after("#1")
 
-        animalList = self.databaseTemplate.queryForList("select * from animal")
-        self.assertEquals(animalList[0][0], "snake")
-        self.assertEquals(animalList[0][1], "reptile")
-        self.assertEquals(animalList[1][0], "racoon")
-        self.assertEquals(animalList[1][1], "mammal")
+        animals = self.databaseTemplate.query_for_list("select * from animal")
+        self.assertEquals(animals[0][0], "snake")
+        self.assertEquals(animals[0][1], "reptile")
+        self.assertEquals(animals[1][0], "racoon")
+        self.assertEquals(animals[1][1], "mammal")
         
     def testProgrammaticQueryForListWithBoundArguments(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -240,23 +233,23 @@ class DatabaseTemplateMockTestCase(MockTestCase):
         self.mock.expects(once()).method("execute").id("#3").after("#2")
         self.mock.expects(once()).method("fetchall").will(return_value([('snake', 'reptile', 1)])).id("#4").after("#3")
 
-        animalList = self.databaseTemplate.queryForList("select * from animal where name = %s", ("snake",))
-        self.assertEquals(animalList[0][0], "snake")
-        self.assertEquals(animalList[0][1], "reptile")
+        animals = self.databaseTemplate.query_for_list("select * from animal where name = %s", ("snake",))
+        self.assertEquals(animals[0][0], "snake")
+        self.assertEquals(animals[0][1], "reptile")
         
-        animalList = self.databaseTemplate.queryForList("select * from animal where name = ?", ("snake",))
-        self.assertEquals(animalList[0][0], "snake")
-        self.assertEquals(animalList[0][1], "reptile")
+        animals = self.databaseTemplate.query_for_list("select * from animal where name = ?", ("snake",))
+        self.assertEquals(animals[0][0], "snake")
+        self.assertEquals(animals[0][1], "reptile")
 
     def testProgrammaticQueryForListWithBoundArgumentsNotProperlyTuplized(self):
-        self.assertRaises(InvalidArgumentType, self.databaseTemplate.queryForList, "select * from animal where name = %s", "snake")
-        self.assertRaises(InvalidArgumentType, self.databaseTemplate.queryForList, "select * from animal where name = ?", "snake")
+        self.assertRaises(InvalidArgumentType, self.databaseTemplate.query_for_list, "select * from animal where name = %s", "snake")
+        self.assertRaises(InvalidArgumentType, self.databaseTemplate.query_for_list, "select * from animal where name = ?", "snake")
 
     def testProgrammaticStaticQueryForInt(self):
         self.mock.expects(once()).method("execute").id("#1")
         self.mock.expects(once()).method("fetchall").will(return_value([(1,)])).id("#2").after("#1")
 
-        count = self.databaseTemplate.queryForInt("select population from animal where name = 'snake'")
+        count = self.databaseTemplate.query_for_int("select population from animal where name = 'snake'")
         self.assertEquals(count, 1)
         
     def testProgrammaticQueryForIntWithBoundArguments(self):
@@ -265,17 +258,17 @@ class DatabaseTemplateMockTestCase(MockTestCase):
         self.mock.expects(once()).method("execute").id("#3").after("#2")
         self.mock.expects(once()).method("fetchall").will(return_value([(1,)])).id("#4").after("#3")
 
-        count = self.databaseTemplate.queryForInt("select population from animal where name = %s", ("snake",))
+        count = self.databaseTemplate.query_for_int("select population from animal where name = %s", ("snake",))
         self.assertEquals(count, 1)
 
-        count = self.databaseTemplate.queryForInt("select population from animal where name = ?", ("snake",))
+        count = self.databaseTemplate.query_for_int("select population from animal where name = ?", ("snake",))
         self.assertEquals(count, 1)
         
     def testProgrammaticStaticQueryForLong(self):
         self.mock.expects(once()).method("execute").id("#1")
         self.mock.expects(once()).method("fetchall").will(return_value([(4,)])).id("#2").after("#1")
 
-        count = self.databaseTemplate.queryForObject("select count(*) from animal", requiredType=types.IntType)
+        count = self.databaseTemplate.query_for_object("select count(*) from animal", required_type=types.IntType)
         self.assertEquals(count, 4)
         
     def testProgrammaticQueryForLongWithBoundVariables(self):
@@ -284,19 +277,19 @@ class DatabaseTemplateMockTestCase(MockTestCase):
         self.mock.expects(once()).method("execute").id("#3").after("#2")
         self.mock.expects(once()).method("fetchall").will(return_value([(1,)])).id("#4").after("#3")
 
-        count = self.databaseTemplate.queryForObject("select count(*) from animal where name = %s", ("snake",), types.IntType)
+        count = self.databaseTemplate.query_for_object("select count(*) from animal where name = %s", ("snake",), types.IntType)
         self.assertEquals(count, 1)
 
-        count = self.databaseTemplate.queryForObject("select count(*) from animal where name = ?", ("snake",), types.IntType)
+        count = self.databaseTemplate.query_for_object("select count(*) from animal where name = ?", ("snake",), types.IntType)
         self.assertEquals(count, 1)
         
     def testProgrammaticStaticQueryForObject(self):
-        self.assertRaises(ArgumentMustBeNamed, self.databaseTemplate.queryForObject, "select name from animal where category = 'reptile'", types.StringType)
+        self.assertRaises(ArgumentMustBeNamed, self.databaseTemplate.query_for_object, "select name from animal where category = 'reptile'", types.StringType)
 
         self.mock.expects(once()).method("execute").id("#1")
         self.mock.expects(once()).method("fetchall").will(return_value([("snake",)])).id("#2").after("#1")
 
-        name = self.databaseTemplate.queryForObject("select name from animal where category = 'reptile'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("select name from animal where category = 'reptile'", required_type=types.StringType)
         self.assertEquals(name, "snake")
         
     def testProgrammaticQueryForObjectWithBoundVariables(self):
@@ -305,10 +298,10 @@ class DatabaseTemplateMockTestCase(MockTestCase):
         self.mock.expects(once()).method("execute").id("#3").after("#2")
         self.mock.expects(once()).method("fetchall").will(return_value([("snake",)])).id("#4").after("#3")
 
-        name = self.databaseTemplate.queryForObject("select name from animal where category = %s", ("reptile",), types.StringType)
+        name = self.databaseTemplate.query_for_object("select name from animal where category = %s", ("reptile",), types.StringType)
         self.assertEquals(name, "snake")
 
-        name = self.databaseTemplate.queryForObject("select name from animal where category = ?", ("reptile",), types.StringType)
+        name = self.databaseTemplate.query_for_object("select name from animal where category = ?", ("reptile",), types.StringType)
         self.assertEquals(name, "snake")
         
     def testProgrammaticStaticUpdate(self):
@@ -320,7 +313,7 @@ class DatabaseTemplateMockTestCase(MockTestCase):
         rows = self.databaseTemplate.update("UPDATE animal SET name = 'python' WHERE name = 'snake'")
         self.assertEquals(rows, 1)
 
-        name = self.databaseTemplate.queryForObject("SELECT name FROM animal WHERE category = 'reptile'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'reptile'", required_type=types.StringType)
         self.assertEquals(name, "python")
         
     def testProgrammaticUpdateWithBoundVariables(self):
@@ -335,13 +328,13 @@ class DatabaseTemplateMockTestCase(MockTestCase):
         rows = self.databaseTemplate.update("UPDATE animal SET name = ? WHERE category = ?", ("python", "reptile"))
         self.assertEquals(rows, 1)
 
-        name = self.databaseTemplate.queryForObject("SELECT name FROM animal WHERE category = 'reptile'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'reptile'", required_type=types.StringType)
         self.assertEquals(name, "python")
 
         rows = self.databaseTemplate.update("UPDATE animal SET name = ? WHERE category = %s", ("coily", "reptile"))
         self.assertEquals(rows, 1)
 
-        name = self.databaseTemplate.queryForObject("SELECT name FROM animal WHERE category = 'reptile'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'reptile'", required_type=types.StringType)
         self.assertEquals(name, "coily")
 
     def testProgrammaticStaticInsert(self):
@@ -353,7 +346,7 @@ class DatabaseTemplateMockTestCase(MockTestCase):
         rows = self.databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES ('black mamba', 'kill_bill_viper', 1)")
         self.assertEquals(rows, 1)
 
-        name = self.databaseTemplate.queryForObject("SELECT name FROM animal WHERE category = 'kill_bill_viper'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'kill_bill_viper'", required_type=types.StringType)
         self.assertEquals(name, "black mamba")
         
     def testProgrammaticInsertWithBoundVariables(self):
@@ -368,13 +361,13 @@ class DatabaseTemplateMockTestCase(MockTestCase):
         rows = self.databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES (?, ?, ?)", ('black mamba', 'kill_bill_viper', 1))
         self.assertEquals(rows, 1)
 
-        name = self.databaseTemplate.queryForObject("SELECT name FROM animal WHERE category = 'kill_bill_viper'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'kill_bill_viper'", required_type=types.StringType)
         self.assertEquals(name, "black mamba")
 
         rows = self.databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES (%s, %s, %s)", ('cottonmouth', 'kill_bill_viper', 1))
         self.assertEquals(rows, 1)
 
-        name = self.databaseTemplate.queryForObject("select name from animal where name = 'cottonmouth'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("select name from animal where name = 'cottonmouth'", required_type=types.StringType)
         self.assertEquals(name, "cottonmouth")
 
 class AbstractDatabaseTemplateTestCase(unittest.TestCase):
@@ -389,13 +382,13 @@ class AbstractDatabaseTemplateTestCase(unittest.TestCase):
         self.databaseTemplate = DatabaseTemplate(self.factory)
         self.databaseTemplate.execute("DELETE FROM animal")
         self.factory.commit()
-        self.assertEquals(len(self.databaseTemplate.queryForList("SELECT * FROM animal")), 0)
+        self.assertEquals(len(self.databaseTemplate.query_for_list("SELECT * FROM animal")), 0)
         self.databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES ('snake', 'reptile', 1)")
         self.databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES ('racoon', 'mammal', 0)")
         self.databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES ('black mamba', 'kill_bill_viper', 1)")
         self.databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES ('cottonmouth', 'kill_bill_viper', 1)")
         self.factory.commit()
-        self.assertEquals(len(self.databaseTemplate.queryForList("SELECT * FROM animal")), 4)
+        self.assertEquals(len(self.databaseTemplate.query_for_list("SELECT * FROM animal")), 4)
 
     def tearDown(self):
         self.factory.rollback()
@@ -414,96 +407,96 @@ class AbstractDatabaseTemplateTestCase(unittest.TestCase):
         results = self.databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.ValidHandler())
 
     def testProgrammaticStaticQuery(self):
-        self.assertRaises(ArgumentMustBeNamed, self.databaseTemplate.query, "select * from animal", testSupportClasses.AnimalRowCallbackHandler())
+        self.assertRaises(ArgumentMustBeNamed, self.databaseTemplate.query, "select * from animal", testSupportClasses.AnimalRowMapper())
 
-        animalList = self.databaseTemplate.query("select name, category from animal", rowhandler=testSupportClasses.AnimalRowCallbackHandler())
-        self.assertEquals(animalList[0].name, "snake")
-        self.assertEquals(animalList[0].category, "reptile")
-        self.assertEquals(animalList[1].name, "racoon")
-        self.assertEquals(animalList[1].category, "mammal")
+        animals = self.databaseTemplate.query("select name, category from animal", rowhandler=testSupportClasses.AnimalRowMapper())
+        self.assertEquals(animals[0].name, "snake")
+        self.assertEquals(animals[0].category, "reptile")
+        self.assertEquals(animals[1].name, "racoon")
+        self.assertEquals(animals[1].category, "mammal")
         
     def testProgrammaticQueryWithBoundArguments(self):
-        animalList = self.databaseTemplate.query("select name, category from animal where name = %s", ("snake",), testSupportClasses.AnimalRowCallbackHandler())
-        self.assertEquals(animalList[0].name, "snake")
-        self.assertEquals(animalList[0].category, "reptile")
+        animals = self.databaseTemplate.query("select name, category from animal where name = %s", ("snake",), testSupportClasses.AnimalRowMapper())
+        self.assertEquals(animals[0].name, "snake")
+        self.assertEquals(animals[0].category, "reptile")
 
-        animalList = self.databaseTemplate.query("select name, category from animal where name = ?", ("snake",), testSupportClasses.AnimalRowCallbackHandler())
-        self.assertEquals(animalList[0].name, "snake")
-        self.assertEquals(animalList[0].category, "reptile")
+        animals = self.databaseTemplate.query("select name, category from animal where name = ?", ("snake",), testSupportClasses.AnimalRowMapper())
+        self.assertEquals(animals[0].name, "snake")
+        self.assertEquals(animals[0].category, "reptile")
         
     def testProgrammaticStaticQueryForList(self):
-        animalList = self.databaseTemplate.queryForList("select name, category from animal")
-        self.assertEquals(animalList[0][0], "snake")
-        self.assertEquals(animalList[0][1], "reptile")
-        self.assertEquals(animalList[1][0], "racoon")
-        self.assertEquals(animalList[1][1], "mammal")
+        animals = self.databaseTemplate.query_for_list("select name, category from animal")
+        self.assertEquals(animals[0][0], "snake")
+        self.assertEquals(animals[0][1], "reptile")
+        self.assertEquals(animals[1][0], "racoon")
+        self.assertEquals(animals[1][1], "mammal")
         
     def testProgrammaticQueryForListWithBoundArguments(self):
-        animalList = self.databaseTemplate.queryForList("select name, category from animal where name = %s", ("snake",))
-        self.assertEquals(animalList[0][0], "snake")
-        self.assertEquals(animalList[0][1], "reptile")
+        animals = self.databaseTemplate.query_for_list("select name, category from animal where name = %s", ("snake",))
+        self.assertEquals(animals[0][0], "snake")
+        self.assertEquals(animals[0][1], "reptile")
         
-        animalList = self.databaseTemplate.queryForList("select name, category from animal where name = ?", ("snake",))
-        self.assertEquals(animalList[0][0], "snake")
-        self.assertEquals(animalList[0][1], "reptile")
+        animals = self.databaseTemplate.query_for_list("select name, category from animal where name = ?", ("snake",))
+        self.assertEquals(animals[0][0], "snake")
+        self.assertEquals(animals[0][1], "reptile")
 
     def testProgrammaticQueryForListWithBoundArgumentsNotProperlyTuplized(self):
-        self.assertRaises(InvalidArgumentType, self.databaseTemplate.queryForList, "select * from animal where name = %s", "snake")
-        self.assertRaises(InvalidArgumentType, self.databaseTemplate.queryForList, "select * from animal where name = ?", "snake")
+        self.assertRaises(InvalidArgumentType, self.databaseTemplate.query_for_list, "select * from animal where name = %s", "snake")
+        self.assertRaises(InvalidArgumentType, self.databaseTemplate.query_for_list, "select * from animal where name = ?", "snake")
 
     def testProgrammaticStaticQueryForInt(self):
-        count = self.databaseTemplate.queryForInt("select population from animal where name = 'snake'")
+        count = self.databaseTemplate.query_for_int("select population from animal where name = 'snake'")
         self.assertEquals(count, 1)
         
     def testProgrammaticQueryForIntWithBoundArguments(self):
-        count = self.databaseTemplate.queryForInt("select population from animal where name = %s", ("snake",))
+        count = self.databaseTemplate.query_for_int("select population from animal where name = %s", ("snake",))
         self.assertEquals(count, 1)
 
-        count = self.databaseTemplate.queryForInt("select population from animal where name = ?", ("snake",))
+        count = self.databaseTemplate.query_for_int("select population from animal where name = ?", ("snake",))
         self.assertEquals(count, 1)
         
     def testProgrammaticStaticQueryForLong(self):
-        count = self.databaseTemplate.queryForObject("select count(*) from animal", requiredType=self.factory.countType())
+        count = self.databaseTemplate.query_for_object("select count(*) from animal", required_type=self.factory.count_type())
         self.assertEquals(count, 4)
         
     def testProgrammaticQueryForLongWithBoundVariables(self):
-        count = self.databaseTemplate.queryForObject("select count(*) from animal where name = %s", ("snake",), self.factory.countType())
+        count = self.databaseTemplate.query_for_object("select count(*) from animal where name = %s", ("snake",), self.factory.count_type())
         self.assertEquals(count, 1)
 
-        count = self.databaseTemplate.queryForObject("select count(*) from animal where name = ?", ("snake",), self.factory.countType())
+        count = self.databaseTemplate.query_for_object("select count(*) from animal where name = ?", ("snake",), self.factory.count_type())
         self.assertEquals(count, 1)
         
     def testProgrammaticStaticQueryForObject(self):
-        self.assertRaises(ArgumentMustBeNamed, self.databaseTemplate.queryForObject, "select name from animal where category = 'reptile'", types.StringType)
+        self.assertRaises(ArgumentMustBeNamed, self.databaseTemplate.query_for_object, "select name from animal where category = 'reptile'", types.StringType)
 
-        name = self.databaseTemplate.queryForObject("select name from animal where category = 'reptile'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("select name from animal where category = 'reptile'", required_type=types.StringType)
         self.assertEquals(name, "snake")
         
     def testProgrammaticQueryForObjectWithBoundVariables(self):
-        name = self.databaseTemplate.queryForObject("select name from animal where category = %s", ("reptile",), types.StringType)
+        name = self.databaseTemplate.query_for_object("select name from animal where category = %s", ("reptile",), types.StringType)
         self.assertEquals(name, "snake")
 
-        name = self.databaseTemplate.queryForObject("select name from animal where category = ?", ("reptile",), types.StringType)
+        name = self.databaseTemplate.query_for_object("select name from animal where category = ?", ("reptile",), types.StringType)
         self.assertEquals(name, "snake")
         
     def testProgrammaticStaticUpdate(self):
         rows = self.databaseTemplate.update("UPDATE animal SET name = 'python' WHERE name = 'snake'")
         self.assertEquals(rows, 1)
 
-        name = self.databaseTemplate.queryForObject("SELECT name FROM animal WHERE category = 'reptile'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'reptile'", required_type=types.StringType)
         self.assertEquals(name, "python")
         
     def testProgrammaticUpdateWithBoundVariables(self):
         rows = self.databaseTemplate.update("UPDATE animal SET name = ? WHERE category = ?", ("python", "reptile"))
         self.assertEquals(rows, 1)
 
-        name = self.databaseTemplate.queryForObject("SELECT name FROM animal WHERE category = 'reptile'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'reptile'", required_type=types.StringType)
         self.assertEquals(name, "python")
 
         rows = self.databaseTemplate.update("UPDATE animal SET name = ? WHERE category = %s", ("coily", "reptile"))
         self.assertEquals(rows, 1)
 
-        name = self.databaseTemplate.queryForObject("SELECT name FROM animal WHERE category = 'reptile'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'reptile'", required_type=types.StringType)
         self.assertEquals(name, "coily")
 
     def testProgrammaticStaticInsert(self):
@@ -511,7 +504,7 @@ class AbstractDatabaseTemplateTestCase(unittest.TestCase):
         rows = self.databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES ('black mamba', 'kill_bill_viper', 1)")
         self.assertEquals(rows, 1)
 
-        name = self.databaseTemplate.queryForObject("SELECT name FROM animal WHERE category = 'kill_bill_viper'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'kill_bill_viper'", required_type=types.StringType)
         self.assertEquals(name, "black mamba")
         
     def testProgrammaticInsertWithBoundVariables(self):
@@ -519,13 +512,13 @@ class AbstractDatabaseTemplateTestCase(unittest.TestCase):
         rows = self.databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES (?, ?, ?)", ('black mamba', 'kill_bill_viper', 1))
         self.assertEquals(rows, 1)
 
-        name = self.databaseTemplate.queryForObject("SELECT name FROM animal WHERE category = 'kill_bill_viper'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'kill_bill_viper'", required_type=types.StringType)
         self.assertEquals(name, "black mamba")
 
         rows = self.databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES (%s, %s, %s)", ('cottonmouth', 'kill_bill_viper', 1))
         self.assertEquals(rows, 1)
 
-        name = self.databaseTemplate.queryForObject("select name from animal where name = 'cottonmouth'", requiredType=types.StringType)
+        name = self.databaseTemplate.query_for_object("select name from animal where name = 'cottonmouth'", required_type=types.StringType)
         self.assertEquals(name, "cottonmouth")
 
 class MySQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
@@ -568,10 +561,10 @@ class MySQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
 
     def testIoCGeneralQuery(self):
         appContext = XmlApplicationContext("support/databaseTestMySQLApplicationContext.xml")
-        factory = appContext.getComponent("connectionFactory")
+        factory = appContext.get_component("connection_factory")
         
         databaseTemplate = DatabaseTemplate(factory)
-        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowCallbackHandler())
+        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
         
 class PostGreSQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
     def __init__(self, methodName='runTest'):
@@ -618,10 +611,10 @@ class PostGreSQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
 
     def testIoCGeneralQuery(self):
         appContext = XmlApplicationContext("support/databaseTestPGApplicationContext.xml")
-        factory = appContext.getComponent("connectionFactory")
+        factory = appContext.get_component("connection_factory")
         
         databaseTemplate = DatabaseTemplate(factory)
-        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowCallbackHandler())
+        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
 
 class SqliteDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
     def __init__(self, methodName='runTest'):
@@ -634,7 +627,7 @@ class SqliteDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
                 os.remove("/tmp/springpython.db")
             except OSError:
                 pass
-            self.factory = factory.SqliteConnectionFactory("/tmp/springpython.db")
+            self.factory = factory.Sqlite3ConnectionFactory("/tmp/springpython.db")
             dt = DatabaseTemplate(self.factory)
 
             dt.execute("""
@@ -655,8 +648,8 @@ class SqliteDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
 
     def testIoCGeneralQuery(self):
         appContext = XmlApplicationContext("support/databaseTestSqliteApplicationContext.xml")
-        factory = appContext.getComponent("connectionFactory")
+        factory = appContext.get_component("connection_factory")
         
         databaseTemplate = DatabaseTemplate(factory)
-        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowCallbackHandler())
+        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
 

@@ -33,13 +33,13 @@ class PyroRemotingTestCase(unittest.TestCase):
     def testExportingAServiceThroughIoC(self):
         appContext = XmlApplicationContext("support/remotingPyroTestApplicationContext.xml")
         
-        remoteService1 = appContext.getComponent("remoteServiceServer1")
-        serviceExporter1 = appContext.getComponent("serviceExporter1")
-        clientSideProxy1 = appContext.getComponent("accountServiceClient1")
+        remoteService1 = appContext.get_component("remoteServiceServer1")
+        serviceExporter1 = appContext.get_component("serviceExporter1")
+        clientSideProxy1 = appContext.get_component("accountServiceClient1")
                
-        remoteService2 = appContext.getComponent("remoteServiceServer2")
-        serviceExporter2 = appContext.getComponent("serviceExporter2")
-        clientSideProxy2 = appContext.getComponent("accountServiceClient2")
+        remoteService2 = appContext.get_component("remoteServiceServer2")
+        serviceExporter2 = appContext.get_component("serviceExporter2")
+        clientSideProxy2 = appContext.get_component("accountServiceClient2")
                       
         time.sleep(0.01)
         
@@ -60,11 +60,11 @@ class PyroRemotingTestCase(unittest.TestCase):
     def testExportingAServiceThroughIoCWithoutPullingTheIntermediateComponent(self):
         appContext = XmlApplicationContext("support/remotingPyroTestApplicationContext.xml")
         
-        remoteService1 = appContext.getComponent("remoteServiceServer1")
-        clientSideProxy1 = appContext.getComponent("accountServiceClient1")
+        remoteService1 = appContext.get_component("remoteServiceServer1")
+        clientSideProxy1 = appContext.get_component("accountServiceClient1")
                
-        remoteService2 = appContext.getComponent("remoteServiceServer2")
-        clientSideProxy2 = appContext.getComponent("accountServiceClient2")
+        remoteService2 = appContext.get_component("remoteServiceServer2")
+        clientSideProxy2 = appContext.get_component("accountServiceClient2")
         
         time.sleep(0.01)
         
@@ -85,17 +85,17 @@ class PyroRemotingTestCase(unittest.TestCase):
     def testExportingAServiceThroughProgrammatically(self):
         remoteService1 = RemoteService1()
         serviceExporter1 = PyroServiceExporter()
-        serviceExporter1.serviceName = "RemoteService1"
+        serviceExporter1.service_name = "RemoteService1"
         serviceExporter1.service = remoteService1
         clientSideProxy1 = PyroProxyFactory()
-        clientSideProxy1.serviceUrl = "PYROLOC://localhost:7766/RemoteService1"
+        clientSideProxy1.service_url = "PYROLOC://localhost:7766/RemoteService1"
                
         remoteService2 = RemoteService2()
         serviceExporter2 = PyroServiceExporter()
-        serviceExporter2.serviceName = "RemoteService2"
+        serviceExporter2.service_name = "RemoteService2"
         serviceExporter2.service = remoteService2
         clientSideProxy2 = PyroProxyFactory()
-        clientSideProxy2.serviceUrl = "PYROLOC://localhost:7766/RemoteService2"
+        clientSideProxy2.service_url = "PYROLOC://localhost:7766/RemoteService2"
            
         time.sleep(0.01)
         
@@ -118,18 +118,21 @@ class HessianRemotingTestCase(unittest.TestCase):
         unittest.TestCase.__init__(self, tests)
         os.popen("rm -f org/springframework/springpython/*.class")
         os.popen("javac -cp lib/jetty-6.1.11.jar:lib/jetty-util-6.1.11.jar:lib/servlet-api-2.5-6.1.11.jar:lib/hessian-3.1.6.jar org/springframework/springpython/*.java")
-        self.predelay = 5.0
-        self.postdelay = 4.0
+        self.predelay = 10.0
+        self.postdelay = 10.0
 
-    def testExportingAServiceThroughProgrammatically(self):
+    def run_jetty(self):
         os.popen("java  -cp lib/jetty-6.1.11.jar:lib/jetty-util-6.1.11.jar:lib/servlet-api-2.5-6.1.11.jar:lib/hessian-3.1.6.jar:. org.springframework.springpython.HessianJavaServer &")
 
         # This is the minimum time to wait before starting a new test,
         # allowing the jetty web server to start up.
         time.sleep(self.predelay)
 
+    def testExportingAServiceThroughProgrammatically(self):
+        self.run_jetty()
+
         clientSideProxy = HessianProxyFactory()
-        clientSideProxy.serviceUrl = "http://localhost:8080/"
+        clientSideProxy.service_url = "http://localhost:8080/"
 
         results = clientSideProxy.transform("Greg Turnquist a,b,c,x,y,z")
 
@@ -140,14 +143,10 @@ class HessianRemotingTestCase(unittest.TestCase):
         time.sleep(self.postdelay)
  
     def testExportingAServiceThroughIoC(self):
-        os.popen("java  -cp lib/jetty-6.1.11.jar:lib/jetty-util-6.1.11.jar:lib/servlet-api-2.5-6.1.11.jar:lib/hessian-3.1.6.jar:. org.springframework.springpython.HessianJavaServer &")
-
-        # This is the minimum time to wait before starting a new test,
-        # allowing the jetty web server to start up.
-        time.sleep(self.predelay)
+        self.run_jetty()
 
         appContext = XmlApplicationContext("support/remotingHessianTestApplicationContext.xml")
-        clientSideProxy = appContext.getComponent("personService")
+        clientSideProxy = appContext.get_component("personService")
 
         results = clientSideProxy.transform("Greg Turnquist a,b,c,x,y,z")
 

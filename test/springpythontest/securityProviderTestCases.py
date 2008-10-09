@@ -18,7 +18,6 @@ import unittest
 from pmock import *
 from springpython.context import XmlApplicationContext
 from springpython.database.core import DatabaseTemplate
-from springpython.security.providers import InMemoryAuthenticationProvider
 from springpython.security.providers import AuthenticationManager
 from springpython.security.providers import UsernamePasswordAuthenticationToken
 from springpython.security.context import SecurityContextHolder
@@ -28,79 +27,11 @@ from springpython.security import DisabledException
 from springpython.security import UsernameNotFoundException
 from springpythontest.support import testSupportClasses
 
-class InMemoryAuthenticationProviderTestCase(unittest.TestCase):
-    """
-    DEPRECATED since v0.2: Use InMemoryUserDetailsService with a DaoAuthenticationProvider instead.
-    This test case provides testing supporting until that section of code is removed.
-    """
-    def testProgrammaticInMemoryAuthentication(self):
-        SecurityContextHolder.setContext(SecurityContext())
-        
-        userMap = {}
-        userMap["user1"] = ("password1", ["role1", "blue"], True)
-        userMap["user2"] = ("password2", ["role1", "orange"], True)
-        userMap["adminuser"] = ("password3", ["role1", "admin"], True)
-        userMap["disableduser"] = ("password4", ["role1", "blue"], False)
-        userMap["emptyuser"] = ("", [], True)
-        userMap["toomanyroles1"] = ("password5", ["blue", "orange"], True)
-        userMap["toomanyroles2"] = ("password6", ["orange", "admin"], True)
-        userMap["toomanyroles3"] = ("password7", ["blue", "admin"], True)
-        userMap["toomanyroles4"] = ("password8", ["blue", "admin"], True)
-
-        authenticationProvider = InMemoryAuthenticationProvider(userMap = userMap)
-        
-        authenticationManager = AuthenticationManager(authenticationProviderList = [authenticationProvider])
-        
-        authentication = UsernamePasswordAuthenticationToken(username="user1", password=userMap["user1"][0])
-        SecurityContextHolder.getContext().authentication = authenticationManager.authenticate(authentication)
-        self.assertTrue("role1" in authentication.grantedAuthorities)
-        self.assertTrue("blue" in authentication.grantedAuthorities)
-        
-        authentication = UsernamePasswordAuthenticationToken(username="user2", password=userMap["user2"][0])
-        SecurityContextHolder.getContext().authentication = authenticationManager.authenticate(authentication)
-        self.assertTrue("role1" in authentication.grantedAuthorities)
-        self.assertTrue("orange" in authentication.grantedAuthorities)
-
-        authentication = UsernamePasswordAuthenticationToken(username="adminuser", password=userMap["adminuser"][0])
-        SecurityContextHolder.getContext().authentication = authenticationManager.authenticate(authentication)
-        self.assertTrue("role1" in authentication.grantedAuthorities)
-        self.assertTrue("admin" in authentication.grantedAuthorities)
-
-        authentication = UsernamePasswordAuthenticationToken(username="disableduser", password=userMap["disableduser"][0])
-        self.assertRaises(DisabledException, authenticationManager.authenticate, authentication)
-        
-        authentication = UsernamePasswordAuthenticationToken(username="user1", password="badpassword")
-        self.assertRaises(BadCredentialsException, authenticationManager.authenticate, authentication)
-
-    def testIoCInMemoryAuthentication(self):
-        SecurityContextHolder.setContext(SecurityContext())
-        appContext = XmlApplicationContext("support/providerApplicationContext.xml")
-        
-        authenticationManager = appContext.getComponent("deprecatedAuthenticationManager")
-        
-        authentication = UsernamePasswordAuthenticationToken(username="user1", password="password1")
-        SecurityContextHolder.getContext().authentication = authenticationManager.authenticate(authentication)
-        self.assertTrue("role1" in authentication.grantedAuthorities)
-        self.assertTrue("blue" in authentication.grantedAuthorities)
-        
-        authentication = UsernamePasswordAuthenticationToken(username="user2", password="password2")
-        SecurityContextHolder.getContext().authentication = authenticationManager.authenticate(authentication)
-        self.assertTrue("role1" in authentication.grantedAuthorities)
-        self.assertTrue("orange" in authentication.grantedAuthorities)
-
-        authentication = UsernamePasswordAuthenticationToken(username="adminuser", password="password3")
-        SecurityContextHolder.getContext().authentication = authenticationManager.authenticate(authentication)
-        self.assertTrue("role1" in authentication.grantedAuthorities)
-        self.assertTrue("admin" in authentication.grantedAuthorities)
-
-        authentication = UsernamePasswordAuthenticationToken(username="disableduser", password="password4")
-        self.assertRaises(DisabledException, authenticationManager.authenticate, authentication)
-
 class InMemoryDaoAuthenticationProviderTestCase(unittest.TestCase):
     def setUp(self):
         SecurityContextHolder.setContext(SecurityContext())
         self.appContext = XmlApplicationContext("support/providerApplicationContext.xml")
-        self.authenticationManager = self.appContext.getComponent("inMemoryDaoAuthenticationManager")
+        self.auth_manager = self.appContext.get_component("inMemoryDaoAuthenticationManager")
         
     def __init__(self, methodName='runTest'):
         unittest.TestCase.__init__(self, methodName)
@@ -108,29 +39,29 @@ class InMemoryDaoAuthenticationProviderTestCase(unittest.TestCase):
 
     def testIoCDaoAuthenticationGoodUsers(self):                
         authentication = UsernamePasswordAuthenticationToken(username="user1", password="password1")
-        SecurityContextHolder.getContext().authentication = self.authenticationManager.authenticate(authentication)
-        self.assertTrue("role1" in SecurityContextHolder.getContext().authentication.grantedAuthorities)
-        self.assertTrue("blue" in SecurityContextHolder.getContext().authentication.grantedAuthorities)
+        SecurityContextHolder.getContext().authentication = self.auth_manager.authenticate(authentication)
+        self.assertTrue("role1" in SecurityContextHolder.getContext().authentication.granted_auths)
+        self.assertTrue("blue" in SecurityContextHolder.getContext().authentication.granted_auths)
         
         authentication = UsernamePasswordAuthenticationToken(username="user2", password="password2")
-        SecurityContextHolder.getContext().authentication = self.authenticationManager.authenticate(authentication)
-        self.assertTrue("role1" in SecurityContextHolder.getContext().authentication.grantedAuthorities)
-        self.assertTrue("orange" in SecurityContextHolder.getContext().authentication.grantedAuthorities)
+        SecurityContextHolder.getContext().authentication = self.auth_manager.authenticate(authentication)
+        self.assertTrue("role1" in SecurityContextHolder.getContext().authentication.granted_auths)
+        self.assertTrue("orange" in SecurityContextHolder.getContext().authentication.granted_auths)
 
         authentication = UsernamePasswordAuthenticationToken(username="adminuser", password="password3")
-        SecurityContextHolder.getContext().authentication = self.authenticationManager.authenticate(authentication)
-        self.assertTrue("role1" in SecurityContextHolder.getContext().authentication.grantedAuthorities)
-        self.assertTrue("admin" in SecurityContextHolder.getContext().authentication.grantedAuthorities)
+        SecurityContextHolder.getContext().authentication = self.auth_manager.authenticate(authentication)
+        self.assertTrue("role1" in SecurityContextHolder.getContext().authentication.granted_auths)
+        self.assertTrue("admin" in SecurityContextHolder.getContext().authentication.granted_auths)
 
     def testIocDaoAuthenticationBadUsersWithHiddenExceptions(self):
         authentication = UsernamePasswordAuthenticationToken(username="nonexistent", password="password999")
-        self.assertRaises(BadCredentialsException, self.authenticationManager.authenticate, authentication)
+        self.assertRaises(BadCredentialsException, self.auth_manager.authenticate, authentication)
 
         authentication = UsernamePasswordAuthenticationToken(username="disableduser", password="password4")
-        self.assertRaises(DisabledException, self.authenticationManager.authenticate, authentication)
+        self.assertRaises(DisabledException, self.auth_manager.authenticate, authentication)
 
         authentication = UsernamePasswordAuthenticationToken(username="emptyuser", password="")
-        self.assertRaises(BadCredentialsException, self.authenticationManager.authenticate, authentication)
+        self.assertRaises(BadCredentialsException, self.auth_manager.authenticate, authentication)
 
 class DaoAuthenticationProviderHidingUserNotFoundExceptionsTestCase(MockTestCase):
     def __init__(self, methodName='runTest'):
@@ -140,9 +71,9 @@ class DaoAuthenticationProviderHidingUserNotFoundExceptionsTestCase(MockTestCase
     def setUp(self):
         SecurityContextHolder.setContext(SecurityContext())
         self.appContext = XmlApplicationContext("support/providerApplicationContext.xml")
-        self.authenticationManager = self.appContext.getComponent("daoAuthenticationManagerHidingUserNotFoundExceptions")
+        self.auth_manager = self.appContext.get_component("dao_mgr_hiding_exception")
         self.mock = self.mock()
-        self.appContext.getComponent("dataSource").stubConnection.mockCursor = self.mock
+        self.appContext.get_component("dataSource").stubConnection.mockCursor = self.mock
         
     def testIoCDaoAuthenticationActiveUserBadPassword(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -151,7 +82,7 @@ class DaoAuthenticationProviderHidingUserNotFoundExceptionsTestCase(MockTestCase
         self.mock.expects(once()).method("fetchall").will(return_value([('activeuser', 'role1')])).id("#4").after("#3")
 
         authentication = UsernamePasswordAuthenticationToken(username="activeuser", password="wrongpassword")
-        self.assertRaises(BadCredentialsException, self.authenticationManager.authenticate, authentication)
+        self.assertRaises(BadCredentialsException, self.auth_manager.authenticate, authentication)
         
     def testIoCDaoAuthenticationDisabledUserBadPassword(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -160,7 +91,7 @@ class DaoAuthenticationProviderHidingUserNotFoundExceptionsTestCase(MockTestCase
         self.mock.expects(once()).method("fetchall").will(return_value([('disabled', 'role1')])).id("#4").after("#3")
 
         authentication = UsernamePasswordAuthenticationToken(username="disabled", password="wrongpassword")
-        self.assertRaises(DisabledException, self.authenticationManager.authenticate, authentication)
+        self.assertRaises(DisabledException, self.auth_manager.authenticate, authentication)
         
     def testIoCDaoAuthenticationGoodUser1(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -169,10 +100,10 @@ class DaoAuthenticationProviderHidingUserNotFoundExceptionsTestCase(MockTestCase
         self.mock.expects(once()).method("fetchall").will(return_value([('user1', 'role1'), ('user1', 'blue')])).id("#4").after("#3")
 
         authentication = UsernamePasswordAuthenticationToken(username="user1", password="password1")
-        SecurityContextHolder.getContext().authentication = self.authenticationManager.authenticate(authentication)
+        SecurityContextHolder.getContext().authentication = self.auth_manager.authenticate(authentication)
         
-        self.assertTrue("role1" in SecurityContextHolder.getContext().authentication.grantedAuthorities)
-        self.assertTrue("blue" in SecurityContextHolder.getContext().authentication.grantedAuthorities)
+        self.assertTrue("role1" in SecurityContextHolder.getContext().authentication.granted_auths)
+        self.assertTrue("blue" in SecurityContextHolder.getContext().authentication.granted_auths)
 
     def testIoCDaoAuthenticationGoodUser2(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -181,10 +112,10 @@ class DaoAuthenticationProviderHidingUserNotFoundExceptionsTestCase(MockTestCase
         self.mock.expects(once()).method("fetchall").will(return_value([('user2', 'role1'), ('user2', 'orange')])).id("#4").after("#3")
         
         authentication = UsernamePasswordAuthenticationToken(username="user2", password="password2")
-        SecurityContextHolder.getContext().authentication = self.authenticationManager.authenticate(authentication)
+        SecurityContextHolder.getContext().authentication = self.auth_manager.authenticate(authentication)
         
-        self.assertTrue("role1" in SecurityContextHolder.getContext().authentication.grantedAuthorities)
-        self.assertTrue("orange" in SecurityContextHolder.getContext().authentication.grantedAuthorities)
+        self.assertTrue("role1" in SecurityContextHolder.getContext().authentication.granted_auths)
+        self.assertTrue("orange" in SecurityContextHolder.getContext().authentication.granted_auths)
 
     def testIoCDaoAuthenticationGoodAdminUser(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -193,17 +124,17 @@ class DaoAuthenticationProviderHidingUserNotFoundExceptionsTestCase(MockTestCase
         self.mock.expects(once()).method("fetchall").will(return_value([('adminuser', 'role1'), ('adminuser', 'admin')])).id("#4").after("#3")
         
         authentication = UsernamePasswordAuthenticationToken(username="adminuser", password="password3")
-        SecurityContextHolder.getContext().authentication = self.authenticationManager.authenticate(authentication)
+        SecurityContextHolder.getContext().authentication = self.auth_manager.authenticate(authentication)
         
-        self.assertTrue("role1" in SecurityContextHolder.getContext().authentication.grantedAuthorities)
-        self.assertTrue("admin" in SecurityContextHolder.getContext().authentication.grantedAuthorities)
+        self.assertTrue("role1" in SecurityContextHolder.getContext().authentication.granted_auths)
+        self.assertTrue("admin" in SecurityContextHolder.getContext().authentication.granted_auths)
 
     def testIocDaoAuthenticationBadUsersWithHiddenExceptionsNonexistentUser(self):
         self.mock.expects(once()).method("execute").id("#1")
         self.mock.expects(once()).method("fetchall").will(return_value([])).id("#2").after("#1")
 
         authentication = UsernamePasswordAuthenticationToken(username="nonexistent", password="password999")
-        self.assertRaises(BadCredentialsException, self.authenticationManager.authenticate, authentication)
+        self.assertRaises(BadCredentialsException, self.auth_manager.authenticate, authentication)
 
     def testIocDaoAuthenticationBadUsersWithHiddenExceptionsDisabledUser(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -212,7 +143,7 @@ class DaoAuthenticationProviderHidingUserNotFoundExceptionsTestCase(MockTestCase
         self.mock.expects(once()).method("fetchall").will(return_value([('disableduser', 'role1'), ('disableduser', 'blue')])).id("#4").after("#3")
 
         authentication = UsernamePasswordAuthenticationToken(username="disableduser", password="password4")
-        self.assertRaises(DisabledException, self.authenticationManager.authenticate, authentication)
+        self.assertRaises(DisabledException, self.auth_manager.authenticate, authentication)
 
     def testIocDaoAuthenticationBadUsersWithHiddenExceptionsEmptyUser(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -221,7 +152,7 @@ class DaoAuthenticationProviderHidingUserNotFoundExceptionsTestCase(MockTestCase
         self.mock.expects(once()).method("fetchall").will(return_value([])).id("#4").after("#3")
 
         authentication = UsernamePasswordAuthenticationToken(username="emptyuser", password="")
-        self.assertRaises(BadCredentialsException, self.authenticationManager.authenticate, authentication)
+        self.assertRaises(BadCredentialsException, self.auth_manager.authenticate, authentication)
 
 class DaoAuthenticationProviderNotHidingUserNotFoundExceptionsTestCase(MockTestCase):
     def __init__(self, methodName='runTest'):
@@ -231,9 +162,9 @@ class DaoAuthenticationProviderNotHidingUserNotFoundExceptionsTestCase(MockTestC
     def setUp(self):
         SecurityContextHolder.setContext(SecurityContext())
         self.appContext = XmlApplicationContext("support/providerApplicationContext.xml")
-        self.authenticationManager = self.appContext.getComponent("daoAuthenticationManagerNotHidingUserNotFoundExceptions")
+        self.auth_manager = self.appContext.get_component("dao_mgr_not_hiding_exceptions")
         self.mock = self.mock()
-        self.appContext.getComponent("dataSource").stubConnection.mockCursor = self.mock
+        self.appContext.get_component("dataSource").stubConnection.mockCursor = self.mock
         
     def testIocDaoAuthenticationBadUsersDontHideBadCredentialsDisabledUser(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -242,7 +173,7 @@ class DaoAuthenticationProviderNotHidingUserNotFoundExceptionsTestCase(MockTestC
         self.mock.expects(once()).method("fetchall").will(return_value([('disableduser', 'role1'), ('disableduser', 'blue')])).id("#4").after("#3")
 
         authentication = UsernamePasswordAuthenticationToken(username="disableduser", password="password4")
-        self.assertRaises(DisabledException, self.authenticationManager.authenticate, authentication)
+        self.assertRaises(DisabledException, self.auth_manager.authenticate, authentication)
 
     def testIocDaoAuthenticationBadUsersDontHideBadCredentialsEmptyUser(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -251,4 +182,4 @@ class DaoAuthenticationProviderNotHidingUserNotFoundExceptionsTestCase(MockTestC
         self.mock.expects(once()).method("fetchall").will(return_value([])).id("#4").after("#3")
 
         authentication = UsernamePasswordAuthenticationToken(username="emptyuser", password="")
-        self.assertRaises(UsernameNotFoundException, self.authenticationManager.authenticate, authentication)
+        self.assertRaises(UsernameNotFoundException, self.auth_manager.authenticate, authentication)

@@ -1,5 +1,6 @@
-<components>
-
+<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            
 	<component id="remoteServiceServer1" class="springpythontest.support.testSupportClasses.RemoteService1">
 	</component>
 	
@@ -7,21 +8,21 @@
 	</component>
 	
 	<component id="serviceExporter1" class="springpython.remoting.pyro.PyroServiceExporter">
-		<property name="serviceName">"RemoteService1"</property>
+		<property name="service_name">"RemoteService1"</property>
 		<property name="service" local="remoteServiceServer1"/>
 	</component>
 	
 	<component id="serviceExporter2" class="springpython.remoting.pyro.PyroServiceExporter">
-		<property name="serviceName">"RemoteService2"</property>
+		<property name="service_name">"RemoteService2"</property>
 		<property name="service" local="remoteServiceServer2"/>
 	</component>
 	
 	<component id="accountServiceClient1" class="springpython.remoting.pyro.PyroProxyFactory">
-		<property name="serviceUrl">"PYROLOC://localhost:7766/RemoteService1"</property>
+		<property name="service_url">"PYROLOC://localhost:7766/RemoteService1"</property>
 	</component>
 
 	<component id="accountServiceClient2" class="springpython.remoting.pyro.PyroProxyFactory">
-		<property name="serviceUrl">"PYROLOC://localhost:7766/RemoteService2"</property>
+		<property name="service_url">"PYROLOC://localhost:7766/RemoteService2"</property>
 	</component>
 
 </components>

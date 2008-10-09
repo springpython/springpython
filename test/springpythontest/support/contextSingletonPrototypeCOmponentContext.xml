@@ -1,10 +1,11 @@
-<components>
-    <component id="MovieLister" class="springpythontest.support.testSupportClasses.MovieLister" type="prototype">
+<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <component id="MovieLister" class="springpythontest.support.testSupportClasses.MovieLister" scope="prototype">
 	    <property name="finder" local="MovieFinder"/>
 	    <property name="description" local="SingletonString"/>
 	</component>
 
-	<component id="MovieFinder" class="springpythontest.support.testSupportClasses.ColonMovieFinder" type="singleton">
+	<component id="MovieFinder" class="springpythontest.support.testSupportClasses.ColonMovieFinder" scope="singleton">
 		<property name="filename">"support/movies1.txt"</property>
 	</component>
     

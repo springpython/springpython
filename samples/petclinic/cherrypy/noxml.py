@@ -75,13 +75,13 @@ class PetClinicClientAndServer(DecoratorBasedApplicationContext):
     @component
     def userDetailsService2(self):
         userDetailsService = InMemoryUserDetailsService()
-        userDetailsService.userMap = {"jcarter": ("password6", ["VET_ANY"], True)}
+        userDetailsService.user_dict = {"jcarter": ("password6", ["VET_ANY"], True)}
         return userDetailsService
 
     @component
     def userDetailsService3(self):
         userDetailsService = InMemoryUserDetailsService()
-        userDetailsService.userMap = {"jcoleman": ("password5", ["CUSTOMER_ANY"], True)}
+        userDetailsService.user_dict = {"jcoleman": ("password5", ["CUSTOMER_ANY"], True)}
         return userDetailsService
 
     @component
@@ -113,40 +113,40 @@ class PetClinicClientAndServer(DecoratorBasedApplicationContext):
     @component
     def plainAuthenticationProvider(self):
         provider = DaoAuthenticationProvider()
-        provider.userDetailsService = self.userDetailsService()
-        provider.passwordEncoder = self.plainEncoder()
+        provider.user_details_service = self.userDetailsService()
+        provider.password_encoder = self.plainEncoder()
         return provider   
 
     @component
     def md5AuthenticationProvider(self):
         provider = DaoAuthenticationProvider()
-        provider.userDetailsService = self.md5UserDetailsService()
-        provider.passwordEncoder = self.md5Encoder()
+        provider.user_details_service = self.md5UserDetailsService()
+        provider.password_encoder = self.md5Encoder()
         return provider
 
     @component
     def shaAuthenticationProvider(self):
         provider = DaoAuthenticationProvider()
-        provider.userDetailsService = self.shaUserDetailsService()
-        provider.passwordEncoder = self.shaEncoder()
+        provider.user_details_service = self.shaUserDetailsService()
+        provider.password_encoder = self.shaEncoder()
         return provider
 
     @component
     def authenticationManager(self):
         authManager = AuthenticationManager()
-        authManager.authenticationProviderList = []
-        authManager.authenticationProviderList.append(self.plainAuthenticationProvider())
-        authManager.authenticationProviderList.append(self.md5AuthenticationProvider())
-        authManager.authenticationProviderList.append(self.shaAuthenticationProvider())
+        authManager.auth_providers = []
+        authManager.auth_providers.append(self.plainAuthenticationProvider())
+        authManager.auth_providers.append(self.md5AuthenticationProvider())
+        authManager.auth_providers.append(self.shaAuthenticationProvider())
         return authManager
 
     @component
     def vetRoleVoter(self):
-        return RoleVoter(rolePrefix = "VET")
+        return RoleVoter(role_prefix = "VET")
 
     @component
     def customerRoleVoter(self):
-        return RoleVoter(rolePrefix = "CUSTOMER")
+        return RoleVoter(role_prefix = "CUSTOMER")
 
     @component
     def ownerVoter(self):
@@ -155,11 +155,11 @@ class PetClinicClientAndServer(DecoratorBasedApplicationContext):
     @component
     def accessDecisionManager(self):
         adm = AffirmativeBased()
-        adm.allowIfAllAbstain = False
-        adm.accessDecisionVoterList = []
-        adm.accessDecisionVoterList.append(self.vetRoleVoter())
-        adm.accessDecisionVoterList.append(self.customerRoleVoter())
-        adm.accessDecisionVoterList.append(self.ownerVoter())
+        adm.allow_if_all_abstain = False
+        adm.access_decision_voters = []
+        adm.access_decision_voters.append(self.vetRoleVoter())
+        adm.access_decision_voters.append(self.customerRoleVoter())
+        adm.access_decision_voters.append(self.ownerVoter())
         return adm
     
     @component
@@ -179,17 +179,17 @@ class PetClinicClientAndServer(DecoratorBasedApplicationContext):
     @component
     def authenticationProcessingFilter(self):
         filter = AuthenticationProcessingFilter()
-        filter.authenticationManager = self.authenticationManager()
+        filter.auth_manager = self.authenticationManager()
         filter.alwaysReauthenticate = False
         return filter
 
     @component
     def filterSecurityInterceptor(self):
         filter = FilterSecurityInterceptor()
-        filter.authenticationManager = self.authenticationManager()
-        filter.accessDecisionManager = self.accessDecisionManager()
+        filter.auth_manager = self.authenticationManager()
+        filter.access_decision_manager = self.accessDecisionManager()
         filter.sessionStrategy = self.cherrypySessionStrategy()
-        filter.objectDefinitionSource = [
+        filter.obj_def_source = [
                                          ("/vets.*", ["VET_ANY"]),
                                          ("/editOwner.*", ["VET_ANY", "OWNER"]),
                                          ("/.*", ["VET_ANY", "CUSTOMER_ANY"])
@@ -270,13 +270,13 @@ class PetClinicServerOnly(DecoratorBasedApplicationContext):
     @component
     def remoteController(self):
         remoteController = controller.PetClinicController()
-        remoteController.connectionFactory = self.connectionFactory()
+        remoteController.connection_factory = self.connectionFactory()
         return remoteController
     
     @component
     def controllerExporter(self):
         exporter = PyroServiceExporter()
-        exporter.serviceName = "Controller"
+        exporter.service_name = "Controller"
         exporter.service = self.remoteController()
         return exporter
     
@@ -289,7 +289,7 @@ class PetClinicServerOnly(DecoratorBasedApplicationContext):
     @component
     def userDetailsServiceExporter(self):
         exporter = PyroServiceExporter()
-        exporter.serviceName = "UserDetails"
+        exporter.service_name = "UserDetails"
         exporter.service = self.remoteUserDetailsService()
         return exporter
 
@@ -305,7 +305,7 @@ class PetClinicClientOnly(DecoratorBasedApplicationContext):
     @component
     def controller(self):
         proxy = PyroProxyFactory()
-        proxy.serviceUrl = "PYROLOC://localhost:7766/Controller"
+        proxy.service_url = "PYROLOC://localhost:7766/Controller"
         return proxy
         
     @component
@@ -315,21 +315,25 @@ class PetClinicClientOnly(DecoratorBasedApplicationContext):
         return petClientView
 
     @component
+    def root(self):
+        return view.PetClinicView(self.controller())    
+
+    @component
     def userDetailsService(self):
         userDetailsService = PyroProxyFactory()
-        userDetailsService.serviceUrl = "PYROLOC://localhost:7766/UserDetails"
+        userDetailsService.service_url = "PYROLOC://localhost:7766/UserDetails"
         return userDetailsService
     
     @component
     def userDetailsService2(self):
         userDetailsService = InMemoryUserDetailsService()
-        userDetailsService.userMap = {"jcarter": ("password6", ["VET_ANY"], True)}
+        userDetailsService.user_dict = {"jcarter": ("password6", ["VET_ANY"], True)}
         return userDetailsService
 
     @component
     def userDetailsService3(self):
         userDetailsService = InMemoryUserDetailsService()
-        userDetailsService.userMap = {"jcoleman": ("password5", ["CUSTOMER_ANY"], True)}
+        userDetailsService.user_dict = {"jcoleman": ("password5", ["CUSTOMER_ANY"], True)}
         return userDetailsService
     
     @component
@@ -361,40 +365,40 @@ class PetClinicClientOnly(DecoratorBasedApplicationContext):
     @component
     def plainAuthenticationProvider(self):
         provider = DaoAuthenticationProvider()
-        provider.userDetailsService = self.userDetailsService()
-        provider.passwordEncoder = self.plainEncoder()
+        provider.user_details_service = self.userDetailsService()
+        provider.password_encoder = self.plainEncoder()
         return provider
 
     @component
     def md5AuthenticationProvider(self):
         provider = DaoAuthenticationProvider()
-        provider.userDetailsService = self.md5UserDetailsService()
-        provider.passwordEncoder = self.md5Encoder()
+        provider.user_details_service = self.md5UserDetailsService()
+        provider.password_encoder = self.md5Encoder()
         return provider
 
     @component
     def shaAuthenticationProvider(self):
         provider = DaoAuthenticationProvider()
-        provider.userDetailsService = self.shaUserDetailsService()
-        provider.passwordEncoder = self.shaEncoder()
+        provider.user_details_service = self.shaUserDetailsService()
+        provider.password_encoder = self.shaEncoder()
         return provider
 
     @component
     def authenticationManager(self):
         provider = AuthenticationManager()
-        provider.authenticationProviderList = []
-        provider.authenticationProviderList.append(self.plainAuthenticationProvider())
-        provider.authenticationProviderList.append(self.md5AuthenticationProvider())
-        provider.authenticationProviderList.append(self.shaAuthenticationProvider())
+        provider.auth_providers = []
+        provider.auth_providers.append(self.plainAuthenticationProvider())
+        provider.auth_providers.append(self.md5AuthenticationProvider())
+        provider.auth_providers.append(self.shaAuthenticationProvider())
         return provider
 
     @component
     def vetRoleVoter(self):
-        return RoleVoter(rolePrefix = "VET")
+        return RoleVoter(role_prefix = "VET")
 
     @component
     def customerRoleVoter(self):
-        return RoleVoter(rolePrefix = "CUSTOMER")
+        return RoleVoter(role_prefix = "CUSTOMER")
 
     @component
     def ownerVoter(self):
@@ -403,11 +407,11 @@ class PetClinicClientOnly(DecoratorBasedApplicationContext):
     @component
     def accessDecisionManager(self):
         adm = AffirmativeBased()
-        adm.allowIfAllAbstainDecisions = False
-        adm.accessDecisionVoterList = []
-        adm.accessDecisionVoterList.append(self.vetRoleVoter())
-        adm.accessDecisionVoterList.append(self.customerRoleVoter())
-        adm.accessDecisionVoterList.append(self.ownerVoter())
+        adm.allow_if_all_abstain_decisions = False
+        adm.access_decision_voters = []
+        adm.access_decision_voters.append(self.vetRoleVoter())
+        adm.access_decision_voters.append(self.customerRoleVoter())
+        adm.access_decision_voters.append(self.ownerVoter())
         return adm
     
     @component
@@ -427,18 +431,18 @@ class PetClinicClientOnly(DecoratorBasedApplicationContext):
     @component
     def authenticationProcessingFilter(self):
         filter = AuthenticationProcessingFilter()
-        filter.authenticationManager = self.authenticationManager()
+        filter.auth_manager = self.authenticationManager()
         filter.alwaysReauthenticate = False
         return filter
 
     @component
     def filterSecurityInterceptor(self):
         filter = FilterSecurityInterceptor()
-        filter.validateConfigAttributes = False
-        filter.authenticationManager = self.authenticationManager()
-        filter.accessDecisionManager = self.accessDecisionManager()
+        filter.validate_config_attributes = False
+        filter.auth_manager = self.authenticationManager()
+        filter.access_decision_manager = self.accessDecisionManager()
         filter.sessionStrategy = self.cherrypySessionStrategy()
-        filter.objectDefinitionSource = [("/vets.*", ["VET_ANY"]),
+        filter.obj_def_source = [("/vets.*", ["VET_ANY"]),
                                          ("/editOwner.*", ["VET_ANY", "OWNER"]),
                                          ("/.*", ["VET_ANY", "CUSTOMER_ANY"])]
         return filter

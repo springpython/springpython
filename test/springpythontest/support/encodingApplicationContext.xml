@@ -1,4 +1,5 @@
-<components>
+<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 	<component id="plainEncoder" class="springpython.security.providers.encoding.PlaintextPasswordEncoder"/>
 
@@ -9,27 +10,27 @@
 	<component id="systemWideSaltSource" class="springpython.security.providers.dao.SystemWideSaltSource"/>
 
 	<component id="systemWideSaltSource2" class="springpython.security.providers.dao.SystemWideSaltSource">
-		<property name="systemWideSalt">"SpringPython"</property>
+		<property name="system_wide_salt">"SpringPython"</property>
 	</component>
 	
 	<component id="systemWideSaltSource3" class="springpython.security.providers.dao.SystemWideSaltSource">
-		<property name="systemWideSalt">"{This is invalid"</property>
+		<property name="system_wide_salt">"{This is invalid"</property>
 	</component>
 	
 	<component id="systemWideSaltSource4" class="springpython.security.providers.dao.SystemWideSaltSource">
-		<property name="systemWideSalt">"This is invalid}"</property>
+		<property name="system_wide_salt">"This is invalid}"</property>
 	</component>
 	
 	<component id="systemWideSaltSource5" class="springpython.security.providers.dao.SystemWideSaltSource">
-		<property name="systemWideSalt">"{This is invalid}"</property>
+		<property name="system_wide_salt">"{This is invalid}"</property>
 	</component>
 	
 	<component id="reflectionSaltSource" class="springpython.security.providers.dao.ReflectionSaltSource">
-		<property name="userPropertyToUse">"getUserId"</property>
+		<property name="user_prop_to_use">"getUserId"</property>
 	</component>
 	
 	<component id="reflectionSaltSource2" class="springpython.security.providers.dao.ReflectionSaltSource">
-		<property name="userPropertyToUse">"noSuchMethod"</property>
+		<property name="user_prop_to_use">"noSuchMethod"</property>
 	</component>
 	
 	<component id="reflectionSaltSource3" class="springpython.security.providers.dao.ReflectionSaltSource"/>

@@ -14,20 +14,34 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
+import re
 import sys
 from distutils.core import setup
+from optparse import OptionParser
 
 if sys.version_info < (2, 3):
     print "Spring Python only supports Python 2.3 and higher"
     sys.exit(1)
 
+parser = OptionParser(usage="usage: %prog [-h|--help] [options]")
+parser.add_option("", "--version", action="store", dest="version", help="Define the version of this build.")
+(options, args) = parser.parse_args()
+
+if options.version is not None:
+    if re.match(r"\d\.\d", options.version):
+        # Remove version argument
+        sys.argv = [sys.argv[0]] + sys.argv[-1:]
+    else:
+        print "Version not correctly specified => version = %s Arguments => %s" % (options.version, sys.argv)
+        sys.exit(1)
+
 setup(name='springpython',
-      version='0.6.0',
+      version=options.version,
       description='Spring Python',
       long_description='Spring Python is an offshoot of the Java-based SpringFramework, targeted for Python. Spring provides many useful features, and I wanted those same features available when working with Python.',
       author='Greg L. Turnquist',
       author_email='gregturn at mindspring dot com',
-      url='https://springpython.webfactional.com',
+      url='http://springpython.webfactional.com',
       platforms = ["Python >= 2.3"],
       license='Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
       packages=['springpython', 
@@ -40,12 +54,9 @@ setup(name='springpython',
                 'springpython.security',
                 'springpython.security.context',
                 'springpython.security.providers',
-                'springpython.security.userdetails',
-                'springpython.test', 
-                'springpython.test.support'
+                'springpython.security.userdetails'
                 ],
-      package_data={'springpython': ["README", "NOTICE", "LICENSE.txt"],
-                    'springpython.test.support': ['*.xml', '*.txt']},
+      package_data={'springpython': ["README", "COPYRIGHT", "LICENSE.txt"]},
       download_url="http://sourceforge.net/projects/springpython/",
       classifiers=["License :: OSI Approved :: Apache Software License",
                    "Intended Audience :: Developers",

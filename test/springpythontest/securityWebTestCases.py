@@ -172,13 +172,13 @@ class FilterTestCase(MockTestCase):
         environ["PATH_INFO"] = "/index.html"
         
         inMemoryUserDetailsService = InMemoryUserDetailsService()
-        inMemoryUserDetailsService.userMap = {"user1": ("good_password", ["role1", "blue"], True)}
+        inMemoryUserDetailsService.user_dict = {"user1": ("good_password", ["role1", "blue"], True)}
         inMemoryDaoAuthenticationProvider = DaoAuthenticationProvider()
-        inMemoryDaoAuthenticationProvider.userDetailsService = inMemoryUserDetailsService
+        inMemoryDaoAuthenticationProvider.user_details_service = inMemoryUserDetailsService
         inMemoryDaoAuthenticationManager = AuthenticationManager([inMemoryDaoAuthenticationProvider])
 
         authenticationFilter = AuthenticationProcessingFilter()
-        authenticationFilter.authenticationManager = inMemoryDaoAuthenticationManager
+        authenticationFilter.auth_manager = inMemoryDaoAuthenticationManager
         authenticationFilter.alwaysReauthenticate = False
         
         token = UsernamePasswordAuthenticationToken("user1", "good_password", None)
@@ -207,13 +207,13 @@ class FilterTestCase(MockTestCase):
         environ["PATH_INFO"] = "/index.html"
         
         inMemoryUserDetailsService = InMemoryUserDetailsService()
-        inMemoryUserDetailsService.userMap = {"user1": ("good_password", ["role1", "blue"], True)}
+        inMemoryUserDetailsService.user_dict = {"user1": ("good_password", ["role1", "blue"], True)}
         inMemoryDaoAuthenticationProvider = DaoAuthenticationProvider()
-        inMemoryDaoAuthenticationProvider.userDetailsService = inMemoryUserDetailsService
+        inMemoryDaoAuthenticationProvider.user_details_service = inMemoryUserDetailsService
         inMemoryDaoAuthenticationManager = AuthenticationManager([inMemoryDaoAuthenticationProvider])
 
         authenticationFilter = AuthenticationProcessingFilter()
-        authenticationFilter.authenticationManager = inMemoryDaoAuthenticationManager
+        authenticationFilter.auth_manager = inMemoryDaoAuthenticationManager
         authenticationFilter.alwaysReauthenticate = False
         
         token = UsernamePasswordAuthenticationToken("user1", "bad_password", None)

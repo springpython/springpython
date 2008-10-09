@@ -1,3 +1,3 @@
-recursive-include petclinic README configure.py *.txt *.xml *.html *.png *.gif *.jpg *.template *.css
-recursive-include springwiki README configure.py *.txt *.xml *.html *.png *.gif *.jpg *.template *.css
+recursive-include petclinic README configure.py *.txt *.xml *.html *.png
+recursive-include springwiki README *.txt *.xml *.png *.gif *.jpg *.css
 recursive-include springirc coily springbot.py *.txt

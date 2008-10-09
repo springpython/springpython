@@ -1,4 +1,5 @@
-<components>
+<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 	<component id="connectionFactory" class="springpython.database.factory.MySQLConnectionFactory">
 		<property name="username">"springpython"</property>
@@ -8,11 +9,11 @@
 	</component>
 	
 	<component id="remoteController" class="controller.PetClinicController">
-		<property name="connectionFactory" local="connectionFactory"/>
+		<property name="connection_factory" local="connectionFactory"/>
 	</component>
 	
 	<component id="controllerExporter" class="springpython.remoting.pyro.PyroServiceExporter">
-		<property name="serviceName">"Controller"</property>
+		<property name="service_name">"Controller"</property>
 		<property name="service" local="remoteController"/>
 	</component>
 	
@@ -21,7 +22,7 @@
 	</component>
 
 	<component id="userDetailsServiceExporter" class="springpython.remoting.pyro.PyroServiceExporter">
-		<property name="serviceName">"UserDetails"</property>
+		<property name="service_name">"UserDetails"</property>
 		<property name="service" local="remoteUserDetailsService"/>
 	</component>
 	

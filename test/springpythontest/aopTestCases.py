@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
+import logging
 import unittest
 from springpython.aop import MethodInterceptor
 from springpython.aop import MethodMatcher
@@ -29,12 +30,12 @@ from springpythontest.support.testSupportClasses import WrappingInterceptor
 class AopInterfaceTestCase(unittest.TestCase):
     def testPointcutInterface(self):
         pointcut = Pointcut()
-        self.assertRaises(NotImplementedError, pointcut.getClassFilter)
-        self.assertRaises(NotImplementedError, pointcut.getMethodMatcher)
+        self.assertRaises(NotImplementedError, pointcut.class_filter)
+        self.assertRaises(NotImplementedError, pointcut.method_matcher)
         
     def testMethodMatcherInterface(self):
         methodMatcher = MethodMatcher()
-        self.assertRaises(NotImplementedError, methodMatcher.matchesMethodAndTarget, None, None, None)
+        self.assertRaises(NotImplementedError, methodMatcher.matches_method_and_target, None, None, None)
         
     def testMethodInterceptorInterface(self):
         methodInterceptor = MethodInterceptor()
@@ -48,19 +49,28 @@ class AopProxyTestCase(unittest.TestCase):
     def testCreatingAProxyFactoryAndAddingAnInterceptorProgrammatically(self):
         factory = ProxyFactory()
         factory.target = SampleService()
-        factory.addInterceptor(WrappingInterceptor())
+        factory.interceptors.append(WrappingInterceptor())
         service = factory.getProxy()
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
-
+        
     def testCreatingAProxyFactoryAndAddingAnInterceptorIoC(self):
-        factory = self.appContext.getComponent("factory")
+        factory = self.appContext.get_component("factory")
         service = factory.getProxy()
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
 
+    def testWrappingStringFunctionWithInterceptor(self):
+        service = ProxyFactoryComponent()
+        service.target = SampleService()
+        service.interceptors = [WrappingInterceptor()]
+        self.assertEquals("This is a sample service.", service.target.__str__())
+        self.assertEquals("This is a sample service.", str(service.target))
+        self.assertEquals("<Wrapped>This is a sample service.</Wrapped>", str(service))
+        self.assertEquals("<Wrapped>This is a sample service.</Wrapped>", service.__str__())
+    
     def testCreatingAProxyFactoryComponentAndAddingAnInterceptorProgrammatically(self):
         service = ProxyFactoryComponent()
         service.target = SampleService()
@@ -70,18 +80,18 @@ class AopProxyTestCase(unittest.TestCase):
         self.assertEquals("sample", service.attribute)
 
     def testCreatingAProxyFactoryComponentWithAnInterceptorIoC(self):
-        service = self.appContext.getComponent("sampleService4")
+        service = self.appContext.get_component("sampleService4")
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
 
     def testApplyingASingleConditionalPointcutIoC(self):
-        sampleService = self.appContext.getComponent("sampleService1")
+        sampleService = self.appContext.get_component("sampleService1")
         self.assertEquals(sampleService.doSomething(), "<Wrapped>Alright!</Wrapped>")
         self.assertEquals(sampleService.method("testdata"), "You made it!")
 
     def testApplyingTwoConditionalPointcutsIoC(self):
-        sampleService = self.appContext.getComponent("sampleService2")
+        sampleService = self.appContext.get_component("sampleService2")
         self.assertEquals(sampleService.doSomething(), "BEFORE => <Wrapped>Alright!</Wrapped> <= AFTER")
         self.assertEquals(sampleService.method("testdata"), "You made it!")
         
@@ -109,7 +119,7 @@ class AopProxyTestCase(unittest.TestCase):
         self.assertEquals(sampleService.method("testdata"), "You made it!")
         
     def testCreatingAProxyFactoryComponentWithAnInterceptorByClassNameInsteadOfInstanceIoC(self):
-        service = self.appContext.getComponent("sampleService5")
+        service = self.appContext.get_component("sampleService5")
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
@@ -124,8 +134,8 @@ class AopProxyFactoryCombinedWithPyroTestCase(unittest.TestCase):
         PyroDaemonHolder.shutdown()
 
     def testWrappingPyroProxyOnClientSideIoC(self):
-        remoteService = self.appContext.getComponent("remoteService1")
-        clientService = self.appContext.getComponent("service1")
+        remoteService = self.appContext.get_component("remoteService1")
+        clientService = self.appContext.get_component("service1")
         self.assertEquals("You got remote data => test1", remoteService.getData("test1"))
         self.assertEquals("<Wrapped>You got remote data => test1</Wrapped>", clientService.getData("test1"))
         self.appContext.dispose()
@@ -134,11 +144,20 @@ class AopProxyFactoryCombinedWithPyroTestCase(unittest.TestCase):
     # dependency. Each test works fine when the other is commented out. Must resolve.
     
     #def testWrappingPyroProxyOnServerSideIoC(self):
-    #    remoteService = self.appContext.getComponent("remoteService2")
-    #    clientService = self.appContext.getComponent("service2")
+    #    remoteService = self.appContext.get_component("remoteService2")
+    #    clientService = self.appContext.get_component("service2")
     #    self.assertEquals("<Wrapped>You got remote data => test2</Wrapped>", remoteService.getData("test2"))
     #    self.assertEquals("<Wrapped>You got remote data => test2</Wrapped>", clientService.getData("test2"))
     #    self.appContext.dispose()
 
 if __name__ == "__main__":
+    logger = logging.getLogger("springpython")
+    loggingLevel = logging.INFO
+    logger.setLevel(loggingLevel)
+    ch = logging.StreamHandler()
+    ch.setLevel(loggingLevel)
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s") 
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
     unittest.main()

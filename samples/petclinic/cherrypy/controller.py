@@ -40,7 +40,7 @@ class PetClinicController(DaoSupport):
     
     def getVets(self):
         """Return a list of vets from the database."""
-        return self.databaseTemplate.query("""
+        return self.database_template.query("""
             SELECT
                 id,
                 first_name,
@@ -50,7 +50,7 @@ class PetClinicController(DaoSupport):
         
     def getOwners(self, lastName = ""):
         """Return a list of owners, filtered by partial lastname."""
-        return self.databaseTemplate.query("""
+        return self.database_template.query("""
             SELECT
                 id,
                 first_name,
@@ -64,7 +64,7 @@ class PetClinicController(DaoSupport):
         
     def getOwner(self, id):
         """Return one owner."""
-        return self.databaseTemplate.query("""
+        return self.database_template.query("""
             SELECT
                 id,
                 first_name,
@@ -78,7 +78,7 @@ class PetClinicController(DaoSupport):
 
     def addOwner(self, **kwargs):
         """Add an owner to the database."""
-        rowsAffected = self.databaseTemplate.execute("""
+        rowsAffected = self.database_template.execute("""
             INSERT INTO owners
             (first_name, last_name, address, city, telephone)
             VALUES
@@ -88,7 +88,7 @@ class PetClinicController(DaoSupport):
 
     def updateOwner(self, id, address = "", city = "", telephone = ""):
         """Add an owner to the database."""
-        rowsAffected = self.databaseTemplate.update("""
+        rowsAffected = self.database_template.update("""
             UPDATE owners
             SET
                 address   = ?,
@@ -100,7 +100,7 @@ class PetClinicController(DaoSupport):
 
     def getPets(self, owner):
         """Return pets belonging to a particular owner."""
-        return self.databaseTemplate.query("""
+        return self.database_template.query("""
             SELECT
                 pets.id,
                 pets.name,
@@ -114,7 +114,7 @@ class PetClinicController(DaoSupport):
 
     def getPet(self, id):
         """Return pets belonging to a particular owner."""
-        return self.databaseTemplate.query("""
+        return self.database_template.query("""
             SELECT
                 pets.id,
                 pets.name,
@@ -127,7 +127,7 @@ class PetClinicController(DaoSupport):
 
     def getVisits(self, pet):
         """Return visits associated with a particular pet."""
-        return self.databaseTemplate.query("""
+        return self.database_template.query("""
             SELECT
                 visits.visit_date,
                 visits.description
@@ -138,7 +138,7 @@ class PetClinicController(DaoSupport):
 
     def addPet(self, id, name, birthDate, type):
         """Store a new pet in the database."""
-        rowsAffected = self.databaseTemplate.execute("""
+        rowsAffected = self.database_template.execute("""
                 INSERT INTO pets
                 (name, birth_date, type_id, owner_id)
                 values
@@ -148,14 +148,14 @@ class PetClinicController(DaoSupport):
 
     def getPetTypes(self):
         """Return visits associated with a particular pet."""
-        return self.databaseTemplate.query("""
+        return self.database_template.query("""
             SELECT types.id, types.name
             FROM types
             """, rowhandler=PetTypeRowCallbackHandler())
 
     def visitClinic(self, petId, description):
         """Record a visit to the clinic."""
-        rowsAffected = self.databaseTemplate.execute("""
+        rowsAffected = self.database_template.execute("""
                 INSERT INTO visits
                 (pet_id, description, visit_date)
                 values
@@ -165,7 +165,7 @@ class PetClinicController(DaoSupport):
 
     def getVetSpecialties(self, vet):
         """Look up specialties associated with a particular veterinarian."""
-        return self.databaseTemplate.query("""
+        return self.database_template.query("""
                 SELECT
                     specialties.id,
                     specialties.name
@@ -177,7 +177,7 @@ class PetClinicController(DaoSupport):
 
     def getUsername(self, id):
         """Look up the username associated with a user id"""
-        return self.databaseTemplate.queryForObject("""
+        return self.database_template.query_for_object("""
                 SELECT username
                 FROM owners
                 WHERE id = ?
@@ -188,16 +188,16 @@ class PetClinicController(DaoSupport):
         This function fetches the users out of the database, so someone trying out PetClinic
         can get the passwords to log in.
         """
-        users = self.databaseTemplate.queryForList("select username, password, ' ', enabled from users")
+        users = self.database_template.query_for_list("select username, password, ' ', enabled from users")
         for i in range(len(users)):
-            authorities = [row for (row,) in self.databaseTemplate.queryForList("select authority from authorities where username = ?", (users[i][0],))]
+            authorities = [row for (row,) in self.database_template.query_for_list("select authority from authorities where username = ?", (users[i][0],))]
             users[i] = (users[i][0], users[i][1], authorities, users[i][3])
         return users
         
 class VetRowCallbackHandler(RowCallbackHandler):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a Vet-oriented query by mapping a Vet-record."""
-    def processRow(self, row):
+    def process_row(self, row):
         vet = Vet()
         vet.id = row[0]
         vet.firstName = row[1]
@@ -207,7 +207,7 @@ class VetRowCallbackHandler(RowCallbackHandler):
 class OwnerRowCallbackHandler(RowCallbackHandler):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from an owner-oriented query by mapping an Owner-record."""
-    def processRow(self, row):
+    def process_row(self, row):
         owner = Owner()
         owner.id = row[0]
         owner.firstName = row[1]
@@ -220,7 +220,7 @@ class OwnerRowCallbackHandler(RowCallbackHandler):
 class PetRowCallbackHandler(RowCallbackHandler):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a pet-oriented query by mapping an Pet-record."""
-    def processRow(self, row):
+    def process_row(self, row):
         pet = Pet()
         pet.id = row[0]
         pet.name = row[1]
@@ -231,7 +231,7 @@ class PetRowCallbackHandler(RowCallbackHandler):
 class PetTypeRowCallbackHandler(RowCallbackHandler):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a visit-oriented query by mapping an Visit-record."""
-    def processRow(self, row):
+    def process_row(self, row):
         petType = PetType()
         petType.id = row[0]
         petType.name = row[1]
@@ -240,7 +240,7 @@ class PetTypeRowCallbackHandler(RowCallbackHandler):
 class SpecialtyRowCallbackHandler(RowCallbackHandler):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a visit-oriented query by mapping an Visit-record."""
-    def processRow(self, row):
+    def process_row(self, row):
         specialty = Specialty()
         specialty.id = row[0]
         specialty.name = row[1]
@@ -249,7 +249,7 @@ class SpecialtyRowCallbackHandler(RowCallbackHandler):
 class VisitRowCallbackHandler(RowCallbackHandler):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a visit-oriented query by mapping an Visit-record."""
-    def processRow(self, row):
+    def process_row(self, row):
         visit = Visit()
         visit.date = row[0]
         visit.description = row[1]
@@ -260,12 +260,10 @@ class OwnerVoter(AccessDecisionVoter):
         self.controller = controller
         self.logger = logging.getLogger("springpython.petclinic.controller")
 
-    def supports(self, clazzOrConfigAttribute):
+    def supports(self, attr):
         """This voter will support a list.
         """
-        if type(clazzOrConfigAttribute) == list:
-            return True
-        elif clazzOrConfigAttribute and clazzOrConfigAttribute == "OWNER":
+        if isinstance(attr, list) or (attr is not None and attr == "OWNER"):
             return True
         else:
             return False
@@ -306,8 +304,8 @@ class PreencodingUserDetailsService(UserDetailsService):
         self.encoder = encoder
         self.logger = logging.getLogger("springpython.petclinic.controller.PreencodingUserDetailsService")
         
-    def loadUserByUsername(self, username):
-        user = self.wrappedUserDetailsService.loadUserByUsername(username)
+    def load_user(self, username):
+        user = self.wrappedUserDetailsService.load_user(username)
         user.password = self.encoder.encodePassword(user.password, None)
         self.logger.debug("Pre-converting %s's password to hashed format of %s, before authentication happens." % (username, user.password))
         return user

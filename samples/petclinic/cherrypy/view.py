@@ -24,6 +24,8 @@ from springpython.security.context import SecurityContext
 from springpython.security.context import SecurityContextHolder
 from springpython.security.providers import UsernamePasswordAuthenticationToken
 
+def notice():
+    return "<b><small>FilterSecurityInterceptor has NOT been upgraded to CherryPy 3.1 yet. Somes pages for certain users are not yet denying access as expected.</small></b>"
 
 def header():
     """Standard header used for all pages"""
@@ -49,7 +51,11 @@ def header():
             <div id="image">&nbsp;</div>
             <br clear="all">
             <p>&nbsp;</p>
-        """
+            <br/>
+            <br/>
+            <br/>
+            <br/>
+            """ + notice()
 
 def footer():
     """Standard footer used for all pages."""
@@ -59,7 +65,7 @@ def footer():
                 <td><A href="/">Home</A></td>
                 <td style="text-align:right;color:silver">PetClinic :: a <a href="https://springpython.webfactional.com">Spring Python</a> demonstration (powered by <A HREF="http://www.cherrypy.org">CherryPy</A>)</td>
         </tr></table>
-        
+        """ + notice() + """
         </body>
         """
     
@@ -441,7 +447,7 @@ class CherryPyAuthenticationForm:
                         <th><small>Enabled?</small></th>
                     </tr>
                 """ % re.compile("<").sub("&lt;", str(hashedUserDetailsService))
-            for key, value in hashedUserDetailsService.wrappedUserDetailsService.userMap.items():
+            for key, value in hashedUserDetailsService.wrappedUserDetailsService.user_dict.items():
                     results += """
                     <tr>
                         <td><small>%s </small></td>

@@ -54,8 +54,8 @@ class ConnectionFactoryTransactionManager(PlatformTransactionManager):
     transactional functions on a per-vendor basis.
     """
 
-    def __init__(self, connectionFactory):
-        self.connectionFactory = connectionFactory
+    def __init__(self, connection_factory):
+        self.connection_factory = connection_factory
         self.logger = logging.getLogger("springpython.database.transaction.ConnectionFactoryTransactionManager")
         self.status = []
 
@@ -63,35 +63,35 @@ class ConnectionFactoryTransactionManager(PlatformTransactionManager):
         """According to PEP 249, commits and rollbacks silently start new transactions. Until a more
         robust transaction manager is implemented to handle save points and so forth, this must suffice."""
 
-        self.logger.debug("Analyzing %s" % definition.propagationBehavior)
+        self.logger.debug("Analyzing %s" % definition.propagation)
 
-        startTransaction = False
+        start_tx = False
 
-        if definition.propagationBehavior == "PROPAGATION_REQUIRED":
+        if definition.propagation == "PROPAGATION_REQUIRED":
             if len(self.status) == 0:
                 self.logger.debug("There is no current transaction, and one is required, so starting one.")
-                startTransaction = True
+                start_tx = True
             self.status.append(DefaultTransactionStatus())
 
-        elif definition.propagationBehavior == "PROPAGATION_SUPPORTS":
+        elif definition.propagation == "PROPAGATION_SUPPORTS":
             self.logger.debug("This code can execute inside or outside a transaction.")
 
-        elif definition.propagationBehavior == "PROPAGATION_MANDATORY":
+        elif definition.propagation == "PROPAGATION_MANDATORY":
             if len(self.status) == 0:
                 raise TransactionPropagationException("Trying to execute PROPAGATION_MANDATORY operation while outside TX")
             self.status.append(DefaultTransactionStatus())
 
-        elif definition.propagationBehavior == "PROPAGATION_NEVER":
+        elif definition.propagation == "PROPAGATION_NEVER":
             if len(self.status) != 0:
                 raise TransactionPropagationException("Trying to execute PROPAGATION_NEVER operation while inside TX")
 
         else:
-            raise TransactionPropagationException("Transaction propagation level %s is not supported!" % definition.startTransaction)
+            raise TransactionPropagationException("Transaction propagation level %s is not supported!" % definition.start_tx)
 
-        if startTransaction:
+        if start_tx:
             self.logger.debug("START TRANSACTION")
-            self.logger.debug("Creating a transaction, propagation = %s, isolation = %s, timeout = %s, readOnly = %s" % (definition.propagationBehavior, definition.isolationLevel, definition.timeout, definition.readOnly))
-            self.connectionFactory.commit()
+            self.logger.debug("Creating a transaction, propagation = %s, isolation = %s, timeout = %s, read_only = %s" % (definition.propagation, definition.isolation, definition.timeout, definition.read_only))
+            self.connection_factory.commit()
 
         return self.status
 
@@ -101,7 +101,7 @@ class ConnectionFactoryTransactionManager(PlatformTransactionManager):
             self.status.pop()
             if len(self.status) == 0:
                 self.logger.debug("Commit the changes")
-                self.connectionFactory.commit()
+                self.connection_factory.commit()
                 self.logger.debug("END TRANSACTION")
         except IndexError:
             pass
@@ -112,64 +112,64 @@ class ConnectionFactoryTransactionManager(PlatformTransactionManager):
             self.status.pop()
             if len(self.status) == 0:
                 self.logger.debug("Rolling back the transaction.")
-                self.connectionFactory.rollback()
+                self.connection_factory.rollback()
                 self.logger.debug("END TRANSACTION")
         except IndexError:
             pass
 
 class TransactionDefinition(object):
-    def __init__(self, isolationLevel = None, name = None, propagationBehavior = None, timeout = None, readOnly = None):
-        self.isolationLevel = isolationLevel
+    def __init__(self, isolation = None, name = None, propagation = None, timeout = None, read_only = None):
+        self.isolation = isolation
         self.name = name
-        self.propagationBehavior = propagationBehavior
+        self.propagation = propagation
         self.timeout = timeout
-        self.readOnly = readOnly
+        self.read_only = read_only
 
 class DefaultTransactionDefinition(TransactionDefinition):
-    def __init__(self, isolationLevel = "ISOLATION_DEFAULT", name = "", propagationBehavior = "PROPAGATION_REQUIRED", timeout = "TIMEOUT_DEFAULT", readOnly = False):
-        TransactionDefinition.__init__(self, isolationLevel, name, propagationBehavior, timeout, readOnly)
+    def __init__(self, isolation = "ISOLATION_DEFAULT", name = "", propagation = "PROPAGATION_REQUIRED", timeout = "TIMEOUT_DEFAULT", read_only = False):
+        TransactionDefinition.__init__(self, isolation, name, propagation, timeout, read_only)
 
 class TransactionTemplate(DefaultTransactionDefinition):
     """This utility class is used to simplify defining transactional blocks. Any exceptions thrown inside the
     transaction block will be propagated to whom ever is calling the template execute method."""
 
-    def __init__(self, transactionManager):
+    def __init__(self, tx_manager):
         DefaultTransactionDefinition.__init__(self)	
-        self.transactionManager = transactionManager
+        self.tx_manager = tx_manager
         self.logger = logging.getLogger("springpython.database.transaction.TransactionTemplate")
 
     def execute(self, transactionCallback):
         """Execute the action specified by the given callback object within a transaction."""
 
-        status = self.transactionManager.getTransaction(self)
+        status = self.tx_manager.getTransaction(self)
         result = None
         try:
             self.logger.debug("Execute the steps inside the transaction")
-            result = transactionCallback.doInTransaction(status)
-            self.transactionManager.commit(status)
+            result = transactionCallback.do_in_transaction(status)
+            self.tx_manager.commit(status)
         except Exception, e:
             self.logger.debug("Exception: (%s)" % e)
-            self.transactionManager.rollback(status)
+            self.tx_manager.rollback(status)
             raise e
         return result
 
-    def setTxAttributes(self, txAttributes):
-        for txDefProp in txAttributes:
-            if txDefProp.startswith("ISOLATION"):
-                if txDefDrop != self.isolationLevel:        self.isolationLevel = txDefProp
-            elif txDefProp.startswith("PROPAGATION"):
-                if txDefProp != self.propagationBehavior:   self.propagationBehavior = txDefProp
-            elif txDefProp.startswith("TIMEOUT"):
-                if txDefProp != self.timeout:               self.timeout = txDefProp
-            elif txDefProp == "readOnly":
-                if not self.readOnly:                       self.readOnly = True
+    def setTxAttributes(self, tx_attributes):
+        for tx_def_prop in tx_attributes:
+            if tx_def_prop.startswith("ISOLATION"):
+                if tx_def_prop != self.isolation:       self.isolation = tx_def_prop
+            elif tx_def_prop.startswith("PROPAGATION"):
+                if tx_def_prop != self.propagation:     self.propagation = tx_def_prop
+            elif tx_def_prop.startswith("TIMEOUT"):
+                if tx_def_prop != self.timeout:         self.timeout = tx_def_prop
+            elif tx_def_prop == "read_only":
+                if not self.read_only:                  self.read_only = True
             else:
-                self.logger.debug("Don't know how to handle %s" % txDefProp)
+                self.logger.debug("Don't know how to handle %s" % tx_def_prop)
 
 
 class TransactionCallback(object):
     """This interface defines the basic action needed to plug into the TransactionTemplate"""
-    def doInTransaction(self, status):
+    def do_in_transaction(self, status):
         raise NotImplementedError()
 
 class TransactionCallbackWithoutResult(TransactionCallback):
@@ -177,40 +177,40 @@ class TransactionCallbackWithoutResult(TransactionCallback):
     def __init__(self):
         self.logger = logging.getLogger("springpython.database.transaction.TransactionCallbackWithoutResult")
 
-    def doInTransaction(self, status):
+    def do_in_transaction(self, status):
         self.logger.debug("Starting a transaction without result")
-        self.doInTransactionWithoutResult(status)
+        self.do_in_tx_without_result(status)
         self.logger.debug("Completing a transaction without result")
         return None
 
-    def doInTransactionWithoutResult(self, status):
+    def do_in_tx_without_result(self, status):
         pass
 
 class TransactionalInterceptor(MethodInterceptor):
     """This interceptor is used by the TransactionProxyFactoryComponent in order to wrap
     method calls with transactions."""
-    def __init__(self, txManager, transactionAttributes):
+    def __init__(self, tx_manager, tx_attributes):
         self.logger = logging.getLogger("springpython.database.transaction.TransactionalInterceptor")
-        self.transactionAttributes = transactionAttributes
-        self.txManager = txManager
+        self.tx_attributes = tx_attributes
+        self.tx_manager = tx_manager
 
     def invoke(self, invocation):
-        class txWrapper(TransactionCallback):
-            def doInTransaction(s, status):
+        class tx_def(TransactionCallback):
+            def do_in_transaction(s, status):
                 return invocation.proceed()
 
-        txTemplate = TransactionTemplate(self.txManager)
+        tx_template = TransactionTemplate(self.tx_manager)
 
-        # Iterate over the txAttributes, and when a method match is found, apply the properties
-        for pattern, txDefProps in self.transactionAttributes:
-            if re.compile(pattern).match(invocation.methodName):
-                self.logger.debug("%s matches pattern %s, tx attributes = %s" % (invocation.methodName, pattern, txDefProps))
-                txTemplate.setTxAttributes(txDefProps)
+        # Iterate over the tx_attributes, and when a method match is found, apply the properties
+        for pattern, tx_def_props in self.tx_attributes:
+            if re.compile(pattern).match(invocation.method_name):
+                self.logger.debug("%s matches pattern %s, tx attributes = %s" % (invocation.method_name, pattern, tx_def_props))
+                tx_template.setTxAttributes(tx_def_props)
                 break
             
         self.logger.debug("Call TransactionTemplate")
         try:
-            results = txTemplate.execute(txWrapper())
+            results = tx_template.execute(tx_def())
         except Exception, e:
             self.logger.debug("Exception => %s" % e)
             raise e
@@ -220,11 +220,11 @@ class TransactionalInterceptor(MethodInterceptor):
 class TransactionProxyFactoryComponent(ProxyFactoryComponent):
     """This class acts like the target object, and routes function calls through a
     transactional interceptor."""
-    def __init__(self, txManager, target, transactionAttributes):
+    def __init__(self, tx_manager, target, tx_attributes):
         self.logger = logging.getLogger("springpython.database.transaction.TransactionProxyFactoryComponent")
-        ProxyFactoryComponent.__init__(self, target, TransactionalInterceptor(txManager, transactionAttributes))
+        ProxyFactoryComponent.__init__(self, target, TransactionalInterceptor(tx_manager, tx_attributes))
 
-def Transactional(txAttributes = None):
+def Transactional(tx_attributes = None):
     """
     This decorator is actually a utility function that returns an embedded decorator, in order
     to handle whether it was called in any of the following ways:
@@ -260,25 +260,25 @@ def Transactional(txAttributes = None):
         transactional_wrapper is used to wrap the decorated function in a TransactionTemplate callback,
         and then return the results.
         """
-        class txDefinition(TransactionCallback):
+        class tx_def(TransactionCallback):
             """TransactionTemplate requires a callback defined this way."""
-            def doInTransaction(s, status):
+            def do_in_transaction(s, status):
                 return f(*args, **kwargs)
 
         try:
-            # Assumes transactionManager is supplied by AutoTransactionalComponent
-            transactionTemplate = TransactionTemplate(transactionManager)
-            if txAttributes is not None:
-                transactionTemplate.setTxAttributes(txAttributes)
+            # Assumes tx_manager is supplied by AutoTransactionalComponent
+            tx_template = TransactionTemplate(tx_manager)
+            if tx_attributes is not None:
+                tx_template.setTxAttributes(tx_attributes)
             else:
-                logger.debug("There are NO txAttributes! %s" % txAttributes)
-            return transactionTemplate.execute(txDefinition())
+                logger.debug("There are NO tx_attributes! %s" % tx_attributes)
+            return tx_template.execute(tx_def())
         except NameError:
             # If no AutoTransactionalComponent found in IoC container, then pass straight through.
-            return txDefinition().doInTransaction(None)
+            return tx_def().do_in_transaction(None)
 
-    if type(txAttributes) == types.FunctionType:
-        return Transactional()(txAttributes)
+    if type(tx_attributes) == types.FunctionType:
+        return Transactional()(tx_attributes)
     else:
         return transactional_wrapper
 
@@ -289,11 +289,11 @@ class AutoTransactionalComponent(object):
     is found applied to any of the component's methods, link it with a TransactionManager.
     """
 
-    def __init__(self, transactionManager):
-        self.transactionManager = transactionManager
+    def __init__(self, tx_manager):
+        self.tx_manager = tx_manager
         self.logger = logging.getLogger("springpython.database.transaction.AutoTransactionalComponent")
 
-    def postProcessAfterInitialization(self, container):
+    def post_process_after_initialization(self, container):
         """This setup is run after all objects in the container have been created."""
         for component in container.components:
             # Check every method in the component...
@@ -302,8 +302,8 @@ class AutoTransactionalComponent(object):
                     # If the method contains _call_, then you are looking at a wrapper...
                     wrapper = method.im_func.func_globals["_call_"]
                     if wrapper.func_name == "transactional_wrapper":  # name of @Transactional's wrapper method
-                        self.logger.debug("Linking transactionManager with %s" % name)
-                        wrapper.func_globals["transactionManager"] = self.transactionManager
+                        self.logger.debug("Linking tx_manager with %s" % name)
+                        wrapper.func_globals["tx_manager"] = self.tx_manager
                 except KeyError, e:   # If the method is NOT wrapped, there will be no _call_ attribute
                     pass
 

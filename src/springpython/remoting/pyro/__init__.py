@@ -26,8 +26,8 @@ class PyroServiceExporter(object):
     """
     def __init__(self):
         self.__dict__["service"] = None
-        self.__dict__["serviceName"] = None
-        self.__dict__["_pyroThread"] = None
+        self.__dict__["service_name"] = None
+        self.__dict__["_pyro_thread"] = None
         
     def __del__(self):
         """
@@ -35,7 +35,7 @@ class PyroServiceExporter(object):
         service must be deregistered.
         """
         try:
-            PyroDaemonHolder.deregister(self.serviceName)
+            PyroDaemonHolder.deregister(self.service_name)
         except:
             pass
         
@@ -46,37 +46,37 @@ class PyroServiceExporter(object):
         need to wait until the service and serviceInterface is set, and then
         register the service.
         """
-        if name == "service" or name == "serviceName":
+        if name == "service" or name == "service_name":
             self.__dict__[name] = value
         else:
             object.__setattr__(self, name, value)
-        if self.service is not None and self.serviceName is not None and self._pyroThread is None:
-            pyroObj = Pyro.core.ObjBase()
-            pyroObj.delegateTo(self.service)        
-            PyroDaemonHolder.register(pyroObj, self.serviceName)
+        if self.service is not None and self.service_name is not None and self._pyro_thread is None:
+            pyro_obj = Pyro.core.ObjBase()
+            pyro_obj.delegateTo(self.service)        
+            PyroDaemonHolder.register(pyro_obj, self.service_name)
             
 class PyroProxyFactory(object):
     """
     This is wrapper around a Pyro client proxy. The idea is to inject this object with a 
-    Pyro serviceUrl, which in turn generates a Pyro client proxy. After that, any
+    Pyro service_url, which in turn generates a Pyro client proxy. After that, any
     method calls or attribute accessses will be forwarded to the Pyro client proxy.
     """
     def __init__(self):
-        self.__dict__["clientProxy"] = None
+        self.__dict__["client_proxy"] = None
         
     def __setattr__(self, name, value):
-        if name == "serviceUrl":
-            self.__dict__["serviceUrl"] = value
+        if name == "service_url":
+            self.__dict__["service_url"] = value
         else:
-            setattr(self.clientProxy, name, value)
+            setattr(self.client_proxy, name, value)
     
     def __getattr__(self, name):
-        if name == "serviceUrl":
-            return self.serviceUrl
-        elif name == "postProcessAfterInitialization":
+        if name == "service_url":
+            return self.service_url
+        elif name == "post_process_after_initialization":
             raise AttributeError, name
         else:
-            if self.clientProxy is None:
-                self.__dict__["clientProxy"] = Pyro.core.getProxyForURI(self.serviceUrl)
-            return getattr(self.clientProxy, name)
+            if self.client_proxy is None:
+                self.__dict__["client_proxy"] = Pyro.core.getProxyForURI(self.service_url)
+            return getattr(self.client_proxy, name)
 
