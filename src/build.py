@@ -27,13 +27,9 @@ parser = OptionParser(usage="usage: %prog [-h|--help] [options]")
 parser.add_option("", "--version", action="store", dest="version", help="Define the version of this build.")
 (options, args) = parser.parse_args()
 
-if options.version is not None:
-    if re.match(r"\d\.\d", options.version):
-        # Remove version argument
-        sys.argv = [sys.argv[0]] + sys.argv[-1:]
-    else:
-        print "Version not correctly specified => version = %s Arguments => %s" % (options.version, sys.argv)
-        sys.exit(1)
+# NOTE: This assumes setup.py is called from build.py. It can NOT be run stand alone.
+# Remove version argument
+sys.argv = [sys.argv[0]] + sys.argv[-1:]
 
 setup(name='springpython',
       version=options.version,
