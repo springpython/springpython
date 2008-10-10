@@ -16,11 +16,13 @@
 """
 from datetime import datetime
 from glob import glob
+import mimetypes
 import os
 import re
 import sys
 import getopt
 import shutil
+import S3
 
 ############################################################################
 # Get external properties and load into a dictionary. NOTE: These properties
@@ -34,11 +36,19 @@ p["targetDir"] = "target"
 p["testDir"] = "%s/test-results/xml" % p["targetDir"]
 p["packageDir"] = "%s/artifacts" % p["targetDir"]
 
-# Override defaults with a properties file
-inputProperties = [property.split("=") for property in open("springpython.properties").readlines()
-                   if not (property.startswith("#") or property.strip() == "")]
-filter(p.update, map((lambda prop: {prop[0].strip(): prop[1].strip()}), inputProperties))
 
+def load_properties(prop_dict, prop_file):
+    "This function loads standard, java-style properties files into a dictionary."
+    if os.path.exists(prop_file):
+        print "Reading property file " + prop_file
+        [prop_dict.update({prop.split("=")[0].strip(): prop.split("=")[1].strip()})
+         for prop in open(prop_file).readlines() if not (prop.startswith("#") or prop.strip() == "")]
+    else:
+        print "Unable to read property file " + prop_file
+
+# Override defaults with a properties file
+load_properties(p, "springpython.properties")
+load_properties(p, p["s3.key_file"])  # Saves the user from having to manually input the keys
 
 ############################################################################
 # Read the command-line, and assemble commands. Any invalid command, print
@@ -105,15 +115,52 @@ def test_coverage(dir):
     os.makedirs(dir)
     os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s --with-coverage --cover-package=springpython" % dir)
 
+def build(dir, version):
+    input = open(dir + "/build.py")
+    output = open(dir + "/setup.py", "w") 
+    for line in input.readlines():
+        skip = ["sys.argv =", "parser = OptionParser", "parser.add_option", "(options, args)", "# NOTE:", "# Remove version argument", "from optparse"]
+        if len([True for criteria in skip if criteria in line]) > 0:
+            continue
+        if "options.version" in line:
+            output.write(re.sub("options.version", "'" + version + "'", line))
+            continue
+        output.write(line)
+    output.close()
+    os.system("cd %s ; python build.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % (dir, version))
+
 def package(dir, version):
     os.makedirs(dir)
-    os.system("cd src     ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % version)
-    os.system("cd samples ; python setup.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % version)
+    build("src", version)
+    build("samples", version)
     os.system("mv *.tar.gz %s" % dir)
 
-def publish():
-    """TODO(8/28/2008 GLT): Implement automated solution for this."""
-    print "+++ Upload the tarballs using sftp manually to <user>@frs.sourceforge.net, into dir uploads and create a release."
+def publish(filename, BUCKET_NAME, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
+    KEY_NAME = p["s3.key_prefix"] + filename.split("/")[-1]
+
+    print "Reading in content from %s" % filename
+    filedata = open(filename, "rb").read()
+
+    content_type = mimetypes.guess_type(filename)[0]
+    if content_type is None:
+        content_type = 'text/plain'
+
+    print "File appears to be %s" % content_type
+
+    print "Connecting to S3..."
+    conn = S3.AWSAuthConnection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+
+    print "Checking if bucket %s exists..." % BUCKET_NAME
+    check = conn.check_bucket_exists(BUCKET_NAME)
+    if (check.status == 200):
+        print "It does! Now uploading %s to %s/%s" % (filename, BUCKET_NAME, KEY_NAME)
+        print conn.put(
+            BUCKET_NAME,
+            KEY_NAME,
+            S3.S3Object(filedata),
+            { 'Content-Type': content_type, 'x-amz-acl': 'public-read'}).message
+    else:
+        print "Error code %s: Unable to publish" % check.status
 
 def register(version):
     os.system("cd src     ; python setup.py --version %s register" % version)
@@ -228,7 +275,11 @@ def docs_pdf(version):
 for option in optlist:
     if option[0] == "--build-stamp":
         buildStamp = option[1]   # Override build stamp with user-supplied version
-completeVersion = p["version"] + "-" + buildStamp
+
+if "build.stamp" in p:
+    completeVersion = p["build.stamp"]
+else:
+    completeVersion = p["version"] + "-" + buildStamp
 
 # Check for help requests, which cause all other options to be ignored. Help can offer version info, which is
 # why it comes as the second check
@@ -257,7 +308,17 @@ for option in optlist:
         package(p["packageDir"], completeVersion)
 	
     if option[0] in ("--publish"):
-        publish()
+        BUCKET_NAME = p["s3.bucket"]
+        if "accessKey" in p:
+            AWS_ACCESS_KEY_ID = p["accessKey"]
+        else: 
+            AWS_ACCESS_KEY_ID = raw_input("Please enter the AWS_ACCESS_KEY_ID (NOT your secret key): ")
+        if "secretKey" in p:
+            AWS_SECRET_ACCESS_KEY = p["secretKey"]
+        else:
+            AWS_SECRET_ACCESS_KEY = raw_input("Please enter AWC_SECRET_ACCESS_KEY: ")
+
+        [publish(filename, BUCKET_NAME, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) for filename in glob("target/artifacts/*.tar.gz")]
 
     if option[0] in ("--register"):
         register(completeVersion)
