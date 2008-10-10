@@ -5,10 +5,7 @@
     <src>reference/html/images/spring_python_white.png</src>
     <href>http://springpython.webfactional.com/</href>
   </bannerLeft>
-  <!--<bannerRight>
-    <name>Spring Python</name>
-    <src>reference/html/images/springsource-banner-rhs.png</src>
-  </bannerRight>-->
+
   <body>
     <links>
       <item name="SpringSource" href="http://springsource.com" />
@@ -30,8 +27,8 @@
     </menu>
 
     <menu name="Documentation">
-      <item name="HTML" href="reference/html" />
-      <item name="Single HTML" href="reference/html_single"/>
+      <item name="HTML" href="reference/html/index.html" />
+      <item name="Single HTML" href="reference/html_single/index.html"/>
       <item name="PDF" href="reference/pdf/springpython-reference.pdf"/>
       <item name="XML schema specs" href="schema/context"/>
     </menu>
