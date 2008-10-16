@@ -48,7 +48,6 @@ def load_properties(prop_dict, prop_file):
 
 # Override defaults with a properties file
 load_properties(p, "springpython.properties")
-load_properties(p, p["s3.key_file"])  # Saves the user from having to manually input the keys
 
 ############################################################################
 # Read the command-line, and assemble commands. Any invalid command, print
@@ -308,6 +307,12 @@ for option in optlist:
         package(p["packageDir"], completeVersion)
 	
     if option[0] in ("--publish"):
+        print "Looking for local key file..."
+        load_properties(p, p["s3.key_file"])  # Saves the user from having to manually input the keys
+
+        print "Looking for user's key file, which can override local file..."
+        load_properties(p, os.path.expanduser("~") + "/" + p["s3.key_file"])  # Saves the user from having to manually input the keys
+
         BUCKET_NAME = p["s3.bucket"]
         if "accessKey" in p:
             AWS_ACCESS_KEY_ID = p["accessKey"]
