@@ -141,7 +141,7 @@
   		<title>Downloads</title>
   		
   		<para>If you want a release, check out
-  		<ulink url="http://sourceforge.net/project/showfiles.php?group_id=184275">sourceforge.net</ulink>.</para>
+  		<ulink url="http://s3browse.com/explore/dist.springframework.org/release/EXT/se-springpython-py/">Spring's download site for Spring Python</ulink>.</para>
 
 		<para>If you want the latest source code type:
 		
@@ -155,9 +155,6 @@ svn co https://src.springframework.org/svn/se-springpython-py/trunk/springpython
 		the demo applications (PetClinic and SpringWiki).</para>
 		
 		<para>You can browse the code at <ulink url="https://fisheye.springframework.org/browse/se-springpython-py"/>.</para>
-		
-		<para>NOTE: Steps to upload a new release are found
-		<ulink url="https://sourceforge.net/docman/display_doc.php?docid=6445&amp;group_id=1#upload">here</ulink>.</para>
   	</section>
   	
   	<section id="overview-license">
