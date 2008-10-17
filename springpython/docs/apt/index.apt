@@ -59,6 +59,10 @@ What's Coming?
   
 Spring Python News
 
+  <<NEWS>> - Spring Python 0.7.1 has been released. This release contains improvements to reference documentation as well
+  as integration with {{{http://s3browse.com/explore/dist.springframework.org/release/EXT/se-springpython-py}Spring's new
+  download site}}. - 10/17/2008 G.Turnquist
+
   <<NEWS>> - Spring Python 0.7.0 has been released. This release contains several upgrades and improvements, including
   scrubbing the APIs to better match {{{http://www.python.org/dev/peps/pep-0008/}PEP-0008}}. - 9/25/2008 G.Turnquist
 
