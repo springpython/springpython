@@ -64,7 +64,7 @@ def usage():
     print "\t--test\t\t\trun the test suite, leaving all artifacts in %s" % p["testDir"]
     print "\t--coverage\t\trun the test suite with coverage analysis, leaving all artifacts in %s" % p["testDir"]
     print "\t--package\t\tpackage everything up into a tarball for release to sourceforge in %s" % p["packageDir"]
-    print "\t--build-stamp [tag]\tfor --package, this specifies a special tag, generating version tag '%s-<tag>'" % p["version"]
+    print "\t--build-stamp [tag]\tfor --package, this specifies a special tag, generating version tag '%s-<tag>. springpython.properties can override with build.stamp'" % p["version"]
     print "\t\t\t\tIf this option isn't used, default will be tag will be '%s-<current time>'" % p["version"]
     print "\t--publish\t\tpublish this release to the deployment server"
     print "\t--register\t\tregister this release with http://pypi.python.org/pypi"
@@ -139,6 +139,8 @@ def publish(filename, BUCKET_NAME, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
 
     print "Reading in content from %s" % filename
     filedata = open(filename, "rb").read()
+
+    print "Preparing to upload %s to %s/%s" % (filename, BUCKET_NAME, KEY_NAME)
 
     content_type = mimetypes.guess_type(filename)[0]
     if content_type is None:
@@ -275,10 +277,10 @@ for option in optlist:
     if option[0] == "--build-stamp":
         buildStamp = option[1]   # Override build stamp with user-supplied version
 
+# However, a springpython.properties entry can override the command-line
 if "build.stamp" in p:
-    completeVersion = p["build.stamp"]
-else:
-    completeVersion = p["version"] + "-" + buildStamp
+    buildStamp = p["build.stamp"]
+completeVersion = p["version"] + "-" + buildStamp
 
 # Check for help requests, which cause all other options to be ignored. Help can offer version info, which is
 # why it comes as the second check
