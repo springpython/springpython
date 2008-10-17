@@ -37,4 +37,10 @@
       <item name="Old trac site" href="http://trac.springpython.webfactional.com"/>
     </menu>
   </body>
+  <poweredBy>
+    <logo name="Source code written in Python" href="http://www.python.org" img="images/python-powered-w-100x40.png"/>
+    <logo name="Powered by JIRA" href="http://www.atlassian.com/software/jira/" img="images/jira.png"/>
+    <logo name="Powered by bamboo" href="http://www.atlassian.com/software/bamboo/" img="images/bamboo.png"/>
+    <logo name="Hosted by WebFaction" href="http://www.webfaction.com" img=""/>
+  </poweredBy>
 </project>
