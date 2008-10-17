@@ -163,9 +163,9 @@ def publish(filename, BUCKET_NAME, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
     else:
         print "Error code %s: Unable to publish" % check.status
 
-def register(version):
-    os.system("cd src     ; python setup.py --version %s register" % version)
-    os.system("cd samples ; python setup.py --version %s register" % version)
+def register():
+    os.system("cd src     ; python setup.py register")
+    os.system("cd samples ; python setup.py register")
 
 # Using glob, generate a list of files, then use map to go over each item, and copy it
 # from source to destination.
@@ -328,7 +328,7 @@ for option in optlist:
         [publish(filename, BUCKET_NAME, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) for filename in glob("target/artifacts/*.tar.gz")]
 
     if option[0] in ("--register"):
-        register(completeVersion)
+        register()
 
     if option[0] in ("--site"):
         site(completeVersion)

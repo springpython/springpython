@@ -53,7 +53,7 @@ setup(name='springpython',
                 'springpython.security.userdetails'
                 ],
       package_data={'springpython': ["README", "COPYRIGHT", "LICENSE.txt"]},
-      download_url="http://sourceforge.net/projects/springpython/",
+      download_url="http://s3browse.com/explore/dist.springframework.org/release/EXT/se-springpython-py/",
       classifiers=["License :: OSI Approved :: Apache Software License",
                    "Intended Audience :: Developers",
                    "Development Status :: 4 - Beta",
