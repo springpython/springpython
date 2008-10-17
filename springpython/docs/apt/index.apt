@@ -51,12 +51,16 @@ Key Features
           * {{{reference/html/samples.html#samples-springbot}Spring Bot}} - Use Spring Python to build
           	a tiny bot to manage the IRC channel of your open source project. 
 			
+Downloads
+
+  {{{http://s3browse.com/explore/dist.springframework.org/release/EXT/se-springpython-py}Official releases}}
+
 What's Coming?
 
   We are working on improving the {{{reference/html/components.html}core IoC container}}. Right now, what we have
   works for simple situations, but in order to make it as powerful and extensible as the original Spring Framework's container,
   we are overhauling things. The goal is to have this completed by release 1.0.
-  
+
 Spring Python News
 
   <<NEWS>> - Spring Python 0.7.1 has been released. This release contains improvements to reference documentation as well
@@ -72,7 +76,7 @@ Spring Python News
   - 9/19/2008 G.Turnquist
 
   <<NEWS>> - Spring Python's official documentation has been staged at
-  {{{http://docs.springpython.webfactional.com}http://docs.springpython.webfactional.com}}. - 9/17/2008 G.Turnquist
+  {{{http://springpython.webfactional.com/reference/html}http://springpython.webfactional.com/reference/html}}. - 9/17/2008 G.Turnquist
 
   <<NEWS>> - Spring Python was given as a "sneak peek" into Spring Extensions to the London Spring User's Group at the
   end of a presentation on Spring.NET given by Russ Miles. If you follow that link to the Spring Python forums, there is another
@@ -89,11 +93,4 @@ Spring Python News
   Python to become an official Spring Extension. Russ is in charge of the Spring Extensions project, a process they are
   setting up to incubate projects that can potentially become official parts of Spring Source's software portfolio. Read more
   on our new discussion forum. - 8/11/2008 G.Turnquist
-
-  <<NEWS>> - Spring Python 0.5.0 has been released. This includes declarative transactions you can put into your
-  DecoratorBasedApplicationContext and support for defining propagation levels. Much more testing has been put into verifying
-  that DatabaseTemplate and DatabaseTransactions support MySQL, PostgreSQL, and Sqlite. We also have preliminary support for
-  Oracle. Also, Spring Python has been re-licensed under Apache License 2.0. The sample applications are still under the old
-  licenses, but the core library of Spring Python has been turned business friendly. You can read my my blog article for more
-  information about this. - 5/30/2008 G.Turnquist
 
