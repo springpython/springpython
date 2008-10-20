@@ -167,15 +167,13 @@ def register():
     os.system("cd src     ; python setup.py register")
     os.system("cd samples ; python setup.py register")
 
-# Using glob, generate a list of files, then use map to go over each item, and copy it
-# from source to destination.
 def copy(src, dest, patterns):
     if not os.path.exists(dest):
         print "+++ Creating " + dest
         os.makedirs(dest)
     
-    map(lambda pattern: [shutil.copy(file, dest) for file in glob(src + pattern)], patterns)
-
+    [shutil.copy(file, dest) for pattern in patterns for file in glob(src + pattern)]
+    
 def setup(root, stylesheets=True):
     copy(
          p["doc.ref.dir"]+"/src/images/",
