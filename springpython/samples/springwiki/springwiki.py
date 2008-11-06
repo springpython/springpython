@@ -19,7 +19,8 @@ import logging
 import os
 from springpython.security.cherrypy31 import AuthenticationFilter, ContextSessionFilter, SecurityFilter
 from springpython.security.context import SecurityContextHolder
-from springpython.context import XmlApplicationContext
+from springpython.config import XMLConfig
+from springpython.context import ApplicationContext
 
 port = 8002
 
@@ -36,7 +37,7 @@ if __name__ == '__main__':
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    applicationContext = XmlApplicationContext(configLocation = "applicationContext.xml")
+    applicationContext = ApplicationContext(XMLConfig(config_location = "applicationContext.xml"))
     
     conf = {"/":                {"tools.staticdir.root": os.getcwd()},
             "/images":          {"tools.staticdir.on": True,
@@ -67,7 +68,7 @@ if __name__ == '__main__':
 
     cherrypy.config.update({'server.socket_port': port})
     
-    cherrypy.tree.mount(applicationContext.get_component(componentId = "read"), '/', config=conf)
+    cherrypy.tree.mount(applicationContext.get_object(name = "read"), '/', config=conf)
 
     cherrypy.engine.start()
     cherrypy.engine.block()

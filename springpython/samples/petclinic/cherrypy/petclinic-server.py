@@ -15,6 +15,7 @@
 """
 import logging
 import noxml
+from springpython.context import ApplicationContext
 
 if __name__ == '__main__':
 
@@ -30,4 +31,4 @@ if __name__ == '__main__':
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    applicationContext = noxml.PetClinicServerOnly()
+    applicationContext = ApplicationContext(noxml.PetClinicServerOnly())

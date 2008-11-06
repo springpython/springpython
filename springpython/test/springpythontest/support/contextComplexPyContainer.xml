@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<components xmlns="http://www.springframework.org/springpython/schema/pycontainer-components"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/pycontainer-components
+       		http://springpython.webfactional.com/schema/context/spring-python-pycontainer-context-1.0.xsd">
+            
+    <component id="user_details_service" class="springpython.security.userdetails.InMemoryUserDetailsService">
+	    <property name="user_dict">
+			{
+				"basichiblueuser"  : ("password1", ["ROLE_BASIC", "ASSIGNED_BLUE",   "LEVEL_HI"], True),
+				"basichiorangeuser": ("password2", ["ROLE_BASIC", "ASSIGNED_ORANGE", "LEVEL_HI"], True),
+				"otherhiblueuser"  : ("password3", ["ROLE_OTHER", "ASSIGNED_BLUE",   "LEVEL_HI"], True),
+				"otherhiorangeuser": ("password4", ["ROLE_OTHER", "ASSIGNED_ORANGE", "LEVEL_HI"], True),
+				"basicloblueuser"  : ("password5", ["ROLE_BASIC", "ASSIGNED_BLUE",   "LEVEL_LO"], True),
+				"basicloorangeuser": ("password6", ["ROLE_BASIC", "ASSIGNED_ORANGE", "LEVEL_LO"], True),
+				"otherloblueuser"  : ("password7", ["ROLE_OTHER", "ASSIGNED_BLUE",   "LEVEL_LO"], True),
+				"otherloorangeuser": ("password8", ["ROLE_OTHER", "ASSIGNED_ORANGE", "LEVEL_LO"], True)
+			}
+        </property>
+    </component>
+
+</components>

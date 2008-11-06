@@ -13,8 +13,8 @@
 		include reference documentation that was used at the time to implement this security module.</para>
 	</note>
 
-	<section id="security-components">
-		<title>Shared Components</title>
+	<section id="security-objects">
+		<title>Shared Objects</title>
 		
 		<para>The major building blocks of Spring Python Security are</para>
 		<itemizedlist>
@@ -41,14 +41,14 @@
  		</itemizedlist>
  		
 		<note>
-			<title>Web components are still being upgraded for CherryPy 3</title>
+			<title>Web objects are still being upgraded for CherryPy 3</title>
 			
 			<para>While PetClinic has been upgraded to support CherryPy 3, the web-based
-			security components have only been partially upgraded.</para>
+			security objects have only been partially upgraded.</para>
 		</note>
 
 
-		<para>These components are needed for both authentication and authorization.</para>
+		<para>These objects are needed for both authentication and authorization.</para>
 
 	</section>
 	
@@ -77,15 +77,15 @@
 				<para>To configure this using a pythonic, decorator-based IoC container...</para>
 				
 <programlisting><![CDATA[
-class SampleContainer(DecoratorBasedApplicationContext):
+class SampleContainer(PythonConfig):
     ...
-    @component
+    @Object
     def inMemoryDaoAuthenticationProvider(self):
         provider = DaoAuthenticationProvider()
         provider.user_details_service = inMemoryUserDetailsService()
         return provider
         
-	@component
+	@Object
 	def inMemoryUserDetailsService(self):
 		user_details_service = InMemoryUserDetailsService()
         user_details_service.user_dict = {
@@ -97,7 +97,7 @@ class SampleContainer(DecoratorBasedApplicationContext):
         return user_details_service
 ]]></programlisting>
 
-				<para>XML-based configuration...</para>
+				<para>XML configuration using <classname>PyContainerConfig</classname>...</para>
 
 <programlisting><![CDATA[
 <component id="inMemoryUserDetailsService" class="springpython.security.userdetails.InMemoryUserDetailsService">
@@ -132,6 +132,7 @@ class SampleContainer(DecoratorBasedApplicationContext):
 				
 				<itemizedlist>
 					<listitem><para><classname>LdapAuthenticationProvider</classname></para></listitem>
+					<listitem><para><classname>OpenIDAuthenticationProvider</classname></para></listitem>
 					<listitem>
 						<para>Anonymous authentication provider - allows you to tag anonymous users, and constrain 
 						what they can access, even if they don't provide a password</para>
@@ -148,9 +149,9 @@ class SampleContainer(DecoratorBasedApplicationContext):
 			list when attempting to authenticate. PetClinic configures it like this:</para>
 			
 <programlisting><![CDATA[
-class SampleContainer(DecoratorBasedApplicationContext):
+class SampleContainer(PythonConfig):
     ...
-    @component
+    @Object
     def authenticationManager(self):
         return AuthenticationManager(auth_providers = [self.authenticationProvider()])
 ]]></programlisting>
@@ -165,7 +166,7 @@ class SampleContainer(DecoratorBasedApplicationContext):
 </component>
 ]]></programlisting>
 
-			<para>This <classname>AuthenticationManager</classname> has a list referencing one component already
+			<para>This <classname>AuthenticationManager</classname> has a list referencing one object already
 			defined in the <classname>ApplicationContext</classname>, authenticationProvider. The authentication
 			manager is supplied as an argument to the security interceptor, so it can perform checks as needed.</para>
 
@@ -189,7 +190,7 @@ def supports(self, attr)
 
 		<para>As can be seen from the first method, the <classname>AccessDecisionManager</classname> is passed via method
 		parameters all information that is likely to be of value in assessing an authorization decision. In particular, passing
-		the secure Object enables those arguments contained in the actual secure object invocation to be inspected. For example,
+		the secure object enables those arguments contained in the actual secure object invocation to be inspected. For example,
 		let's assume the secure	object was a <classname>MethodInvocation</classname>. It would be easy to query the
 		<classname>MethodInvocation</classname> for any Customer argument, and then implement some sort of security logic in the
 		<classname>AccessDecisionManager</classname> to ensure the principal is permitted to operate on that customer.
@@ -237,13 +238,13 @@ def vote(self, authentication, object, config)
 		<para>PetClinic has two <classname>RoleVoter</classname>'s in its configuration:</para>
 		
 <programlisting><![CDATA[
-class SampleContainer(DecoratorBasedApplicationContext):
+class SampleContainer(PythonConfig):
     ...
-    @component
+    @Object
     def vetRoleVoter(self):
         return RoleVoter(role_prefix="VET")
 
-    @component
+    @Object
     def customerRoleVoter(self):
         return RoleVoter(role_prefix="CUSTOMER")
 ]]></programlisting>
@@ -268,9 +269,9 @@ class SampleContainer(DecoratorBasedApplicationContext):
 		<para>Petclinic has a custom <classname>AccessDecisionVoter</classname>, which votes on whether a user "owns" a record.</para>
 		
 <programlisting><![CDATA[
-class SampleContainer(DecoratorBasedApplicationContext):
+class SampleContainer(PythonConfig):
     ...
-    @component
+    @Object
     def ownerVoter(self):
         return OwnerVoter(controller = self.controller())
 ]]></programlisting>
@@ -290,9 +291,9 @@ class SampleContainer(DecoratorBasedApplicationContext):
 		<classname>AccessDecisionManager</classname>:</para>
 		
 <programlisting><![CDATA[
-class SampleContainer(DecoratorBasedApplicationContext):
+class SampleContainer(PythonConfig):
     ...
-    @component
+    @Object
     def accessDecisionManager(self):
         manager = AffirmativeBased()
         manager.allow_if_all_abstain = False

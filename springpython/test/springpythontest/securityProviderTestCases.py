@@ -16,7 +16,8 @@
 import logging
 import unittest
 from pmock import *
-from springpython.context import XmlApplicationContext
+from springpython.config import XMLConfig
+from springpython.context import ApplicationContext
 from springpython.database.core import DatabaseTemplate
 from springpython.security.providers import AuthenticationManager
 from springpython.security.providers import UsernamePasswordAuthenticationToken
@@ -30,8 +31,8 @@ from springpythontest.support import testSupportClasses
 class InMemoryDaoAuthenticationProviderTestCase(unittest.TestCase):
     def setUp(self):
         SecurityContextHolder.setContext(SecurityContext())
-        self.appContext = XmlApplicationContext("support/providerApplicationContext.xml")
-        self.auth_manager = self.appContext.get_component("inMemoryDaoAuthenticationManager")
+        self.appContext = ApplicationContext(XMLConfig("support/providerApplicationContext.xml"))
+        self.auth_manager = self.appContext.get_object("inMemoryDaoAuthenticationManager")
         
     def __init__(self, methodName='runTest'):
         unittest.TestCase.__init__(self, methodName)
@@ -70,10 +71,10 @@ class DaoAuthenticationProviderHidingUserNotFoundExceptionsTestCase(MockTestCase
 
     def setUp(self):
         SecurityContextHolder.setContext(SecurityContext())
-        self.appContext = XmlApplicationContext("support/providerApplicationContext.xml")
-        self.auth_manager = self.appContext.get_component("dao_mgr_hiding_exception")
+        self.appContext = ApplicationContext(XMLConfig("support/providerApplicationContext.xml"))
+        self.auth_manager = self.appContext.get_object("dao_mgr_hiding_exception")
         self.mock = self.mock()
-        self.appContext.get_component("dataSource").stubConnection.mockCursor = self.mock
+        self.appContext.get_object("dataSource").stubConnection.mockCursor = self.mock
         
     def testIoCDaoAuthenticationActiveUserBadPassword(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -161,10 +162,10 @@ class DaoAuthenticationProviderNotHidingUserNotFoundExceptionsTestCase(MockTestC
 
     def setUp(self):
         SecurityContextHolder.setContext(SecurityContext())
-        self.appContext = XmlApplicationContext("support/providerApplicationContext.xml")
-        self.auth_manager = self.appContext.get_component("dao_mgr_not_hiding_exceptions")
+        self.appContext = ApplicationContext(XMLConfig("support/providerApplicationContext.xml"))
+        self.auth_manager = self.appContext.get_object("dao_mgr_not_hiding_exceptions")
         self.mock = self.mock()
-        self.appContext.get_component("dataSource").stubConnection.mockCursor = self.mock
+        self.appContext.get_object("dataSource").stubConnection.mockCursor = self.mock
         
     def testIocDaoAuthenticationBadUsersDontHideBadCredentialsDisabledUser(self):
         self.mock.expects(once()).method("execute").id("#1")

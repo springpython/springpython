@@ -21,8 +21,9 @@ import re
 import sys
 from optparse import OptionParser
 from springbot import DictionaryBot
-from springpython.context import DecoratorBasedApplicationContext
-from springpython.context import component
+from springpython.config import PythonConfig
+from springpython.config import Object
+from springpython.context import ApplicationContext
 from springpython.remoting.pyro import PyroProxyFactory
 from springpython.remoting.pyro import PyroServiceExporter
 
@@ -134,34 +135,34 @@ class CoilyView:
         results += footer()
         return results
 
-class CoilyWebClient(DecoratorBasedApplicationContext):
+class CoilyWebClient(PythonConfig):
     """
     This container represents the context of the web application used to interact with the bot and present a
     nice frontend to the user community about the channel and the bot.\
     """
     def __init__(self):
-        DecoratorBasedApplicationContext.__init__(self)
+        super(CoilyWebClient, self).__init__()
 
-    @component
+    @Object
     def root(self):
         return CoilyView(self.bot())
 
-    @component
+    @Object
     def bot(self):
         proxy = PyroProxyFactory()
         proxy.service_url = "PYROLOC://localhost:7766/bot"
         return proxy
 
-class CoilyIRCServer(DecoratorBasedApplicationContext):
+class CoilyIRCServer(PythonConfig):
     """This container represents the context of the IRC bot. It needs to export information, so the web app can get it."""
     def __init__(self):
-        DecoratorBasedApplicationContext.__init__(self)
+        super(CoilyIRCServer, self).__init__()
 
-    @component
+    @Object
     def remoteBot(self):
         return DictionaryBot([("irc.ubuntu.com", 6667)], "#springpython", ops=["Goldfisch"], nickname="coily", realname="Coily the Spring Python assistant", logfile="springpython.log")
 
-    @component
+    @Object
     def bot(self):
         exporter = PyroServiceExporter()
         exporter.service_name = "bot"
@@ -171,8 +172,8 @@ class CoilyIRCServer(DecoratorBasedApplicationContext):
 if __name__ == "__main__":
     # Parse some launching options.
     parser = OptionParser(usage="usage: %prog [-h|--help] [options]")
-    parser.add_option("-w", "--web", action="store_true", dest="web", default=False, help="Run the web server component.")
-    parser.add_option("-i", "--irc", action="store_true", dest="irc", default=False, help="Run the IRC-bot component.")
+    parser.add_option("-w", "--web", action="store_true", dest="web", default=False, help="Run the web server object.")
+    parser.add_option("-i", "--irc", action="store_true", dest="irc", default=False, help="Run the IRC-bot object.")
     parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="Turn up logging level to DEBUG.")
     (options, args) = parser.parse_args()
 
@@ -181,12 +182,13 @@ if __name__ == "__main__":
         sys.exit(2)
 
     if not options.web and not options.irc:
-        print "You must specify one of the components to run."
+        print "You must specify one of the objects to run."
         sys.exit(2)
 
     if options.debug:
         logger = logging.getLogger("springpython")
-        logger.setLevel(logging.DEBUG)
+        loggingLevel = logging.DEBUG
+        logger.setLevel(loggingLevel)
         ch = logging.StreamHandler()
         ch.setLevel(loggingLevel)
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s") 
@@ -196,7 +198,7 @@ if __name__ == "__main__":
     if options.web:
         # This runs the web application context of the application. It allows a nice web-enabled view into
         # the channel and the bot that supports it.
-        applicationContext = CoilyWebClient()
+        applicationContext = ApplicationContext(CoilyWebClient())
 
         # Configure cherrypy programmatically.
         conf = {"/":                {"tools.staticdir.root": os.getcwd()},
@@ -210,14 +212,14 @@ if __name__ == "__main__":
 
         cherrypy.config.update({'server.socket_port': 9001})
 	    
-        cherrypy.tree.mount(applicationContext.get_component(componentId = "root"), '/', config=conf)
+        cherrypy.tree.mount(applicationContext.get_object(name = "root"), '/', config=conf)
 	
         cherrypy.engine.start()
         cherrypy.engine.block()
     
     if options.irc:
         # This runs the IRC bot that connects to a channel and then responds to various events.
-        applicationContext = CoilyIRCServer()
-        coily = applicationContext.bot()
+        applicationContext = ApplicationContext(CoilyIRCServer())
+        coily = applicationContext.get_object("bot")
         coily.service.start()
 

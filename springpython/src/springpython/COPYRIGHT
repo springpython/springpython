@@ -15,7 +15,7 @@
 
 Spring Python is inspired by the Spring framework (http://www.springframework.org)
 which is released under the Apache Foundation License. Spring Python does NOT require
-redistribution of Spring's components, nor any of its dependencies (binary or source code).
+redistribution of Spring's software modules, nor any of its dependencies (binary or source code).
 However, you are free to download their source code to understand the basis of this product.
 
 The Spring Python's Security module is inspired by Acegi Security Java-based framework
@@ -24,35 +24,6 @@ Spring Python's Security module does NOT require redistribution of Acegi's compo
 nor any of its dependencies (binary or source code). However, you are free to download
 their source code to understand the basis of this product.
    
-*****************************************************************************************
-
-Spring Python has incorporated PyContainer, written by Rafal Sniezynski,
-as its fundamental IoC container. It is found in springpython.context.pycontainer.
-
-PyContainer is
-Copyright (c) 2004, Rafal Sniezynski
-
-By obtaining, using, and/or copying this software and/or its
-associated documentation, you agree that you have read, understood,
-and will comply with the following terms and conditions:
-
-Permission to use, copy, modify, and distribute this software and its
-associated documentation for any purpose and without fee is hereby
-granted, provided that the above copyright notice appears in all
-copies, and that both that copyright notice and this permission notice
-appear in supporting documentation, and that the name of the author 
-not be used in advertising or publicity pertaining to
-distribution of the software without specific, written prior
-permission.
-
-THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, 
-INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
-FITNESS.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
-OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE. 
-
 *****************************************************************************************
 
 Spring Python has incorporated the "decorator" library written by Michele Simionato
@@ -82,4 +53,78 @@ TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 
+*****************************************************************************************
+Spring Python includes software developed by Fourthought, Inc. (http://www.fourthought.com).
 
+License and copyright info for 4Suite software License and copyright info for 4Suite
+software Mike Olson Fourthought, Inc. Uche Ogbuji Fourthought, Inc. License and copyright
+info for 4Suite software 1.1 2002-01-21 MO Initial version in post-0.11.1 codebase 1.4
+2005-03-03 MB Converted source to Simplified DocBook XML 1.0 4Suite copyright license
+4Suite software copyright The copyright on 4Suite as a whole is owned by Fourthought,
+Inc. (USA). Copyright on the components of 4Suite is indicated in the source code; most
+files have their own notice of copyright and ownership, and a CVS datestamp to clarify
+the actual date of authorship or last revision/publication. For purposes of usage and
+redistribution, the following Apache-based license applies.
+
+The 4Suite License, Version 1.1
+Copyright (c) 2000 Fourthought, Inc.. All rights reserved.
+
+Redistribution and use in source
+and binary forms, with or without modification, are permitted provided that the following
+conditions are met: Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer. Redistributions in binary form must
+reproduce the above copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the distribution. The end-user
+documentation included with the redistribution, if any, must include the following
+acknowledgment: "This product includes software developed by Fourthought, Inc.
+(http://www.fourthought.com)." Alternately, this acknowledgment may appear in the software
+itself, if and wherever such third-party acknowledgments normally appear. The names "4Suite",
+"4Suite Server" and "Fourthought" must not be used to endorse or promote products derived from
+this software without prior written permission. For written permission, please contact
+info@fourthought.com. Products derived from this software may not be called "4Suite",
+nor may "4Suite" appear in their name, without prior written permission of Fourthought,
+Inc.
+
+THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT
+NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL FOURTHOGHT, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+====================================================================
+This license is based on the Apache Software License, Version 1.1,
+Copyright (c) 2000 The Apache Software Foundation. All rights reserved. 
+
+*****************************************************************************************
+Spring Python includes software developed by Uche Ogbuji (http://uche.ogbuji.net).
+
+Redistribution and use in source and binary forms, with or without modification, are permitted
+provided that the following conditions are met:
+
+   1. Redistributions of source code must retain the above copyright notice, this list of
+      conditions and the following disclaimer.
+   2. Redistributions in binary form must reproduce the above copyright notice, this list of
+      conditions and the following disclaimer in the documentation and/or other materials provided
+      with the distribution.
+   3. The end-user documentation included with the redistribution, if any, must include the
+      following acknowledgment: "This product includes software developed by Uche Ogbuji
+      (http://uche.ogbuji.net)." Alternately, this acknowledgment may appear in the software
+      itself, if and wherever such third-party acknowledgments normally appear.
+   4. The names "Amara" and "Uche Ogbuji" must not be used to endorse or promote products derived
+      from this software without prior written permission of Uche Ogbuji (uche@ogbuji.net).
+   5. Products derived from this software may not be called "Amara", nor may "Amara" appear in
+      their name, without prior written permission of Uche Ogbuji (uche.ogbuji@gmail.com).
+
+THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL FOURTHOGHT, INC. OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+====================================================================
+This license is based on the Apache Software License, Version 1.1,
+Copyright (c) 2000 The Apache Software Foundation. All rights reserved.

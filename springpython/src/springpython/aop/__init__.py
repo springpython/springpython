@@ -12,14 +12,11 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.       
- 
-   NOTE: This module contains parts of PyContainer written by Rafal Sniezynski.
-   They have been adapted to work outside the container.
 """
 import logging
 import re
 import types
-from springpython.context.pycontainer import utils
+from springpython.aop import utils
 
 class Pointcut(object):
     """Interface defining where to apply an aspect."""
@@ -164,7 +161,7 @@ class FinalInterceptor(MethodInterceptor):
         return getattr(invocation.instance, invocation.method_name)(*invocation.args, **invocation.kwargs)
 
 class AopProxy(object):
-    """AopProxy acts like the target component by dispatching all method calls to the target through a MethodInvocation.
+    """AopProxy acts like the target object by dispatching all method calls to the target through a MethodInvocation.
     The MethodInvocation object actually deals with potential "around" advice, referred to as interceptors. Attribute
     lookups are not intercepted, but instead fetched from the actual target object."""
     
@@ -200,7 +197,7 @@ class AopProxy(object):
         
 class ProxyFactory(object):
     """This object helps to build AopProxy objects programmatically. It allows configuring advice and target objects.
-    Then it will produce an AopProxy when needed. To use similar behavior in an IoC environment, see ProxyFactoryComponent."""
+    Then it will produce an AopProxy when needed. To use similar behavior in an IoC environment, see ProxyFactoryObject."""
     
     def __init__(self, target = None, interceptors = None):
         self.logger = logging.getLogger("springpython.aop.ProxyFactory")
@@ -214,7 +211,7 @@ class ProxyFactory(object):
 
     def getProxy(self):
         """Generate an AopProxy given the current target and list of interceptors. Any changes to the factory after
-        proxy creation do NOT propogate to the proxies."""
+        proxy creation do NOT propagate to the proxies."""
         return AopProxy(self.target, self.interceptors)
     
     def __setattr__(self, name, value):
@@ -223,12 +220,12 @@ class ProxyFactory(object):
         else:
             self.__dict__[name] = value
 
-class ProxyFactoryComponent(ProxyFactory, AopProxy):
+class ProxyFactoryObject(ProxyFactory, AopProxy):
     """This class acts as both a ProxyFactory to build and an AopProxy. It makes itself look like the target object.
     Any changes to the target and list of interceptors is immediately seen when using this as a proxy."""
     def __init__(self, target = None, interceptors = None):
         ProxyFactory.__init__(self, target, interceptors)
-        self.logger = logging.getLogger("springpython.aop.ProxyFactoryComponent")
+        self.logger = logging.getLogger("springpython.aop.ProxyFactoryObject")
         
     def __str__(self):
         return self.__getattr__("__str__")()

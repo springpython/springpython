@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+       		
+	<object id="MovieLister" class="springpythontest.support.testSupportClasses.MovieLister" scope="prototype">
+		<property name="finder" ref="MovieFinder"/>
+		<property name="description"><ref object="SingletonString"/></property> 
+	</object>
+	
+	<object id="MovieFinder" class="springpythontest.support.testSupportClasses.ColonMovieFinder" scope="singleton">
+		<property name="filename"><value>support/movies1.txt</value></property>
+	</object>
+	
+	<object id="SingletonString" class="springpythontest.support.testSupportClasses.StringHolder">
+		<property name="str" value="There should only be one copy of this string"></property>
+	</object>
+	
+	<object id="MovieLister2" class="springpythontest.support.testSupportClasses.MovieLister">
+		<property name="finder">
+			<object class="springpythontest.support.testSupportClasses.ColonMovieFinder">
+				<property name="filename"><value>support/movies1.txt</value></property>
+			</object>
+		</property>
+		<property name="description"><ref object="SingletonString"/></property>
+	</object>
+
+	<object id="MovieLister3" class="springpythontest.support.testSupportClasses.MovieLister">
+		<property name="finder">
+			<object id="named" class="springpythontest.support.testSupportClasses.ColonMovieFinder">
+				<property name="filename"><value>support/movies1.txt</value></property>
+			</object>
+		</property>
+		<property name="description"><ref object="SingletonString"/></property>
+	</object>
+	
+	<object id="ValueHolder" class="springpythontest.support.testSupportClasses.ValueHolder">
+		<constructor-arg><ref object="SingletonString"/></constructor-arg>
+		<property name="some_dict">
+			<dict>
+				<entry><key><value>Hello</value></key><value>World</value></entry>
+				<entry><key><value>Spring</value></key><value>Python</value></entry>
+				<entry><key><value>holder</value></key><ref object="SingletonString"/></entry>
+				<entry><key><value>another copy</value></key><ref object="SingletonString"/></entry>
+			</dict>
+		</property>
+		<property name="some_list">
+			<list>
+				<value>Hello, world!</value>
+				<ref object="SingletonString"/>
+				<value>Spring Python</value>
+			</list>
+		</property>
+		<property name="some_props">
+			<props>
+				<prop key="administrator">administrator@example.org</prop>
+				<prop key="support">support@example.org</prop>
+				<prop key="development">development@example.org</prop>
+			</props>
+        </property>
+        <property name="some_set">
+        	<set>
+				<value>Hello, world!</value>
+				<ref object="SingletonString"/>
+				<value>Spring Python</value>
+        	</set>
+        </property>
+        <property name="some_frozen_set">
+        	<frozenset>
+				<value>Hello, world!</value>
+				<ref object="SingletonString"/>
+				<value>Spring Python</value>
+        	</frozenset>
+        </property>
+        <property name="some_tuple">
+        	<tuple>
+				<value>Hello, world!</value>
+				<ref object="SingletonString"/>
+				<value>Spring Python</value>
+        	</tuple>
+        </property>        
+	</object>
+
+	<object id="AnotherSingletonString" class="springpythontest.support.testSupportClasses.StringHolder">
+		<constructor-arg value="attributed value"/>
+	</object>
+
+	<object id="AThirdSingletonString" class="springpythontest.support.testSupportClasses.StringHolder">
+		<constructor-arg><value>elemental value</value></constructor-arg>
+	</object>
+
+	<object id="MultiValueHolder" class="springpythontest.support.testSupportClasses.MultiValueHolder">
+		<constructor-arg name="a"><value>alt a</value></constructor-arg>
+		<constructor-arg name="b" value="alt b"/>
+	</object>
+	
+	<object id="MultiValueHolder2" class="springpythontest.support.testSupportClasses.MultiValueHolder">
+		<constructor-arg name="c"><value>alt c</value></constructor-arg>
+		<constructor-arg name="b" value="alt b"/>
+	</object>
+				
+</objects>

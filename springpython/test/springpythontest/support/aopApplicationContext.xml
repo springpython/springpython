@@ -1,64 +1,89 @@
-<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
 
-	<component id="wrappingInterceptor" class="springpythontest.support.testSupportClasses.WrappingInterceptor"/>
+	<object id="wrappingInterceptor" class="springpythontest.support.testSupportClasses.WrappingInterceptor"/>
 
-	<component id="beginEndInterceptor" class="springpythontest.support.testSupportClasses.BeforeAndAfterInterceptor"/>
+	<object id="beginEndInterceptor" class="springpythontest.support.testSupportClasses.BeforeAndAfterInterceptor"/>
 
-	<component id="pointcutTest1" class="springpython.aop.RegexpMethodPointcutAdvisor">
-		<property name="advice" local="wrappingInterceptor"/>
-		<property name="patterns">[".*do.*"]</property>
-	</component>
+	<object id="pointcutTest1" class="springpython.aop.RegexpMethodPointcutAdvisor">
+		<property name="advice" ref="wrappingInterceptor"/>
+		<property name="patterns">
+			<list>
+				<value>.*do.*</value>
+			</list>
+		</property>
+	</object>
 
-	<component id="pointcutTest2" class="springpython.aop.RegexpMethodPointcutAdvisor">
+	<object id="pointcutTest2" class="springpython.aop.RegexpMethodPointcutAdvisor">
 		<property name="advice">
-			<list local="beginEndInterceptor"/>
-			<list local="wrappingInterceptor"/>
+			<list>
+				<ref object="beginEndInterceptor"/>
+				<ref object="wrappingInterceptor"/>
+			</list>
 		</property>
-		<property name="patterns">[".*do.*"]</property>
-	</component>
+		<property name="patterns">
+			<list>
+				<value>.*do.*</value>
+			</list>
+		</property>
+	</object>
 
-	<component id="targetService1" class="springpythontest.support.testSupportClasses.SampleService"/>
+	<object id="targetService1" class="springpythontest.support.testSupportClasses.SampleService"/>
 
-	<component id="sampleService1" class="springpython.aop.ProxyFactoryComponent">
-		<property name="target" local="targetService1"/>
+	<object id="sampleService1" class="springpython.aop.ProxyFactoryObject">
+		<property name="target" ref="targetService1"/>
 		<property name="interceptors">
-			<list local="pointcutTest1"/>
+			<list>
+				<ref object="pointcutTest1"/>
+			</list>
 		</property>
-	</component>
+	</object>
 
-	<component id="targetService2" class="springpythontest.support.testSupportClasses.SampleService"/>
+	<object id="targetService2" class="springpythontest.support.testSupportClasses.SampleService"/>
 
-	<component id="sampleService2" class="springpython.aop.ProxyFactoryComponent">
-		<property name="target" local="targetService2"/>
+	<object id="sampleService2" class="springpython.aop.ProxyFactoryObject">
+		<property name="target" ref="targetService2"/>
 		<property name="interceptors">
-			<list local="pointcutTest2"/>
+			<list>
+				<ref object="pointcutTest2"/>
+			</list>
 		</property>
-	</component>
+	</object>
 
-	<component id="sampleService3" class="springpythontest.support.testSupportClasses.SampleService"/>
+	<object id="sampleService3" class="springpythontest.support.testSupportClasses.SampleService"/>
 
-	<component id="factory" class="springpython.aop.ProxyFactory">
-		<property name="target" local="sampleService3"/>
+	<object id="factory" class="springpython.aop.ProxyFactory">
+		<property name="target" ref="sampleService3"/>
 		<property name="interceptors">
-			<list local="wrappingInterceptor"/>
+			<list>
+				<ref object="wrappingInterceptor"/>
+			</list>
 		</property>
-	</component>
+	</object>
 
-	<component id="targetService4" class="springpythontest.support.testSupportClasses.SampleService"/>
+	<object id="targetService4" class="springpythontest.support.testSupportClasses.SampleService"/>
 
-	<component id="sampleService4" class="springpython.aop.ProxyFactoryComponent">
-		<property name="target" local="targetService4"/>
+	<object id="sampleService4" class="springpython.aop.ProxyFactoryObject">
+		<property name="target" ref="targetService4"/>
 		<property name="interceptors">
-			<list local="wrappingInterceptor"/>
+			<list>
+				<ref object="wrappingInterceptor"/>
+			</list>
 		</property>
-	</component>
+	</object>
 
-	<component id="sampleService5" class="springpython.aop.ProxyFactoryComponent">
-		<property name="target">"springpythontest.support.testSupportClasses.SampleService"</property>
+	<object id="sampleService5" class="springpython.aop.ProxyFactoryObject">
+		<property name="target">
+			<value>springpythontest.support.testSupportClasses.SampleService</value>
+		</property>
 		<property name="interceptors">
-			<list local="wrappingInterceptor"/>
+			<list>
+				<ref object="wrappingInterceptor"/>
+			</list>
 		</property>
-	</component>
+	</object>
 
-</components>
+</objects>

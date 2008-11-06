@@ -17,8 +17,8 @@
 import logging
 import controller
 import view
-from springpython.context import DecoratorBasedApplicationContext
-from springpython.context import component
+from springpython.config import PythonConfig
+from springpython.config import Object
 from springpython.database import factory
 from springpython.remoting.pyro import PyroProxyFactory
 from springpython.remoting.pyro import PyroServiceExporter
@@ -42,16 +42,16 @@ from springpython.security.web import MiddlewareFilter
 from springpython.security.web import RedirectStrategy
 from springpython.security.web import SimpleAccessDeniedHandler
 
-class PetClinicClientAndServer(DecoratorBasedApplicationContext):
+class PetClinicClientAndServer(PythonConfig):
     """
     This is a non-XML, decorator based IoC container definition which includes
-    both the client and server components, all in one place. This is meant to demonstrate
-    a bundled set of components, running on the same machine.
+    both the client and server objects, all in one place. This is meant to demonstrate
+    a bundled set of objects, running on the same machine.
     """
     def __init__(self):
-        DecoratorBasedApplicationContext.__init__(self)
+        super(PetClinicClientAndServer, self).__init__()
         
-    @component
+    @Object
     def connectionFactory(self):
         connFactory = factory.MySQLConnectionFactory()
         connFactory.username = "springpython"
@@ -60,78 +60,78 @@ class PetClinicClientAndServer(DecoratorBasedApplicationContext):
         connFactory.db = "petclinic"
         return connFactory
     
-    @component
+    @Object
     def controller(self):
         return controller.PetClinicController(self.connectionFactory())   
     
-    @component
+    @Object
     def root(self):
         return view.PetClinicView(self.controller())    
     
-    @component
+    @Object
     def userDetailsService(self):
         return DatabaseUserDetailsService(self.connectionFactory())    
     
-    @component
+    @Object
     def userDetailsService2(self):
         userDetailsService = InMemoryUserDetailsService()
         userDetailsService.user_dict = {"jcarter": ("password6", ["VET_ANY"], True)}
         return userDetailsService
 
-    @component
+    @Object
     def userDetailsService3(self):
         userDetailsService = InMemoryUserDetailsService()
         userDetailsService.user_dict = {"jcoleman": ("password5", ["CUSTOMER_ANY"], True)}
         return userDetailsService
 
-    @component
+    @Object
     def plainEncoder(self):
         return PlaintextPasswordEncoder()
 
-    @component
+    @Object
     def md5Encoder(self):
         return Md5PasswordEncoder()
 
-    @component
+    @Object
     def shaEncoder(self):
         return ShaPasswordEncoder()
 
-    @component
+    @Object
     def md5UserDetailsService(self):
         userDetailsService = controller.PreencodingUserDetailsService()
         userDetailsService.wrappedUserDetailsService = self.userDetailsService2()
         userDetailsService.encoder = self.md5Encoder()
         return userDetailsService
 
-    @component
+    @Object
     def shaUserDetailsService(self):
         userDetailsService = controller.PreencodingUserDetailsService()
         userDetailsService.wrappedUserDetailsService = self.userDetailsService3()
         userDetailsService.encoder = self.shaEncoder()
         return userDetailsService
 
-    @component
+    @Object
     def plainAuthenticationProvider(self):
         provider = DaoAuthenticationProvider()
         provider.user_details_service = self.userDetailsService()
         provider.password_encoder = self.plainEncoder()
         return provider   
 
-    @component
+    @Object
     def md5AuthenticationProvider(self):
         provider = DaoAuthenticationProvider()
         provider.user_details_service = self.md5UserDetailsService()
         provider.password_encoder = self.md5Encoder()
         return provider
 
-    @component
+    @Object
     def shaAuthenticationProvider(self):
         provider = DaoAuthenticationProvider()
         provider.user_details_service = self.shaUserDetailsService()
         provider.password_encoder = self.shaEncoder()
         return provider
 
-    @component
+    @Object
     def authenticationManager(self):
         authManager = AuthenticationManager()
         authManager.auth_providers = []
@@ -140,19 +140,19 @@ class PetClinicClientAndServer(DecoratorBasedApplicationContext):
         authManager.auth_providers.append(self.shaAuthenticationProvider())
         return authManager
 
-    @component
+    @Object
     def vetRoleVoter(self):
         return RoleVoter(role_prefix = "VET")
 
-    @component
+    @Object
     def customerRoleVoter(self):
         return RoleVoter(role_prefix = "CUSTOMER")
 
-    @component
+    @Object
     def ownerVoter(self):
         return controller.OwnerVoter(controller = self.controller())
 
-    @component
+    @Object
     def accessDecisionManager(self):
         adm = AffirmativeBased()
         adm.allow_if_all_abstain = False
@@ -162,28 +162,28 @@ class PetClinicClientAndServer(DecoratorBasedApplicationContext):
         adm.access_decision_voters.append(self.ownerVoter())
         return adm
     
-    @component
+    @Object
     def cherrypySessionStrategy(self):
         return CherryPySessionStrategy()
 
-    @component
+    @Object
     def redirectStrategy(self):
         return RedirectStrategy()
     
-    @component
+    @Object
     def httpContextFilter(self):
         filter = HttpSessionContextIntegrationFilter()
         filter.sessionStrategy = self.cherrypySessionStrategy()
         return filter
     
-    @component
+    @Object
     def authenticationProcessingFilter(self):
         filter = AuthenticationProcessingFilter()
         filter.auth_manager = self.authenticationManager()
         filter.alwaysReauthenticate = False
         return filter
 
-    @component
+    @Object
     def filterSecurityInterceptor(self):
         filter = FilterSecurityInterceptor()
         filter.auth_manager = self.authenticationManager()
@@ -196,35 +196,35 @@ class PetClinicClientAndServer(DecoratorBasedApplicationContext):
                                          ]
         return filter
 
-    @component
+    @Object
     def exceptionFilter(self):
         filter = MiddlewareFilter()
         filter.clazz = "paste.evalexception.middleware.EvalException"
         filter.appAttribute = "application"
         return filter 
     
-    @component
+    @Object
     def authenticationProcessingFilterEntryPoint(self):
         filter = AuthenticationProcessingFilterEntryPoint()
         filter.loginFormUrl = "/login"
         filter.redirectStrategy = self.redirectStrategy()
         return filter
         
-    @component
+    @Object
     def accessDeniedHandler(self):
         handler = SimpleAccessDeniedHandler()
         handler.errorPage = "/accessDenied"
         handler.redirectStrategy = self.redirectStrategy()
         return handler
         
-    @component
+    @Object
     def exceptionTranslationFilter(self):
         filter = ExceptionTranslationFilter()
         filter.authenticationEntryPoint = self.authenticationProcessingFilterEntryPoint()
         filter.accessDeniedHandler = self.accessDeniedHandler()
         return filter
     
-    @component
+    @Object
     def filterChainProxy(self):
         return FilterChainProxy(filterInvocationDefinitionSource = 
             [
@@ -238,7 +238,7 @@ class PetClinicClientAndServer(DecoratorBasedApplicationContext):
                            self.filterSecurityInterceptor()])
             ])
 
-    @component
+    @Object
     def loginForm(self):
         loginForm = view.CherryPyAuthenticationForm()
         loginForm.filter = self.authenticationProcessingFilter()
@@ -249,16 +249,16 @@ class PetClinicClientAndServer(DecoratorBasedApplicationContext):
         loginForm.redirectStrategy = self.redirectStrategy()
         return loginForm
 
-class PetClinicServerOnly(DecoratorBasedApplicationContext):
+class PetClinicServerOnly(PythonConfig):
     """
     This is a non-XML, decorator based IoC container definition which includes
-    both the server components. This demonstrates splitting up client and server
-    components to run on different machines.
+    both the server objects. This demonstrates splitting up client and server
+    objects to run on different machines.
     """
     def __init__(self):
-        DecoratorBasedApplicationContext.__init__(self)
+        super(PetClinicServerOnly, self).__init__()
 
-    @component
+    @Object
     def connectionFactory(self):
         connFactory = factory.MySQLConnectionFactory()
         connFactory.username = "springpython"
@@ -267,123 +267,123 @@ class PetClinicServerOnly(DecoratorBasedApplicationContext):
         connFactory.db = "petclinic"
         return connFactory
     
-    @component
+    @Object
     def remoteController(self):
         remoteController = controller.PetClinicController()
         remoteController.connection_factory = self.connectionFactory()
         return remoteController
     
-    @component
+    @Object
     def controllerExporter(self):
         exporter = PyroServiceExporter()
         exporter.service_name = "Controller"
         exporter.service = self.remoteController()
         return exporter
     
-    @component
+    @Object
     def remoteUserDetailsService(self):
         userDetailsService = DatabaseUserDetailsService()
         userDetailsService.dataSource = self.connectionFactory()
         return userDetailsService
 
-    @component
+    @Object
     def userDetailsServiceExporter(self):
         exporter = PyroServiceExporter()
         exporter.service_name = "UserDetails"
         exporter.service = self.remoteUserDetailsService()
         return exporter
 
-class PetClinicClientOnly(DecoratorBasedApplicationContext):
+class PetClinicClientOnly(PythonConfig):
     """
     This is a non-XML, decorator based IoC container definition which includes
-    both the server components. This demonstrates splitting up client and server
-    components to run on different machines.
+    both the server objects. This demonstrates splitting up client and server
+    objects to run on different machines.
     """
     def __init__(self):
-        DecoratorBasedApplicationContext.__init__(self)
+        super(PetClinicClientOnly, self).__init__()
 
-    @component
+    @Object
     def controller(self):
         proxy = PyroProxyFactory()
         proxy.service_url = "PYROLOC://localhost:7766/Controller"
         return proxy
         
-    @component
+    @Object
     def view(self):
         petClientView = view.PetClinicView()
         petClientView.controller = self.controller()
         return petClientView
 
-    @component
+    @Object
     def root(self):
         return view.PetClinicView(self.controller())    
 
-    @component
+    @Object
     def userDetailsService(self):
         userDetailsService = PyroProxyFactory()
         userDetailsService.service_url = "PYROLOC://localhost:7766/UserDetails"
         return userDetailsService
     
-    @component
+    @Object
     def userDetailsService2(self):
         userDetailsService = InMemoryUserDetailsService()
         userDetailsService.user_dict = {"jcarter": ("password6", ["VET_ANY"], True)}
         return userDetailsService
 
-    @component
+    @Object
     def userDetailsService3(self):
         userDetailsService = InMemoryUserDetailsService()
         userDetailsService.user_dict = {"jcoleman": ("password5", ["CUSTOMER_ANY"], True)}
         return userDetailsService
     
-    @component
+    @Object
     def md5Encoder(self):
         return Md5PasswordEncoder()
 
-    @component
+    @Object
     def shaEncoder(self):
         return ShaPasswordEncoder()
 
-    @component
+    @Object
     def md5UserDetailsService(self):
         userDetailsService = controller.PreencodingUserDetailsService()
         userDetailsService.wrappedUserDetailsService = self.userDetailsService2()
         userDetailsService.encoder = self.md5Encoder()
         return userDetailsService    
 
-    @component
+    @Object
     def shaUserDetailsService(self):
         userDetailsService = controller.PreencodingUserDetailsService()
         userDetailsService.wrappedUserDetailsService = self.userDetailsService3()
         userDetailsService.encoder = self.shaEncoder()
         return userDetailsService
 
-    @component
+    @Object
     def plainEncoder(self):
         return PlaintextPasswordEncoder()
 
-    @component
+    @Object
     def plainAuthenticationProvider(self):
         provider = DaoAuthenticationProvider()
         provider.user_details_service = self.userDetailsService()
         provider.password_encoder = self.plainEncoder()
         return provider
 
-    @component
+    @Object
     def md5AuthenticationProvider(self):
         provider = DaoAuthenticationProvider()
         provider.user_details_service = self.md5UserDetailsService()
         provider.password_encoder = self.md5Encoder()
         return provider
 
-    @component
+    @Object
     def shaAuthenticationProvider(self):
         provider = DaoAuthenticationProvider()
         provider.user_details_service = self.shaUserDetailsService()
         provider.password_encoder = self.shaEncoder()
         return provider
 
-    @component
+    @Object
     def authenticationManager(self):
         provider = AuthenticationManager()
         provider.auth_providers = []
@@ -392,19 +392,19 @@ class PetClinicClientOnly(DecoratorBasedApplicationContext):
         provider.auth_providers.append(self.shaAuthenticationProvider())
         return provider
 
-    @component
+    @Object
     def vetRoleVoter(self):
         return RoleVoter(role_prefix = "VET")
 
-    @component
+    @Object
     def customerRoleVoter(self):
         return RoleVoter(role_prefix = "CUSTOMER")
 
-    @component
+    @Object
     def ownerVoter(self):
         return controller.OwnerVoter(controller = self.controller())
 
-    @component
+    @Object
     def accessDecisionManager(self):
         adm = AffirmativeBased()
         adm.allow_if_all_abstain_decisions = False
@@ -414,28 +414,28 @@ class PetClinicClientOnly(DecoratorBasedApplicationContext):
         adm.access_decision_voters.append(self.ownerVoter())
         return adm
     
-    @component
+    @Object
     def cherrypySessionStrategy(self):
         return CherryPySessionStrategy()
 
-    @component
+    @Object
     def redirectStrategy(self):
         return RedirectStrategy()
     
-    @component
+    @Object
     def httpContextFilter(self):
         filter = HttpSessionContextIntegrationFilter()
         filter.sessionStrategy = self.cherrypySessionStrategy()
         return filter
     
-    @component
+    @Object
     def authenticationProcessingFilter(self):
         filter = AuthenticationProcessingFilter()
         filter.auth_manager = self.authenticationManager()
         filter.alwaysReauthenticate = False
         return filter
 
-    @component
+    @Object
     def filterSecurityInterceptor(self):
         filter = FilterSecurityInterceptor()
         filter.validate_config_attributes = False
@@ -447,35 +447,35 @@ class PetClinicClientOnly(DecoratorBasedApplicationContext):
                                          ("/.*", ["VET_ANY", "CUSTOMER_ANY"])]
         return filter
 
-    @component
+    @Object
     def exceptionFilter(self):
         filter = MiddlewareFilter()
         filter.clazz = "paste.evalexception.middleware.EvalException"
         filter.appAttribute = "application"
         return filter
     
-    @component
+    @Object
     def authenticationProcessingFilterEntryPoint(self):
         filter = AuthenticationProcessingFilterEntryPoint()
         filter.loginFormUrl = "/login"
         filter.redirectStrategy = self.redirectStrategy()
         return filter
     
-    @component
+    @Object
     def accessDeniedHandler(self):
         filter = SimpleAccessDeniedHandler()
         filter.errorPage = "/accessDenied"
         filter.redirectStrategy = self.redirectStrategy()
         return filter
         
-    @component
+    @Object
     def exceptionTranslationFilter(self):
         filter = ExceptionTranslationFilter()
         filter.authenticationEntryPoint = self.authenticationProcessingFilterEntryPoint()
         filter.accessDeniedHandler = self.accessDeniedHandler()
         return filter
     
-    @component
+    @Object
     def filterChainProxy(self):
         return FilterChainProxy(filterInvocationDefinitionSource = 
             [
@@ -489,7 +489,7 @@ class PetClinicClientOnly(DecoratorBasedApplicationContext):
                            self.filterSecurityInterceptor()])
             ])
 
-    @component
+    @Object
     def loginForm(self):
         loginForm = view.CherryPyAuthenticationForm()
         loginForm.filter = self.authenticationProcessingFilter()

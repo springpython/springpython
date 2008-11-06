@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+
+	<object id="user_details_service" class="springpython.security.userdetails.InMemoryUserDetailsService">
+		<property name="user_dict">
+			<dict>
+				<entry>
+					<key><value>basichiblueuser</value></key>
+					<value><tuple>
+						<value>password1</value>
+						<list><value>ROLE_BASIC</value><value>ASSIGNED_BLUE</value><value>LEVEL_HI</value></list>
+						<value>True</value>
+					</tuple></value>
+				</entry>
+				<entry>
+					<key><value>basichiorangeuser</value></key>
+					<value><tuple>
+						<value>password2</value>
+						<list><value>ROLE_BASIC</value><value>ASSIGNED_ORANGE</value><value>LEVEL_HI</value></list>
+						<value>True</value>
+					</tuple></value>
+				</entry>
+				<entry>
+					<key><value>otherhiblueuser</value></key>
+					<value><tuple>
+						<value>password3</value>
+						<list><value>ROLE_OTHER</value><value>ASSIGNED_BLUE</value><value>LEVEL_HI</value></list>
+						<value>True</value>
+					</tuple></value>
+				</entry>
+				<entry>
+					<key><value>otherhiorangeuser</value></key>
+					<value><tuple>
+						<value>password4</value>
+						<list><value>ROLE_OTHER</value><value>ASSIGNED_ORANGE</value><value>LEVEL_HI</value></list>
+						<value>True</value>
+					</tuple></value>
+				</entry>
+				<entry>
+					<key><value>basicloblueuser</value></key>
+					<value><tuple>
+						<value>password5</value>
+						<list><value>ROLE_BASIC</value><value>ASSIGNED_BLUE</value><value>LEVEL_LO</value></list>
+						<value>True</value>
+					</tuple></value>
+				</entry>
+				<entry>
+					<key><value>basicloorangeuser</value></key>
+					<value><tuple>
+						<value>password6</value>
+						<list><value>ROLE_BASIC</value><value>ASSIGNED_ORANGE</value><value>LEVEL_LO</value></list>
+						<value>True</value>
+					</tuple></value>
+				</entry>
+				<entry>
+					<key><value>otherloblueuser</value></key>
+					<value><tuple>
+						<value>password7</value>
+						<list><value>ROLE_OTHER</value><value>ASSIGNED_BLUE</value><value>LEVEL_LO</value></list>
+						<value>True</value>
+					</tuple></value>
+				</entry>
+				<entry>
+					<key><value>otherloorangeuser</value></key>
+					<value><tuple>
+						<value>password8</value>
+						<list><value>ROLE_OTHER</value><value>ASSIGNED_ORANGE</value><value>LEVEL_LO</value></list>
+						<value>True</value>
+					</tuple></value>
+				</entry>
+			</dict>
+		</property>
+	</object>
+
+	<object id="user_details_service2" class="springpython.security.userdetails.InMemoryUserDetailsService">
+		<property name="user_dict">
+			<list>
+				<value>Hello, world!</value>
+				<dict>
+					<entry>
+						<key><value>yes</value></key>
+						<value>This is working</value>
+					</entry>
+					<entry>
+						<key><value>no</value></key>
+						<value>Maybe it's not?</value>
+					</entry>
+				</dict>
+				<tuple>
+					<value>Hello, from Spring Python!</value>
+					<value>Spring Python</value>
+					<dict>
+						<entry>
+							<key><value>yes</value></key>
+							<value>This is working</value>
+						</entry>
+						<entry>
+							<key><value>no</value></key>
+							<value>Maybe it's not?</value>
+						</entry>
+					</dict>
+					<list>
+						<value>This is a list element inside a tuple.</value>
+						<value>And so is this :)</value>
+					</list>
+				</tuple>
+				<set>
+					<value>1</value>
+					<value>2</value>
+					<value>1</value>
+				</set>
+				<frozenset>
+					<value>a</value>
+					<value>b</value>
+					<value>a</value>
+				</frozenset>
+			</list>
+		</property>
+	</object>
+
+	<object id="user_details_service3" class="springpython.security.userdetails.InMemoryUserDetailsService">
+		<property name="user_dict">
+			<list>
+				<tuple>
+					<object class="springpython.security.userdetails.InMemoryUserDetailsService">
+						<property name="user_dict"><value>Test1</value></property>
+					</object>
+					<object class="springpython.security.userdetails.InMemoryUserDetailsService">
+						<property name="user_dict"><value>Test2</value></property>
+					</object>
+				</tuple>
+				<object class="springpython.security.userdetails.InMemoryUserDetailsService">
+					<property name="user_dict"><value>Test3</value></property>
+				</object>
+			</list>
+		</property>
+	</object>
+	
+</objects>

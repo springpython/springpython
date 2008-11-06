@@ -10,7 +10,7 @@
 		<itemizedlist>
 			<listitem>
 				<para>It uses <ulink url="http://www.cherrypy.org">CherryPy</ulink> as the
-				web server component.</para>
+				web server object.</para>
 			</listitem>
 			<listitem>
 				<para>A <ulink url="https://fisheye.springframework.org/browse/se-springpython-py/trunk/springpython/samples/petclinic/cherrypy/html/petclinic.html">
@@ -274,22 +274,10 @@ class DictionaryBot(ircbot.SingleServerIRCBot):
 				
 				<para>Well, after getting an IRC bot working that quickly, I want a nice
 				interface to see what it is up to. For that, I will use
-				<ulink url="https://springpython.webfactional.com">Spring Python</ulink>
+				<ulink url="http://springpython.webfactional.com">Spring Python</ulink>
 				and build a Spring-based web app.</para>
 
 <programlisting><![CDATA[
-class WSGIServerWithMiddleware(object):
-    """Server component needed to jumpstart a Spring Python/CherryPy web app."""
-    def __init__(self, middleware):
-        self.middleware = middleware
-    def __call__(self):
-        return CherryPyWSGIServer(("", 9001), self.middleware[0])
-
-class MiddlewareServer(Server):
-    """Server component needed to jumpstart a Spring Python/CherryPy web app."""
-    def start(self, middleware):
-        Server.start(self, initOnly=False, serverClass=WSGIServerWithMiddleware(middleware), blocking=False)
-
 def header():
     """Standard header used for all pages"""
     return """
@@ -322,7 +310,7 @@ def footer():
         <hr>
         <table style="width:100%"><tr>
                 <td><A href="/">Home</A></td>
-                <td style="text-align:right;color:silver">Coily :: a <a href="https://springpython.webfactional.com">Spring Python</a> IRC bot (powered by <A HREF="http://www.cherrypy.org">CherryPy</A>)</td>
+                <td style="text-align:right;color:silver">Coily :: a <a href="http://springpython.webfactional.com">Spring Python</a> IRC bot (powered by <A HREF="http://www.cherrypy.org">CherryPy</A>)</td>
         </tr></table>
         
         </body>
@@ -405,7 +393,7 @@ class CoilyView:
 				<title>Putting it all together</title>
 				
 				<para>Well, so far, I have two useful classes. However, they need to get
-				launched inside a script. This means components need to be instantiated.
+				launched inside a script. This means objects need to be instantiated.
 				To do this, I have decided to make this a Spring app and use
 				<ulink url="http://wikipedia.org/wiki/inversion of control">inversion of
 				control</ulink>.</para>
@@ -417,16 +405,16 @@ class CoilyView:
 					<title>IRC Bot's application context</title>
 					
 <programlisting><![CDATA[
-class CoilyIRCServer(DecoratorBasedApplicationContext):
+class CoilyIRCServer(PythonConfig):
     """This container represents the context of the IRC bot. It needs to export information, so the web app can get it."""
     def __init__(self):
-        DecoratorBasedApplicationContext.__init__(self)
+        super(CoilyIRCServer, self).__init__()
 
-    @component
+    @Object
     def remoteBot(self):
         return DictionaryBot([("irc.ubuntu.com", 6667)], "#springpython", ops=["Goldfisch"], nickname="coily", realname="Coily the Spring Python assistant", logfile="springpython.log")
 
-    @component
+    @Object
     def bot(self):
         exporter = PyroServiceExporter()
         exporter.service_name = "bot"
@@ -440,38 +428,23 @@ class CoilyIRCServer(DecoratorBasedApplicationContext):
 					<title>Web App's application context</title>
 					
 <programlisting><![CDATA[
-class CoilyWebClient(DecoratorBasedApplicationContext):
+class CoilyWebClient(PythonConfig):
     """
     This container represents the context of the web application used to interact with the bot and present a
     nice frontend to the user community about the channel and the bot.\
     """
     def __init__(self):
-        DecoratorBasedApplicationContext.__init__(self)
+        super(CoilyWebClient, self).__init__()
 
-    @component
+    @Object
     def root(self):
         return CoilyView(self.bot())
 
-    @component
+    @Object
     def bot(self):
         proxy = PyroProxyFactory()
         proxy.service_url = "PYROLOC://localhost:7766/bot"
         return proxy
-
-
-    @component
-    def exceptionFilter(self):
-        filter = MiddlewareFilter()
-        filter.clazz = "paste.evalexception.middleware.EvalException"
-        filter.appAttribute = "application"
-        return filter 
-
-    @component
-    def filterChainProxy(self):
-        return FilterChainProxy(filterInvocationDefinitionSource = 
-            [
-            ("/.*",       [self.exceptionFilter(), ])
-            ])
 ]]></programlisting>
 
 				</section>
@@ -490,8 +463,8 @@ class CoilyWebClient(DecoratorBasedApplicationContext):
 if __name__ == "__main__":
     # Parse some launching options.
     parser = OptionParser(usage="usage: %prog [-h|--help] [options]")
-    parser.add_option("-w", "--web", action="store_true", dest="web", default=False, help="Run the web server component.")
-    parser.add_option("-i", "--irc", action="store_true", dest="irc", default=False, help="Run the IRC-bot component.")
+    parser.add_option("-w", "--web", action="store_true", dest="web", default=False, help="Run the web server object.")
+    parser.add_option("-i", "--irc", action="store_true", dest="irc", default=False, help="Run the IRC-bot object.")
     parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False, help="Turn up logging level to DEBUG.")
     (options, args) = parser.parse_args()
 
@@ -500,12 +473,13 @@ if __name__ == "__main__":
         sys.exit(2)
 
     if not options.web and not options.irc:
-        print "You must specify one of the components to run."
+        print "You must specify one of the objects to run."
         sys.exit(2)
 
     if options.debug:
         logger = logging.getLogger("springpython")
-        logger.setLevel(logging.DEBUG)
+        loggingLevel = logging.DEBUG
+        logger.setLevel(loggingLevel)
         ch = logging.StreamHandler()
         ch.setLevel(loggingLevel)
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s") 
@@ -515,31 +489,29 @@ if __name__ == "__main__":
     if options.web:
         # This runs the web application context of the application. It allows a nice web-enabled view into
         # the channel and the bot that supports it.
-        applicationContext = CoilyWebClient()
-
-        cherrypy.root = applicationContext.get_component(componentId = "root")
-        cherrypy.server = MiddlewareServer()
+        applicationContext = ApplicationContext(CoilyWebClient())
 
         # Configure cherrypy programmatically.
-        cherrypy.config.update({
-                                "global": {"server.socket_port": 9001},
-                                "/": {"static_filter.root": os.getcwd()},
-                                "/images": {"static_filter.on": True, "static_filter.dir": "images"},
-                                "/html": {"static_filter.on": True, "static_filter.dir": "html"},
-                                "/styles": {"static_filter.on": True, "static_filter.dir": "css"},
-                                "/scripts": {"static_filter.on": True, "static_filter.dir": "js"}
-                            })
+        conf = {"/":                {"tools.staticdir.root": os.getcwd()},
+	            "/images":          {"tools.staticdir.on": True,
+	                                 "tools.staticdir.dir": "images"},
+	            "/html":            {"tools.staticdir.on": True,
+	                                 "tools.staticdir.dir": "html"},
+	            "/styles":          {"tools.staticdir.on": True,
+	                                 "tools.staticdir.dir": "css"}
+	            }
 
-        middleware = applicationContext.get_component(componentId = "filterChainProxy")
-        middleware.application = wsgiApp
-
-        # Start the CherryPy server.
-        cherrypy.server.start(middleware=[middleware])
+        cherrypy.config.update({'server.socket_port': 9001})
+	    
+        cherrypy.tree.mount(applicationContext.get_object(name = "root"), '/', config=conf)
+	
+        cherrypy.engine.start()
+        cherrypy.engine.block()
     
     if options.irc:
         # This runs the IRC bot that connects to a channel and then responds to various events.
-        applicationContext = CoilyIRCServer()
-        coily = applicationContext.bot()
+        applicationContext = ApplicationContext(CoilyIRCServer())
+        coily = applicationContext.get_object("bot")
         coily.service.start()
 ]]></programlisting>
 
@@ -595,8 +567,8 @@ ProxyPassReverse /coily/ http://localhost:9001/
 			<section id="samples-springbot-visit">
 				<title>Come and visit Coily</title>
 				
-				<para>If you haven't figured it out yet, I use this code to run my own bot, Coily.
-				You can visit him at <ulink url="https://scifi.homelinux.net/coily"/>.</para>
+				<para>If you haven't figured it out yet, I use this code to run my own bot, Coily. Unfortunately,
+				at this time, I don't have a mechanism to make it run persistently.</para>
 			</section>
 		</section>
 		

@@ -16,9 +16,10 @@ Introduction
   
 Key Features
 
-    * {{{reference/html/components.html}Inversion Of Control}} - The idea is to decouple two classes at	the
+    * {{{reference/html/objects.html}Inversion Of Control}} - The idea is to decouple two classes at the
     interface level. This lets you build many reusable parts in your software, and your whole application becomes
-    more pluggable. You can use either the XmlApplicationContext or the DecoratorBasedApplicationContext.	
+    more pluggable. You can XMLConfig, PythonConfig/@Object, PyContainerConfig, or SpringJavaConfig, allowing you
+    to read multiple formats.	
 
     * {{{reference/html/aop.html}Aspect-oriented Programming}} - Spring Python provides great ways to wrap advice
     around objects. It is utilized for remoting. Another use is for debug tracers and performance tracing.	
@@ -57,11 +58,14 @@ Downloads
 
 What's Coming?
 
-  We are working on improving the {{{reference/html/components.html}core IoC container}}. Right now, what we have
-  works for simple situations, but in order to make it as powerful and extensible as the original Spring Framework's container,
-  we are overhauling things. The goal is to have this completed by release 1.0.
+  We are working on creating a fluent DSL for configuring the IoC container. With a refactored core container
+  that already supports four formats, it shouldn't be hard to extend things and offer a useful, succinct
+  alternative. The import thing is that with Spring Python, you don't HAVE to get bogged down with XML.
 
 Spring Python News
+
+  <<NEWS>> - Spring Python's core IoC container has been refactored, and now support four formats! This includes
+  XMLConfig, PythonConfig/@Object, PyContainerConfig, and SpringJavaConfig. - 11/06/2008 G.Turnquist
 
   <<NEWS>> - Spring Python 0.7.1 has been released. This release contains improvements to reference documentation as well
   as integration with {{{http://s3browse.com/explore/dist.springframework.org/release/EXT/se-springpython-py}Spring's new

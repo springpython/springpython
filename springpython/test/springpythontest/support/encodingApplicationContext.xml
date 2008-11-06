@@ -1,38 +1,41 @@
-<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
 
-	<component id="plainEncoder" class="springpython.security.providers.encoding.PlaintextPasswordEncoder"/>
+	<object id="plainEncoder" class="springpython.security.providers.encoding.PlaintextPasswordEncoder"/>
 
-	<component id="md5Encoder" class="springpython.security.providers.encoding.Md5PasswordEncoder"/>
+	<object id="md5Encoder" class="springpython.security.providers.encoding.Md5PasswordEncoder"/>
 
-	<component id="shaEncoder" class="springpython.security.providers.encoding.ShaPasswordEncoder"/>
+	<object id="shaEncoder" class="springpython.security.providers.encoding.ShaPasswordEncoder"/>
 
-	<component id="systemWideSaltSource" class="springpython.security.providers.dao.SystemWideSaltSource"/>
+	<object id="systemWideSaltSource" class="springpython.security.providers.dao.SystemWideSaltSource"/>
 
-	<component id="systemWideSaltSource2" class="springpython.security.providers.dao.SystemWideSaltSource">
-		<property name="system_wide_salt">"SpringPython"</property>
-	</component>
+	<object id="systemWideSaltSource2" class="springpython.security.providers.dao.SystemWideSaltSource">
+		<property name="system_wide_salt" value="SpringPython"/>
+	</object>
 	
-	<component id="systemWideSaltSource3" class="springpython.security.providers.dao.SystemWideSaltSource">
-		<property name="system_wide_salt">"{This is invalid"</property>
-	</component>
+	<object id="systemWideSaltSource3" class="springpython.security.providers.dao.SystemWideSaltSource">
+		<property name="system_wide_salt" value="{This is invalid"/>
+	</object>
 	
-	<component id="systemWideSaltSource4" class="springpython.security.providers.dao.SystemWideSaltSource">
-		<property name="system_wide_salt">"This is invalid}"</property>
-	</component>
+	<object id="systemWideSaltSource4" class="springpython.security.providers.dao.SystemWideSaltSource">
+		<property name="system_wide_salt" value="This is invalid}"/>
+	</object>
 	
-	<component id="systemWideSaltSource5" class="springpython.security.providers.dao.SystemWideSaltSource">
-		<property name="system_wide_salt">"{This is invalid}"</property>
-	</component>
+	<object id="systemWideSaltSource5" class="springpython.security.providers.dao.SystemWideSaltSource">
+		<property name="system_wide_salt" value="{This is invalid}"/>
+	</object>
 	
-	<component id="reflectionSaltSource" class="springpython.security.providers.dao.ReflectionSaltSource">
-		<property name="user_prop_to_use">"getUserId"</property>
-	</component>
+	<object id="reflectionSaltSource" class="springpython.security.providers.dao.ReflectionSaltSource">
+		<property name="user_prop_to_use" value="getUserId"/>
+	</object>
 	
-	<component id="reflectionSaltSource2" class="springpython.security.providers.dao.ReflectionSaltSource">
-		<property name="user_prop_to_use">"noSuchMethod"</property>
-	</component>
+	<object id="reflectionSaltSource2" class="springpython.security.providers.dao.ReflectionSaltSource">
+		<property name="user_prop_to_use" value="noSuchMethod"/>
+	</object>
 	
-	<component id="reflectionSaltSource3" class="springpython.security.providers.dao.ReflectionSaltSource"/>
+	<object id="reflectionSaltSource3" class="springpython.security.providers.dao.ReflectionSaltSource"/>
 	
-</components>
+</objects>

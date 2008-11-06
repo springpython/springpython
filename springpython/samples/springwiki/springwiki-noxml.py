@@ -18,23 +18,11 @@ import cherrypy
 import logging
 import os
 import noxml
-from cherrypy._cpwsgi import wsgiApp
-from cherrypy._cpwsgiserver import CherryPyWSGIServer
-from cherrypy._cpserver import Server
-from springpython.context import XmlApplicationContext
+from springpython.config import PyContainerConfig
+from springpython.config import PythonConfig
+from springpython.context import ApplicationContext
 
 port = 8003
-
-class WSGIServerWithMiddleware(object):
-    def __init__(self, middleware):
-        self.middleware = middleware
-    def __call__(self):
-        global port
-        return CherryPyWSGIServer(("", port), self.middleware[0])
-
-class MiddlewareServer(Server):
-    def start(self, middleware):
-        Server.start(self, initOnly=False, serverClass=WSGIServerWithMiddleware(middleware))
 
 if __name__ == '__main__':
     """This allows the script to be run as a tiny webserver, allowing quick testing and development.
@@ -49,93 +37,40 @@ if __name__ == '__main__':
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    applicationContext = noxml.SpringWikiClientAndServer()
+    applicationContext = ApplicationContext(noxml.SpringWikiClientAndServer())
     
-    # CherryPy always starts with cherrypy.root when trying to map request URIs
-    # to objects. In this case, it is being assigned an object that was created in the
-    # IoC container, allowing the web server components to be totally decoupled from the
-    # view component.
-    cherrypy.root = applicationContext.get_component(componentId = "read")
-    
-    cherrypy.server = MiddlewareServer()
-
     # Use a configuration file for server-specific settings.
-    cherrypy.config.update({
-                            "global": {
-                                       "server.socket_port": port
-                            },
-                            "/": {
-                                  "static_filter.root": os.getcwd()
-                            },
-                            "/images": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "images"
-                            },
-                            "/html": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "html"
-                            },
-                            "/styles": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "css"
-                            },
-                            "/scripts": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "js"
-                            },
-                            "/edit/images": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "images"
-                            },
-                            "/edit/html": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "html"
-                            },
-                            "/edit/styles": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "css"
-                            },
-                            "/edit/scripts": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "js"
-                            },
-                            "/history/images": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "images"
-                            },
-                            "/history/html": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "html"
-                            },
-                            "/history/styles": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "css"
-                            },
-                            "/history/scripts": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "js"
-                            },
-                            "/delete/images": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "images"
-                            },
-                            "/delete/html": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "html"
-                            },
-                            "/delete/styles": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "css"
-                            },
-                            "/delete/scripts": {
-                                "static_filter.on": True,
-                                "static_filter.dir": "js"
-                            }
-                        })
+    conf = {"/":                {"tools.staticdir.root": os.getcwd()},
+            "/images":          {"tools.staticdir.on": True,
+                                 "tools.staticdir.dir": "images"},
+            "/html":            {"tools.staticdir.on": True,
+                                 "tools.staticdir.dir": "html"},
+            "/styles":          {"tools.staticdir.on": True,
+                                 "tools.staticdir.dir": "css"},
+            "/edit/images":     {"tools.staticdir.on": True,
+                                 "tools.staticdir.dir": "images"},
+            "/edit/html":       {"tools.staticdir.on": True,
+                                 "tools.staticdir.dir": "html"},
+            "/edit/styles":     {"tools.staticdir.on": True,
+                                 "tools.staticdir.dir": "css"},
+            "/history/images":  {"tools.staticdir.on": True,
+                                 "tools.staticdir.dir": "images"},
+            "/history/html":    {"tools.staticdir.on": True,
+                                 "tools.staticdir.dir": "html"},
+            "/history/styles":  {"tools.staticdir.on": True,
+                                 "tools.staticdir.dir": "css"},
+            "/delete/images":   {"tools.staticdir.on": True,
+                                 "tools.staticdir.dir": "images"},
+            "/delete/html":     {"tools.staticdir.on": True,
+                                 "tools.staticdir.dir": "html"},
+            "/delete/styles":   {"tools.staticdir.on": True,
+                                 "tools.staticdir.dir": "css"}
+            }
+
+    cherrypy.config.update({'server.socket_port': port})
     
-    middleware = applicationContext.get_component(componentId = "filterChainProxy")
-    middleware.application = wsgiApp
-    
-    # Start the CherryPy server.
-    cherrypy.server.start(middleware=[middleware])
+    cherrypy.tree.mount(applicationContext.get_object(name = "read"), '/', config=conf)
+
+    cherrypy.engine.start()
+    cherrypy.engine.block()
 

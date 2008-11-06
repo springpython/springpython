@@ -1,71 +1,101 @@
-<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
             
-    <component id="user_details_service" class="springpython.security.userdetails.InMemoryUserDetailsService">
+    <object id="user_details_service" class="springpython.security.userdetails.InMemoryUserDetailsService">
 	    <property name="user_dict">
-			{
-				"blueuser": ("password1", ["LABEL_BLUE"], True),
-				"superuser": ("password2", ["LABEL_SHARED"], True),
-				"orangeuser": ("password3", ["LABEL_ORANGE"], True),
-				"multiuser": ("password4", ["LABEL_BLUE", "LABEL_ORANGE"], True)
-			}
+	    	<dict>
+	    		<entry>
+	    			<key><value>blueuser</value></key>
+	    			<tuple><value>password1</value><list><value>LABEL_BLUE</value></list><value>True</value></tuple>
+	    		</entry>
+	    		<entry>
+	    			<key><value>superuser</value></key>
+	    			<tuple><value>password2</value><list><value>LABEL_SHARED</value></list><value>True</value></tuple>
+	    		</entry>
+	    		<entry>
+	    			<key><value>orangeuser</value></key>
+	    			<tuple><value>password3</value><list><value>LABEL_ORANGE</value></list><value>True</value></tuple>
+	    		</entry>
+	    		<entry>
+	    			<key><value>multiuser</value></key>
+	    			<tuple><value>password4</value><list><value>LABEL_BLUE</value><value>LABEL_ORANGE</value></list><value>True</value></tuple>
+	    		</entry>
+	    	</dict>
         </property>
-    </component>
+    </object>
 
-    <component id="auth_provider" class="springpython.security.providers.dao.DaoAuthenticationProvider">
-	    <property name="user_details_service" local="user_details_service"/>
-    </component>
+    <object id="auth_provider" class="springpython.security.providers.dao.DaoAuthenticationProvider">
+	    <property name="user_details_service" ref="user_details_service"/>
+    </object>
 
-    <component id="authenticationProvider" class="springpython.security.providers.AuthenticationManager">
+    <object id="authenticationProvider" class="springpython.security.providers.AuthenticationManager">
 	    <property name="auth_providers">
-		    <list local="auth_provider"/>
+	    	<list><ref object="auth_provider"/></list>
 	    </property>
-    </component>
+    </object>
 		
-	<component id="auth_manager" class="springpython.security.providers.AuthenticationManager">
-	  <property name="auth_providers">
-	    <list local="authenticationProvider"/>
+	<object id="auth_manager" class="springpython.security.providers.AuthenticationManager">
+		<property name="auth_providers">
+	  		<list><ref object="authenticationProvider"/></list>
 	  </property>
-	</component>
+	</object>
 	
-	<component id="labelBasedAclVoter" class="springpython.security.vote.LabelBasedAclVoter">
+	<object id="labelBasedAclVoter" class="springpython.security.vote.LabelBasedAclVoter">
 		<property name="label_dict">
-			{
-				"LABEL_BLUE": ["blue", "blue-orange"],
-				"LABEL_ORANGE": ["orange", "blue-orange"],
-				"LABEL_SHARED": ["blue", "orange", "blue-orange"]
-			}
+			<dict>
+				<entry>
+					<key><value>LABEL_BLUE</value></key>
+					<list><value>blue</value><value>blue-orange</value></list>
+				</entry>
+				<entry>
+					<key><value>LABEL_ORANGE</value></key>
+					<list><value>orange</value><value>blue-orange</value></list>
+				</entry>
+				<entry>
+					<key><value>LABEL_SHARED</value></key>
+					<list><value>blue</value><value>orange</value><value>blue-orange</value></list>
+				</entry>
+			</dict>
 		</property>
-		<property name="attr_indicating_labeled_op">"LABELED_OPERATION"</property>
-        <property name="allow_access_if_no_attr_labeled">False</property>
-	</component>        
+		<property name="attr_indicating_labeled_op" value="LABELED_OPERATION"/>
+        <property name="allow_access_if_no_attr_labeled"><value>False</value></property>
+	</object>        
 	
-	<component id="access_decision_mgr" class="springpython.security.vote.UnanimousBased">
-		<property name="allow_if_all_abstain">False</property>
+	<object id="access_decision_mgr" class="springpython.security.vote.UnanimousBased">
+		<property name="allow_if_all_abstain"><value>False</value></property>
 		<property name="access_decision_voters">
-			<list local="labelBasedAclVoter"/>
+			<list><ref object="labelBasedAclVoter"/></list>
 		</property>
-	</component>
+	</object>
 	
-	<component id="securityInteceptor" class="springpython.security.intercept.MethodSecurityInterceptor">
-	  <property name="validate_config_attributes">False</property>
-	  <property name="auth_manager" local="auth_manager"/>
-	  <property name="access_decision_mgr" local="access_decision_mgr"/>
+	<object id="securityInteceptor" class="springpython.security.intercept.MethodSecurityInterceptor">
+	  <property name="validate_config_attributes"><value>False</value></property>
+	  <property name="auth_manager" ref="auth_manager"/>
+	  <property name="access_decision_mgr" ref="access_decision_mgr"/>
 	  <property name="obj_def_source">
-	    	[
-				("springpythontest.support.testSecurityClasses.SampleService.get.*", []),
-				("springpythontest.support.testSecurityClasses.SampleService.do.*", ["LABELED_OPERATION"])
-	      	]
+	  	<list>
+	  		<tuple>
+	  			<value>springpythontest.support.testSecurityClasses.SampleService.get.*</value>
+	  			<list/>
+	  		</tuple>
+	  		<tuple>
+	  			<value>springpythontest.support.testSecurityClasses.SampleService.do.*</value>
+	  			<list><value>LABELED_OPERATION</value></list>
+	  		</tuple>
+	  	</list>
 	  </property>
-	</component>
+	</object>
 	
-	<component id="targetService" class="springpythontest.support.testSecurityClasses.SampleService"/>
+	<object id="targetService" class="springpythontest.support.testSecurityClasses.SampleService"/>
 
-	<component id="sampleService" class="springpython.aop.ProxyFactoryComponent">
-		<property name="target" local="targetService"/>
+	<object id="sampleService" class="springpython.aop.ProxyFactoryObject">
+		<property name="target" ref="targetService"/>
 		<property name="interceptors">
-			<list local="securityInteceptor"/>
+			<list><ref object="securityInteceptor"/></list>
 		</property>
-	</component>
+	</object>
 	
-</components>
+</objects>

@@ -14,7 +14,8 @@
    limitations under the License.       
 """
 import logging
-from springpython.context import XmlApplicationContext
+from springpython.config import PyContainerConfig
+from springpython.context import ApplicationContext
 
 if __name__ == '__main__':
 
@@ -27,4 +28,4 @@ if __name__ == '__main__':
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    applicationContext = XmlApplicationContext(configLocation = "applicationContext-server.xml")
+    applicationContext = ApplicationContext(PyContainerConfig(config_location = "applicationContext-server.xml"))

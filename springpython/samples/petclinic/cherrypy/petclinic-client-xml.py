@@ -18,7 +18,8 @@ import cherrypy
 import logging
 import os
 import noxml
-from springpython.context import XmlApplicationContext
+from springpython.config import PyContainerConfig
+from springpython.context import ApplicationContext
 from springpython.security.cherrypy31 import AuthenticationFilter, ContextSessionFilter, SecurityFilter
 from springpython.security.context import SecurityContextHolder
 
@@ -40,7 +41,7 @@ if __name__ == '__main__':
     # This sample loads the IoC container from an XML file. The XML-based application context
     # automatically resolves all dependencies and order of instantiation for you. 
 
-    applicationContext = XmlApplicationContext(configLocation = "applicationContext-client.xml")
+    applicationContext = ApplicationContext(PyContainerConfig(config_location = "applicationContext-client.xml"))
     
     SecurityContextHolder.setStrategy(SecurityContextHolder.MODE_GLOBAL)
     SecurityContextHolder.getContext()
@@ -64,8 +65,8 @@ if __name__ == '__main__':
         cherrypy.tools.securityFilter = cherrypy.Tool('before_handler', filter_chainer, priority=75)
         return securityFilter
     
-    manager = applicationContext.get_component("authenticationManager")
-    accessDecisionManager = applicationContext.get_component("accessDecisionManager")
+    manager = applicationContext.get_object("authenticationManager")
+    accessDecisionManager = applicationContext.get_object("accessDecisionManager")
     objectDefinitionSource = [
                              ("/vets.*", ["VET_ANY"]),
                              ("/editOwner.*", ["VET_ANY", "OWNER"]),
@@ -102,8 +103,8 @@ if __name__ == '__main__':
                     }
     }
 
-    cherrypy.tree.mount(applicationContext.get_component(componentId = "root"), '/', config=conf)
-    cherrypy.tree.mount(applicationContext.get_component(componentId = "loginForm"), '/login', config=login_conf)
+    cherrypy.tree.mount(applicationContext.get_object(name = "root"), '/', config=conf)
+    cherrypy.tree.mount(applicationContext.get_object(name = "loginForm"), '/login', config=login_conf)
 
     cherrypy.engine.start()
     cherrypy.engine.block()

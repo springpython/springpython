@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
+
+	<bean id="MovieLister" class="springpythontest.support.testSupportClasses.MovieLister" scope="prototype">
+		<property name="finder" ref="MovieFinder"/>
+		<property name="description"><ref bean="SingletonString"/></property>
+	</bean>
+	
+	<bean id="MovieFinder" class="springpythontest.support.testSupportClasses.ColonMovieFinder" scope="singleton">
+		<property name="filename"><value>support/movies1.txt</value></property>
+	</bean>
+	
+	<bean id="SingletonString" class="springpythontest.support.testSupportClasses.StringHolder">
+		<property name="str" value="There should only be one copy of this string"></property>
+	</bean>
+	
+	<bean id="MovieLister2" class="springpythontest.support.testSupportClasses.MovieLister">
+		<property name="finder">
+			<bean class="springpythontest.support.testSupportClasses.ColonMovieFinder">
+				<property name="filename"><value>support/movies1.txt</value></property>
+			</bean>
+		</property>
+		<property name="description"><ref bean="SingletonString"/></property>
+	</bean>
+
+	<bean id="MovieLister3" class="springpythontest.support.testSupportClasses.MovieLister">
+		<property name="finder">
+			<bean id="named" class="springpythontest.support.testSupportClasses.ColonMovieFinder">
+				<property name="filename"><value>support/movies1.txt</value></property>
+			</bean>
+		</property>
+		<property name="description"><ref bean="SingletonString"/></property>
+	</bean>
+	
+	<bean id="ValueHolder" class="springpythontest.support.testSupportClasses.ValueHolder">
+		<constructor-arg><ref bean="SingletonString"/></constructor-arg>
+		<property name="some_dict">
+			<map>
+				<entry><key><value>Hello</value></key><value>World</value></entry>
+				<entry><key><value>Spring</value></key><value>Python</value></entry>
+				<entry><key><value>holder</value></key><ref bean="SingletonString"/></entry>
+				<entry><key><value>another copy</value></key><ref bean="SingletonString"/></entry>
+			</map>
+		</property>
+		<property name="some_list">
+			<list>
+				<value>Hello, world!</value>
+				<ref bean="SingletonString"/>
+				<value>Spring Python</value>
+			</list>
+		</property>
+		<property name="some_props">
+			<props>
+				<prop key="administrator">administrator@example.org</prop>
+				<prop key="support">support@example.org</prop>
+				<prop key="development">development@example.org</prop>
+			</props>
+        </property>
+        <property name="some_set">
+        	<set>
+				<value>Hello, world!</value>
+				<ref bean="SingletonString"/>
+				<value>Spring Python</value>
+        	</set>
+        </property>	
+	</bean>
+
+	<bean id="AnotherSingletonString" class="springpythontest.support.testSupportClasses.StringHolder">
+		<constructor-arg value="attributed value"/>
+	</bean>
+
+	<bean id="AThirdSingletonString" class="springpythontest.support.testSupportClasses.StringHolder">
+		<constructor-arg ><value>elemental value</value></constructor-arg>
+	</bean>
+
+</beans>

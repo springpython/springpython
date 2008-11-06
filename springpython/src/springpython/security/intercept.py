@@ -135,7 +135,7 @@ class AbstractMethodDefinitionSource(ObjectDefinitionSource):
 
 class MethodDefinitionMap(AbstractMethodDefinitionSource):
     """
-    Stores an obj_def_source for each method signature defined in a component.
+    Stores an obj_def_source for each method signature defined in a object.
     
     Regular expressions are used to match a method request in a ConfigAttributeDefinition. The order of registering
     the regular expressions is very important. The system will identify the first matching regular expression for a given

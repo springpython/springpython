@@ -163,8 +163,8 @@ class Bank:
 ]]></programlisting>
 
 		<para>This needs to be wired together with a <classname>TransactionManager</classname> in an
-		<classname>ApplicationContext</classname>. The following example shows a <classname>DecoratorBasedApplicationContext</classname>
-		with three components:</para>
+		<classname>ApplicationContext</classname>. The following example shows a <classname>PythonConfig</classname>
+		with three objects:</para>
 
 		<itemizedlist>
 			<listitem><para>the bank</para></listitem>
@@ -173,32 +173,31 @@ class Bank:
 				<classname>ConnectionFactoryTransactionManager</classname>)</para>
 			</listitem>
 			<listitem>
-				<para>an <classname>AutoTransactionalComponent</classname>, which checks all components to see
+				<para>an <classname>AutoTransactionalObject</classname>, which checks all objects to see
 				if they have <methodname>@Transactional</methodname> methods, and if so, links them with the 
 				<classname>TransactionManager</classname>.</para>
 			</listitem>
 		</itemizedlist> 
 	
-		<para>The name of the method (i.e. component name) for <classname>AutoTransactionalComponent</classname> doesn't matter.</para>
+		<para>The name of the method (i.e. component name) for <classname>AutoTransactionalObject</classname> doesn't matter.</para>
 
 <programlisting><![CDATA[
-class DatabaseTxTestDecorativeTransactions(DecoratorBasedApplicationContext):
+class DatabaseTxTestDecorativeTransactions(PythonConfig):
     def __init__(self, factory):
+    	super(DatabaseTxTestDecorativeTransactions, self).__init__()
         self.factory = factory
-        DecoratorBasedApplicationContext.__init__(self)
 
-    @component
-    def transactionalComponent(self):
-        return AutoTransactionalComponent(self.transactionManager())
+    @Object
+    def transactionalObject(self):
+        return AutoTransactionalObject(self.tx_mgr())
 
-    @component
-    def transactionManager(self):
+    @Object
+    def tx_mgr(self):
         return ConnectionFactoryTransactionManager(self.factory)
 
-    @component
+    @Object
     def bank(self):
-        results = TransactionalBank(self.factory)
-        return results
+        return TransactionalBank(self.factory)
 ]]></programlisting>
 
 			<section id="transaction-at-transactional-arguments">
