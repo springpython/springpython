@@ -64,8 +64,9 @@ What's Coming?
 
 Spring Python News
 
-  <<NEWS>> - Spring Python's core IoC container has been refactored, and now support four formats! This includes
-  XMLConfig, PythonConfig/@Object, PyContainerConfig, and SpringJavaConfig. - 11/06/2008 G.Turnquist
+  <<NEWS>> - Spring Python 0.8.0 has been released. This release contains a refactored IoC container supporting
+  four formats (XMLConfig, PythonConfig/@Object, PyContainerConfig, and SpringJavaConfig); replacement
+  of the term "component" with "object" in all APIs, classnames, etc.; and other bug fixes and API cleanup. 11/06/2007 G.Turnquist
 
   <<NEWS>> - Spring Python 0.7.1 has been released. This release contains improvements to reference documentation as well
   as integration with {{{http://s3browse.com/explore/dist.springframework.org/release/EXT/se-springpython-py}Spring's new
