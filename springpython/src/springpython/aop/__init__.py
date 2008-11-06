@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
+import copy
 import logging
 import re
 import types
@@ -43,7 +44,7 @@ class MethodInvocation(object):
         self.method_name = method_name
         self.args = args
         self.kwargs = kwargs
-        self.intercept_stack = interceptors
+        self.intercept_stack = copy.copy(interceptors)
         self.intercept_stack.append(FinalInterceptor()) 
         self.logger = logging.getLogger("springpython.aop.MethodInvocation")
 
@@ -134,7 +135,7 @@ class RegexpMethodPointcutAdvisor(Pointcut, MethodMatcher, MethodInterceptor):
             return invocation.proceed()
         else:
             self.logger.debug("No match, bypassing advice, going straight to targetClass.")
-            return getattr(invocation.instance, invocation.method_name)(invocation.args)
+            return getattr(invocation.instance, invocation.method_name)(*invocation.args, **invocation.kwargs)
 
     def __setattr__(self, name, value):
         """If "advice", make sure it is a list. Anything else, pass through to simple assignment.
@@ -175,13 +176,6 @@ class AopProxy(object):
             self.interceptors = [interceptors]
         self.logger = logging.getLogger("springpython.aop.AopProxy")
 
-    def dispatch(self, *args, **kwargs):
-        """This method is returned to the caller through __getattr__, to emulate all function calls being sent to the 
-        target object. This allow this object to serve as a proxying agent for the target object."""
-        self.logger.debug("Calling AopProxy.%s(%s)" % (self.method_name, args))
-        invocation = MethodInvocation(self.target, self.method_name, args, kwargs, self.interceptors)
-        return invocation.__getattr__(self.method_name)(*args, **kwargs)
-
     def __getattr__(self, name):
         """If any of the parameters are local objects, they are immediately retrieved. Callables cause the dispatch method
         to be return, which forwards callables through the interceptor stack. Target attributes are retrieved directly from
@@ -191,9 +185,20 @@ class AopProxy(object):
         else:
             attr = getattr(self.target, name)
             if not callable(attr):
-               return attr
-            self.method_name = name
-            return self.dispatch
+                return attr
+            
+            def dispatch(*args, **kwargs):
+                """This method is returned to the caller emulating the function call being sent to the 
+                target object. This services as a proxying agent for the target object."""
+                invocation = MethodInvocation(self.target, name, args, kwargs, self.interceptors)
+                ##############################################################################
+                # NOTE:
+                # getattr(invocation, name) doesn't work here, because __str__ will print
+                # the MethodInvocation's string, instead of trigger the interceptor stack.
+                ##############################################################################
+                return invocation.__getattr__(name)(*args, **kwargs)  
+
+            return dispatch
         
 class ProxyFactory(object):
     """This object helps to build AopProxy objects programmatically. It allows configuring advice and target objects.

@@ -53,14 +53,14 @@ class AopProxyTestCase(unittest.TestCase):
         factory.interceptors.append(WrappingInterceptor())
         service = factory.getProxy()
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
-        self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
+        self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
         
     def testCreatingAProxyFactoryAndAddingAnInterceptorIoC(self):
         factory = self.appContext.get_object("factory")
         service = factory.getProxy()
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
-        self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
+        self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
 
     def testWrappingStringFunctionWithInterceptor(self):
@@ -77,24 +77,24 @@ class AopProxyTestCase(unittest.TestCase):
         service.target = SampleService()
         service.interceptors = [WrappingInterceptor()]
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
-        self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
+        self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
 
     def testCreatingAProxyFactoryObjectWithAnInterceptorIoC(self):
         service = self.appContext.get_object("sampleService4")
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
-        self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
+        self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
 
     def testApplyingASingleConditionalPointcutIoC(self):
         sampleService = self.appContext.get_object("sampleService1")
         self.assertEquals(sampleService.doSomething(), "<Wrapped>Alright!</Wrapped>")
-        self.assertEquals(sampleService.method("testdata"), "You made it!")
+        self.assertEquals(sampleService.method("testdata"), "You made it! => testdata")
 
     def testApplyingTwoConditionalPointcutsIoC(self):
         sampleService = self.appContext.get_object("sampleService2")
         self.assertEquals(sampleService.doSomething(), "BEFORE => <Wrapped>Alright!</Wrapped> <= AFTER")
-        self.assertEquals(sampleService.method("testdata"), "You made it!")
+        self.assertEquals(sampleService.method("testdata"), "You made it! => testdata")
         
     def testApplyingASingleConditionalPointcutProgrammatically(self):
         wrappingAdvice = WrappingInterceptor()
@@ -105,7 +105,7 @@ class AopProxyTestCase(unittest.TestCase):
         sampleService = ProxyFactoryObject(interceptors = pointcutAdvisor)
         sampleService.target = targetService
         self.assertEquals(sampleService.doSomething(), "<Wrapped>Alright!</Wrapped>")
-        self.assertEquals(sampleService.method("testdata"), "You made it!")
+        self.assertEquals(sampleService.method("testdata"), "You made it! => testdata")
 
     def testApplyingTwoConditionalPointcutsProgrammatically(self):
         beginEndAdvice = BeforeAndAfterInterceptor()
@@ -117,12 +117,12 @@ class AopProxyTestCase(unittest.TestCase):
         sampleService = ProxyFactoryObject(interceptors = pointcutAdvisor)
         sampleService.target = targetService
         self.assertEquals(sampleService.doSomething(), "BEFORE => <Wrapped>Alright!</Wrapped> <= AFTER")
-        self.assertEquals(sampleService.method("testdata"), "You made it!")
+        self.assertEquals(sampleService.method("testdata"), "You made it! => testdata")
         
     def testCreatingAProxyFactoryObjectWithAnInterceptorByClassNameInsteadOfInstanceIoC(self):
         service = self.appContext.get_object("sampleService5")
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
-        self.assertEquals("<Wrapped>You made it!</Wrapped>", service.method("test"))
+        self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
         
 #class AopProxyFactoryCombinedWithPyroTestCase(unittest.TestCase):
@@ -150,6 +150,68 @@ class AopProxyTestCase(unittest.TestCase):
 #    #    self.assertEquals("<Wrapped>You got remote data => test2</Wrapped>", remoteService.getData("test2"))
 #    #    self.assertEquals("<Wrapped>You got remote data => test2</Wrapped>", clientService.getData("test2"))
 #    #    self.appContext.dispose()
+
+class AopProxiedArgumentsTest(unittest.TestCase):
+    def testCallingProxiedMethodWithProxiedPositionalArguments(self):
+        targetService = SampleService()
+        
+        service = ProxyFactoryObject(target = targetService, interceptors = WrappingInterceptor())
+        
+        self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
+        self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
+        self.assertEquals("<Wrapped>You made it! => Alright!</Wrapped>",
+                          service.method(targetService.doSomething()))
+        self.assertEquals("<Wrapped>You made it! => <Wrapped>Alright!</Wrapped></Wrapped>",
+                          service.method(service.doSomething()))
+
+    def testCallingProxiedMethodWithProxiedNamedArguments(self):
+        targetService = SampleService()
+        service = ProxyFactoryObject(target = targetService, interceptors = WrappingInterceptor())
+        
+        self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method(data="test"))
+        self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
+        self.assertEquals("<Wrapped>You made it! => Alright!</Wrapped>",
+                          service.method(data=targetService.doSomething()))
+        self.assertEquals("<Wrapped>You made it! => <Wrapped>Alright!</Wrapped></Wrapped>",
+                          service.method(service.doSomething()))
+
+    def testCallingRegExpProxiedMethodThatHasArgumentsWithProxiedPositionalArguments(self):
+        pointcutAdvisor = RegexpMethodPointcutAdvisor(advice = WrappingInterceptor(),
+                                                      patterns = ["SampleService.method"])
+        service = ProxyFactoryObject(target = SampleService(), interceptors = pointcutAdvisor)
+        
+        self.assertEquals("Alright!", service.doSomething())
+        self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
+        self.assertEquals("<Wrapped>You made it! => Alright!</Wrapped>",
+                          service.method(service.doSomething()))
+        
+    def testCallingRegExpProxiedMethodThatHasArgumentsWithProxiedNamedArguments(self):
+        pointcutAdvisor = RegexpMethodPointcutAdvisor(advice = WrappingInterceptor(),
+                                                      patterns = ["SampleService.method"])
+        service = ProxyFactoryObject(target = SampleService(), interceptors = pointcutAdvisor)
+        
+        self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method(data="test"))
+        self.assertEquals("<Wrapped>You made it! => Alright!</Wrapped>",
+                          service.method(data=service.doSomething()))
+
+    def testCallingRegExpProxiedMethodThatHasNoArgumentsWithProxiedPositionalArguments(self):
+        pointcutAdvisor = RegexpMethodPointcutAdvisor(advice = WrappingInterceptor(),
+                                                      patterns = ["SampleService.doSomething"])
+        service = ProxyFactoryObject(target = SampleService(), interceptors = pointcutAdvisor)
+
+        self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
+        self.assertEquals("You made it! => test", service.method("test"))
+        self.assertEquals("You made it! => <Wrapped>Alright!</Wrapped>",
+                          service.method(service.doSomething()))
+        
+    def testCallingRegExpProxiedMethodThatHasNoArgumentsWithProxiedNamedArguments(self):
+        pointcutAdvisor = RegexpMethodPointcutAdvisor(advice = WrappingInterceptor(),
+                                                      patterns = ["SampleService.doSomething"])
+        service = ProxyFactoryObject(target = SampleService(), interceptors = pointcutAdvisor)
+
+        self.assertEquals("You made it! => test", service.method(data="test"))
+        self.assertEquals("You made it! => <Wrapped>Alright!</Wrapped>",
+                          service.method(data=service.doSomething()))
 
 if __name__ == "__main__":
     logger = logging.getLogger("springpython")

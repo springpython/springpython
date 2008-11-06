@@ -142,7 +142,7 @@ class SampleService:
     def __init__(self):
         self.attribute = "sample"
     def method(self, data):
-        return "You made it!"
+        return "You made it! => %s" % data
     def doSomething(self):
         return "Alright!"
     def __str__(self):
