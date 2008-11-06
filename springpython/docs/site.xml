@@ -32,9 +32,6 @@
       <item name="XML schema specs" href="schema/context"/>
     </menu>
 
-    <menu name="Archived">
-      <item name="Old trac site" href="http://trac.springpython.webfactional.com"/>
-    </menu>
     <menu name="Technologies"/>
   </body>
   <poweredBy>
