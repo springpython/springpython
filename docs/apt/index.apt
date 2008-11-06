@@ -11,8 +11,7 @@ Introduction
 
   This used to be a trac site, but since Spring Python became an official Spring Extension, it has been replaced
   with a maven-generated one. Documentation stored in various trac articles has been migrated to the documentation
-  set found in left-hand side of this page. You can view either HTML or a PDF document. The old trac site has been
-  archived for historical benefit.
+  set found in left-hand side of this page. You can view either HTML or a PDF document.
   
 Key Features
 
@@ -54,7 +53,7 @@ Key Features
 			
 Downloads
 
-  {{{http://s3browse.com/explore/dist.springframework.org/release/EXT/se-springpython-py}Official releases}}
+  {{{http://www.springsource.com/download/community?project=Spring%20Extensions}Official releases}}
 
 What's Coming?
 
