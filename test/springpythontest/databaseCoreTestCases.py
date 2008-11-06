@@ -16,10 +16,12 @@
 import logging
 import os
 import sys
+import tempfile
 import types
 import unittest
 from pmock import *
-from springpython.context import XmlApplicationContext
+from springpython.config import XMLConfig
+from springpython.context import ApplicationContext
 from springpython.database import ArgumentMustBeNamed
 from springpython.database import DataAccessException
 from springpython.database import InvalidArgumentType
@@ -180,8 +182,8 @@ class DatabaseTemplateMockTestCase(MockTestCase):
         results = self.databaseTemplate.query("select * from foobar", rowhandler=testSupportClasses.ValidHandler())
 
     def testIoCGeneralQuery(self):
-        appContext = XmlApplicationContext("support/databaseTestApplicationContext.xml")
-        mockConnectionFactory = appContext.get_component("mockConnectionFactory")
+        appContext = ApplicationContext(XMLConfig("support/databaseTestApplicationContext.xml"))
+        mockConnectionFactory = appContext.get_object("mockConnectionFactory")
         mockConnectionFactory.stubConnection.mockCursor = self.mock
         
         self.mock.expects(once()).method("execute")
@@ -560,8 +562,8 @@ class MySQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
             raise e
 
     def testIoCGeneralQuery(self):
-        appContext = XmlApplicationContext("support/databaseTestMySQLApplicationContext.xml")
-        factory = appContext.get_component("connection_factory")
+        appContext = ApplicationContext(XMLConfig("support/databaseTestMySQLApplicationContext.xml"))
+        factory = appContext.get_object("connection_factory")
         
         databaseTemplate = DatabaseTemplate(factory)
         results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
@@ -610,8 +612,8 @@ class PostGreSQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
             raise e
 
     def testIoCGeneralQuery(self):
-        appContext = XmlApplicationContext("support/databaseTestPGApplicationContext.xml")
-        factory = appContext.get_component("connection_factory")
+        appContext = ApplicationContext(XMLConfig("support/databaseTestPGApplicationContext.xml"))
+        factory = appContext.get_object("connection_factory")
         
         databaseTemplate = DatabaseTemplate(factory)
         results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
@@ -619,16 +621,19 @@ class PostGreSQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
 class SqliteDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
     def __init__(self, methodName='runTest'):
         AbstractDatabaseTemplateTestCase.__init__(self, methodName)
+        self.db_filename = tempfile.gettempdir() + "/springpython.db"
 
     def createTables(self):
         self.createdTables = True
         try:
             try:
-                os.remove("/tmp/springpython.db")
+                os.remove(self.db_filename)
             except OSError:
                 pass
-            self.factory = factory.Sqlite3ConnectionFactory("/tmp/springpython.db")
+            self.factory = factory.Sqlite3ConnectionFactory(self.db_filename)
             dt = DatabaseTemplate(self.factory)
+            
+            dt.execute("DROP TABLE IF EXISTS animal")
 
             dt.execute("""
                 CREATE TABLE animal (
@@ -647,9 +652,30 @@ class SqliteDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
             raise e
 
     def testIoCGeneralQuery(self):
-        appContext = XmlApplicationContext("support/databaseTestSqliteApplicationContext.xml")
-        factory = appContext.get_component("connection_factory")
+        appContext = ApplicationContext(XMLConfig("support/databaseTestSqliteApplicationContext.xml"))
+        factory = appContext.get_object("connection_factory")
         
         databaseTemplate = DatabaseTemplate(factory)
+        
+        databaseTemplate.execute("DROP TABLE IF EXISTS animal")
+        databaseTemplate.execute("""
+            CREATE TABLE animal (
+              id serial PRIMARY KEY,
+              name VARCHAR(11),
+              category VARCHAR(20),
+              population integer
+            )
+        """)
+        factory.commit()
+        databaseTemplate.execute("DELETE FROM animal")
+        factory.commit()
+        self.assertEquals(len(databaseTemplate.query_for_list("SELECT * FROM animal")), 0)
+        databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES ('snake', 'reptile', 1)")
+        databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES ('racoon', 'mammal', 0)")
+        databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES ('black mamba', 'kill_bill_viper', 1)")
+        databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES ('cottonmouth', 'kill_bill_viper', 1)")
+        factory.commit()
+        self.assertEquals(len(databaseTemplate.query_for_list("SELECT * FROM animal")), 4)
+        
         results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
 

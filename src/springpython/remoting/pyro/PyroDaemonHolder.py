@@ -19,7 +19,7 @@ import Pyro.core, Pyro.naming
 pyro_thread = None
 serviceList = {}
 
-def register(pyroObj, service_name, verbose = False):
+def register(pyro_obj, service_name, verbose = False):
     """
     Register the pyro object and its service name with the daemon.
     Also add the service to a dictionary of objects. This allows the
@@ -30,7 +30,7 @@ def register(pyroObj, service_name, verbose = False):
     
     if verbose: print "Registering %s with the Pyro server" % service_name
     
-    serviceList[service_name] = pyroObj
+    serviceList[service_name] = pyro_obj
     if pyro_thread is None:
         
         if verbose: print "Pyro thread needs to be started"
@@ -38,7 +38,7 @@ def register(pyroObj, service_name, verbose = False):
         pyro_thread = _PyroThread()
         pyro_thread.start()
         
-    uri = pyro_thread.daemon.connect(pyroObj, service_name)
+    uri = pyro_thread.daemon.connect(pyro_obj, service_name)
     
     if verbose: print uri
 

@@ -101,17 +101,19 @@ buildStamp = "BUILD-%s" % datetime.now().strftime("%Y%m%d%H%M%S")
 def clean(dir):
     print "Removing '%s' directory" % dir
     if os.path.exists(dir):
-        shutil.rmtree(dir)
+        shutil.rmtree(dir, True)
     # TODO: Make this OS-independent
     os.system("find . -name '*.pyc' -exec rm -f {} \;")
     os.system("find . -name '*.class' -exec rm -f {} \;")
 
 def test(dir):
-    os.makedirs(dir)
+    if not os.path.exists(dir):
+        os.makedirs(dir)
     os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s" % dir)
     
 def test_coverage(dir):
-    os.makedirs(dir)
+    if not os.path.exists(dir):
+        os.makedirs(dir)
     os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s --with-coverage --cover-package=springpython" % dir)
 
 def build(dir, version):
@@ -210,7 +212,6 @@ def docs_all(version):
     copy("xml/schema/context/", p["targetDir"] + "/docs/schema/context/", ["*.xsd"])
 
     docs_multi(version)
-    docs_single(version)
     docs_pdf(version)
     
 def docs_multi(version):

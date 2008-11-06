@@ -16,25 +16,25 @@
 
 import controller
 import view
-from springpython.context import DecoratorBasedApplicationContext
-from springpython.context import component
+from springpython.config import PythonConfig
+from springpython.config import Object
 from springpython.security.web import FilterChainProxy
 
-class SpringWikiClientAndServer(DecoratorBasedApplicationContext):
+class SpringWikiClientAndServer(PythonConfig):
     def __init__(self):
-        DecoratorBasedApplicationContext.__init__(self)
+        super(SpringWikiClientAndServer, self).__init__()
         
-    @component
+    @Object
     def read(self):
         wikiView = view.Springwiki()
         wikiView.controller = self.controller()
         return wikiView
     
-    @component
+    @Object
     def controller(self):
         return controller.SpringWikiController()
     
-    @component
+    @Object
     def filterChainProxy(self):
         proxy = FilterChainProxy()
         proxy.filterInvocationDefinitionSource = [("/.*", [])]

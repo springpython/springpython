@@ -17,8 +17,8 @@ import logging
 import types
 from pmock import *
 from springpython.aop import MethodInterceptor
-from springpython.context import DecoratorBasedApplicationContext
-from springpython.context import component
+from springpython.config import PythonConfig
+from springpython.config import Object
 from springpython.context import scope
 from springpython.database.core import DaoSupport
 from springpython.database.core import DatabaseTemplate
@@ -26,11 +26,11 @@ from springpython.database.core import RowMapper
 from springpython.database.factory import ConnectionFactory
 from springpython.database.factory import MySQLConnectionFactory
 from springpython.database import transaction
-from springpython.database.transaction import AutoTransactionalComponent
+from springpython.database.transaction import AutoTransactionalObject
 from springpython.database.transaction import ConnectionFactoryTransactionManager
 from springpython.database.transaction import TransactionTemplate
 from springpython.database.transaction import TransactionCallbackWithoutResult
-from springpython.database.transaction import TransactionProxyFactoryComponent
+from springpython.database.transaction import TransactionProxyFactoryObject
 from springpython.database.transaction import Transactional
 
 class Person(object):
@@ -76,52 +76,55 @@ class StringHolder(object):
     def __init__(self, str=""):
         self.str = str
         
-class MovieBasedApplicationContext(DecoratorBasedApplicationContext):
+class MovieBasedApplicationContext(PythonConfig):
     """
     This is a test support class that inherits its functionality from the super class.
-    """
+    """        
     def __init__(self):
-        DecoratorBasedApplicationContext.__init__(self)
+        super(MovieBasedApplicationContext, self).__init__()
         
-    @component(scope.PROTOTYPE)
+    @Object(scope.PROTOTYPE)
     def MovieLister(self):
         lister = MovieLister()
         lister.finder = self.MovieFinder()
         lister.description = self.SingletonString()
+        self.logger.debug("Description = %s" % lister.description)
         return lister
     
-    @component(scope.SINGLETON)
+    @Object(scope.SINGLETON)
     def MovieFinder(self):
         return ColonMovieFinder(filename="support/movies1.txt")
     
-    @component    # scope.SINGLETON is the default
+    @Object    # scope.SINGLETON is the default
     def SingletonString(self):
         return StringHolder("There should only be one copy of this string")
     
     def NotExposed(self):
         pass
 
-class DuckTypedMovieBasedApplicationContext(object):
-    """
-    This is a test support class that inherits its functionality from the super class.
-    """
-    @component(scope.PROTOTYPE)
-    def MovieLister(self):
-        lister = MovieLister()
-        lister.finder = self.MovieFinder()
-        lister.description = self.SingletonString()
-        return lister
-    
-    @component(scope.SINGLETON)
+class MixedApplicationContext(PythonConfig):
+    def __init__(self):
+        super(MixedApplicationContext, self).__init__()
+        
+    @Object(scope.SINGLETON)
     def MovieFinder(self):
         return ColonMovieFinder(filename="support/movies1.txt")
+
+class MixedApplicationContext2(PythonConfig):
+    def __init__(self):
+        super(MixedApplicationContext2, self).__init__()
+        
+    @Object(scope.PROTOTYPE)
+    def MovieLister(self):
+        lister = MovieLister()
+        lister.finder = self.app_context.get_object("MovieFinder")
+        lister.description = self.SingletonString()
+        self.logger.debug("Description = %s" % lister.description)
+        return lister
     
-    @component    # scope.SINGLETON is the default
+    @Object    # scope.SINGLETON is the default
     def SingletonString(self):
         return StringHolder("There should only be one copy of this string")
-    
-    def NotExposed(self):
-        pass
 
 class TheOtherMovieFinder(object):
     def __init__(self, filename = ""):
@@ -233,45 +236,45 @@ class Bank(object):
         self.withdraw(amount, from_account)
         self.deposit(amount, to_account)
 
-class DatabaseTxTestAppContext(DecoratorBasedApplicationContext):
+class DatabaseTxTestAppContext(PythonConfig):
     def __init__(self, factory):
+        super(DatabaseTxTestAppContext, self).__init__()
         self.factory = factory
-        DecoratorBasedApplicationContext.__init__(self)
 
-    @component
+    @Object
     def bank_target(self):
         return Bank(self.factory)
 
-    @component
-    def tx_component(self):
-        return AutoTransactionalComponent(self.tx_mgr())
+    @Object
+    def tx_object(self):
+        return AutoTransactionalObject(self.tx_mgr())
 
-    @component
+    @Object
     def tx_mgr(self):
         return ConnectionFactoryTransactionManager(self.factory)
 
-    @component
+    @Object
     def bank(self):
         transactionAttributes = []
         transactionAttributes.append((".*transfer", ["PROPAGATION_REQUIRED"]))
         transactionAttributes.append((".*", ["PROPAGATION_REQUIRED","readOnly"]))
-        return TransactionProxyFactoryComponent(self.tx_mgr(), self.bank_target(), transactionAttributes)
+        return TransactionProxyFactoryObject(self.tx_mgr(), self.bank_target(), transactionAttributes)
 
 
-class DatabaseTxTestAppContextWithNoAutoTransactionalComponent(DecoratorBasedApplicationContext):
+class DatabaseTxTestAppContextWithNoAutoTransactionalObject(PythonConfig):
     def __init__(self, factory):
+        super(DatabaseTxTestAppContextWithNoAutoTransactionalObject, self).__init__()
         self.factory = factory
-        DecoratorBasedApplicationContext.__init__(self)
 
-    @component
+    @Object
     def bank_target(self):
         return Bank(self.factory)
 
-    @component
+    @Object
     def tx_mgr(self):
         return ConnectionFactoryTransactionManager(self.factory)
 
-    @component
+    @Object
     def bank(self):
         return TransactionalBank(self.factory)
 
@@ -309,20 +312,20 @@ class TransactionalBank(object):
         self.withdraw(amount, from_account)
         self.deposit(amount, to_account)
 
-class DatabaseTxTestDecorativeTransactions(DecoratorBasedApplicationContext):
+class DatabaseTxTestDecorativeTransactions(PythonConfig):
     def __init__(self, factory):
+        super(DatabaseTxTestDecorativeTransactions, self).__init__()
         self.factory = factory
-        DecoratorBasedApplicationContext.__init__(self)
 
-    @component
-    def tx_component(self):
-        return AutoTransactionalComponent(self.tx_mgr())
+    @Object
+    def tx_object(self):
+        return AutoTransactionalObject(self.tx_mgr())
 
-    @component
+    @Object
     def tx_mgr(self):
         return ConnectionFactoryTransactionManager(self.factory)
 
-    @component
+    @Object
     def bank(self):
         results = TransactionalBank(self.factory)
         return results
@@ -361,20 +364,20 @@ class TransactionalBankWithNoTransactionalArguments(object):
         self.withdraw(amount, from_account)
         self.deposit(amount, to_account)
 
-class DatabaseTxTestDecorativeTransactionsWithNoArguments(DecoratorBasedApplicationContext):
+class DatabaseTxTestDecorativeTransactionsWithNoArguments(PythonConfig):
     def __init__(self, factory):
+        super(DatabaseTxTestDecorativeTransactionsWithNoArguments, self).__init__()
         self.factory = factory
-        DecoratorBasedApplicationContext.__init__(self)
 
-    @component
-    def tx_component(self):
-        return AutoTransactionalComponent(self.tx_mgr())
+    @Object
+    def tx_object(self):
+        return AutoTransactionalObject(self.tx_mgr())
 
-    @component
+    @Object
     def tx_mgr(self):
         return ConnectionFactoryTransactionManager(self.factory)
 
-    @component
+    @Object
     def bank(self):
         results = TransactionalBankWithNoTransactionalArguments(self.factory)
         return results
@@ -435,22 +438,45 @@ class TransactionalBankWithLotsOfTransactionalArguments(object):
     def nonTransactionalOperationTransactionalWrapper(self):
         self.nonTransactionalOperation()
 
-class DatabaseTxTestDecorativeTransactionsWithLotsOfArguments(DecoratorBasedApplicationContext):
+class DatabaseTxTestDecorativeTransactionsWithLotsOfArguments(PythonConfig):
     def __init__(self, factory):
+        super(DatabaseTxTestDecorativeTransactionsWithLotsOfArguments, self).__init__()
         self.factory = factory
-        DecoratorBasedApplicationContext.__init__(self)
 
-    @component
+    @Object
     def tx_mgr(self):
         return ConnectionFactoryTransactionManager(self.factory)
 
-    @component
-    def tx_component(self):
-        return AutoTransactionalComponent(self.tx_mgr())
+    @Object
+    def tx_object(self):
+        return AutoTransactionalObject(self.tx_mgr())
 
-    @component
+    @Object
     def bank(self):
         results = TransactionalBankWithLotsOfTransactionalArguments(self.factory)
         return results
 
-
+class ValueHolder(object):
+    def __init__(self, string_holder = None):
+        self.some_dict = None
+        self.some_list = None
+        self.some_props = None
+        self.some_set = None
+        self.some_frozen_set = None
+        self.some_tuple = None
+        self.string_holder = string_holder
+        
+class MultiValueHolder(object):
+    def __init__(self, a = "a", b = "b", c = "c"):
+        self.a = a
+        self.b = b
+        self.c = c
+        
+class ConstructorBasedContainer(PythonConfig):
+    @Object
+    def MultiValueHolder(self):
+        return MultiValueHolder(a="alt a", b="alt b")
+    
+    @Object
+    def MultiValueHolder2(self):
+        return MultiValueHolder(c="alt c", b="alt b")

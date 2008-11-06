@@ -1,69 +1,133 @@
-<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
             
-    <component id="user_details_service" class="springpython.security.userdetails.InMemoryUserDetailsService">
+    <object id="user_details_service" class="springpython.security.userdetails.InMemoryUserDetailsService">
 	    <property name="user_dict">
-			{
-				"basichiblueuser"  : ("password1", ["ROLE_BASIC", "ASSIGNED_BLUE",   "LEVEL_HI"], True),
-				"basichiorangeuser": ("password2", ["ROLE_BASIC", "ASSIGNED_ORANGE", "LEVEL_HI"], True),
-				"otherhiblueuser"  : ("password3", ["ROLE_OTHER", "ASSIGNED_BLUE",   "LEVEL_HI"], True),
-				"otherhiorangeuser": ("password4", ["ROLE_OTHER", "ASSIGNED_ORANGE", "LEVEL_HI"], True),
-				"basicloblueuser"  : ("password5", ["ROLE_BASIC", "ASSIGNED_BLUE",   "LEVEL_LO"], True),
-				"basicloorangeuser": ("password6", ["ROLE_BASIC", "ASSIGNED_ORANGE", "LEVEL_LO"], True),
-				"otherloblueuser"  : ("password7", ["ROLE_OTHER", "ASSIGNED_BLUE",   "LEVEL_LO"], True),
-				"otherloorangeuser": ("password8", ["ROLE_OTHER", "ASSIGNED_ORANGE", "LEVEL_LO"], True)
-			}
+	    	<dict>
+	    		<entry>
+	    			<key><value>basichiblueuser</value></key>
+	    			<tuple>
+	    				<value>password1</value>
+	    				<list><value>ROLE_BASIC</value><value>ASSIGNED_BLUE</value><value>LEVEL_HI</value></list>
+	    				<value>True</value>
+	    			</tuple>
+	    		</entry>
+	    		<entry>
+	    			<key><value>basichiorangeuser</value></key>
+	    			<tuple>
+	    				<value>password2</value>
+	    				<list><value>ROLE_BASIC</value><value>ASSIGNED_ORANGE</value><value>LEVEL_HI</value></list>
+	    				<value>True</value>
+	    			</tuple>
+	    		</entry>
+	    		<entry>
+	    			<key><value>otherhiblueuser</value></key>
+	    			<tuple>
+	    				<value>password3</value>
+	    				<list><value>ROLE_OTHER</value><value>ASSIGNED_BLUE</value><value>LEVEL_HI</value></list>
+	    				<value>True</value>
+	    			</tuple>
+	    		</entry>
+	    		<entry>
+	    			<key><value>otherhiorangeuser</value></key>
+	    			<tuple>
+	    				<value>password4</value>
+	    				<list><value>ROLE_OTHER</value><value>ASSIGNED_ORANGE</value><value>LEVEL_HI</value></list>
+	    				<value>True</value>
+	    			</tuple>
+	    		</entry>
+	    		<entry>
+	    			<key><value>basicloblueuser</value></key>
+	    			<tuple>
+	    				<value>password5</value>
+	    				<list><value>ROLE_BASIC</value><value>ASSIGNED_BLUE</value><value>LEVEL_LO</value></list>
+	    				<value>True</value>
+	    			</tuple>
+	    		</entry>
+	    		<entry>
+	    			<key><value>basicloorangeuser</value></key>
+	    			<tuple>
+	    				<value>password6</value>
+	    				<list><value>ROLE_BASIC</value><value>ASSIGNED_ORANGE</value><value>LEVEL_LO</value></list>
+	    				<value>True</value>
+	    			</tuple>
+	    		</entry>
+	    		<entry>
+	    			<key><value>otherloblueuser</value></key>
+	    			<tuple>
+	    				<value>password7</value>
+	    				<list><value>ROLE_OTHER</value><value>ASSIGNED_BLUE</value><value>LEVEL_LO</value></list>
+	    				<value>True</value>
+	    			</tuple>
+	    		</entry>
+	    		<entry>
+	    			<key><value>otherloorangeuser</value></key>
+	    			<tuple>
+	    				<value>password8</value>
+	    				<list><value>ROLE_OTHER</value><value>ASSIGNED_ORANGE</value><value>LEVEL_LO</value></list>
+	    				<value>True</value>
+	    			</tuple>
+	    		</entry>
+	    	</dict>
         </property>
-    </component>
+    </object>
 
-    <component id="auth_provider" class="springpython.security.providers.dao.DaoAuthenticationProvider">
-	    <property name="user_details_service" local="user_details_service"/>
-    </component>
+    <object id="auth_provider" class="springpython.security.providers.dao.DaoAuthenticationProvider">
+	    <property name="user_details_service" ref="user_details_service"/>
+    </object>
 
-	<component id="auth_manager" class="springpython.security.providers.AuthenticationManager">
+	<object id="auth_manager" class="springpython.security.providers.AuthenticationManager">
 	  <property name="auth_providers">
-	    <list local="auth_provider"/>
+	  	<list><ref object="auth_provider"/></list>
 	  </property>
-	</component>
+	</object>
 	
-	<component id="roleVoter" class="springpython.security.vote.RoleVoter"/>
+	<object id="roleVoter" class="springpython.security.vote.RoleVoter"/>
 
-	<component id="assignedVoter" class="springpython.security.vote.RoleVoter">
-		<property name="role_prefix">"ASSIGNED"</property>
-	</component>
+	<object id="assignedVoter" class="springpython.security.vote.RoleVoter">
+		<property name="role_prefix"><value>ASSIGNED</value></property>
+	</object>
 
-	<component id="levelVoter" class="springpython.security.vote.RoleVoter">
-		<property name="role_prefix">"LEVEL"</property>
-	</component>
+	<object id="levelVoter" class="springpython.security.vote.RoleVoter">
+		<property name="role_prefix"><value>LEVEL</value></property>
+	</object>
 
-	<component id="access_decision_mgr" class="springpython.security.vote.ConsensusBased">
-		<property name="allow_if_all_abstain">False</property>
+	<object id="access_decision_mgr" class="springpython.security.vote.ConsensusBased">
+		<property name="allow_if_all_abstain"><value>False</value></property>
 		<property name="access_decision_voters">
-			<list local="roleVoter"/>
-			<list local="assignedVoter"/>
-                        <list local="levelVoter"/>
+			<list>
+				<ref object="roleVoter"/>
+				<ref object="assignedVoter"/>
+				<ref object="levelVoter"/>
+            </list>
 		</property>
-	</component>
+	</object>
 	
-	<component id="securityInteceptor" class="springpython.security.intercept.MethodSecurityInterceptor">
-	  <property name="validate_config_attributes">False</property>
-	  <property name="auth_manager" local="auth_manager"/>
-	  <property name="access_decision_mgr" local="access_decision_mgr"/>
+	<object id="securityInterceptor" class="springpython.security.intercept.MethodSecurityInterceptor">
+	  <property name="validate_config_attributes"><value>False</value></property>
+	  <property name="auth_manager" ref="auth_manager"/>
+	  <property name="access_decision_mgr" ref="access_decision_mgr"/>
 	  <property name="obj_def_source">
-	    	[
-			("springpythontest.support.testSecurityClasses.SampleService.do.*",["ROLE_BASIC","ASSIGNED_BLUE","LEVEL_HI"])
-	      	]
+	  	<list>
+	  		<tuple>
+	  			<value>springpythontest.support.testSecurityClasses.SampleService.do.*</value>
+	  			<list><value>ROLE_BASIC</value><value>ASSIGNED_BLUE</value><value>LEVEL_HI</value></list>
+	  		</tuple>
+	  	</list>
 	  </property>
-	</component>
+	</object>
 	
-	<component id="targetService" class="springpythontest.support.testSecurityClasses.SampleService"/>
+	<object id="targetService" class="springpythontest.support.testSecurityClasses.SampleService"/>
 	
-	<component id="sampleService" class="springpython.aop.ProxyFactoryComponent">
-		<property name="target" local="targetService"/>
+	<object id="sampleService" class="springpython.aop.ProxyFactoryObject">
+		<property name="target" ref="targetService"/>
 		<property name="interceptors">
-			<list local="securityInteceptor"/>
+			<list><ref object="securityInterceptor"/></list>
 		</property>
-	</component>
+	</object>
 
 	
-</components>
+</objects>

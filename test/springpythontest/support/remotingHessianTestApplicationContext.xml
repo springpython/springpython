@@ -1,5 +1,8 @@
-<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?>
+<components xmlns="http://www.springframework.org/springpython/schema/pycontainer-components"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/pycontainer-components
+       		http://springpython.webfactional.com/schema/context/spring-python-pycontainer-context-1.0.xsd">
 
 	<component id="personService" class="springpython.remoting.hessian.HessianProxyFactory">
 		<property name="service_url">"http://localhost:8080/"</property>

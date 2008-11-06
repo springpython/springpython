@@ -1,28 +1,29 @@
-<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
             
-	<component id="remoteServiceServer1" class="springpythontest.support.testSupportClasses.RemoteService1">
-	</component>
+	<object id="remoteServiceServer1" class="springpythontest.support.testSupportClasses.RemoteService1"/>
 	
-	<component id="remoteServiceServer2" class="springpythontest.support.testSupportClasses.RemoteService2">
-	</component>
+	<object id="remoteServiceServer2" class="springpythontest.support.testSupportClasses.RemoteService2"/>
 	
-	<component id="serviceExporter1" class="springpython.remoting.pyro.PyroServiceExporter">
-		<property name="service_name">"RemoteService1"</property>
-		<property name="service" local="remoteServiceServer1"/>
-	</component>
+	<object id="serviceExporter1" class="springpython.remoting.pyro.PyroServiceExporter">
+		<property name="service_name"><value>RemoteService1</value></property>
+		<property name="service" ref="remoteServiceServer1"/>
+	</object>
 	
-	<component id="serviceExporter2" class="springpython.remoting.pyro.PyroServiceExporter">
-		<property name="service_name">"RemoteService2"</property>
-		<property name="service" local="remoteServiceServer2"/>
-	</component>
+	<object id="serviceExporter2" class="springpython.remoting.pyro.PyroServiceExporter">
+		<property name="service_name"><value>RemoteService2</value></property>
+		<property name="service" ref="remoteServiceServer2"/>
+	</object>
 	
-	<component id="accountServiceClient1" class="springpython.remoting.pyro.PyroProxyFactory">
-		<property name="service_url">"PYROLOC://localhost:7766/RemoteService1"</property>
-	</component>
+	<object id="accountServiceClient1" class="springpython.remoting.pyro.PyroProxyFactory">
+		<property name="service_url"><value>PYROLOC://localhost:7766/RemoteService1</value></property>
+	</object>
 
-	<component id="accountServiceClient2" class="springpython.remoting.pyro.PyroProxyFactory">
-		<property name="service_url">"PYROLOC://localhost:7766/RemoteService2"</property>
-	</component>
+	<object id="accountServiceClient2" class="springpython.remoting.pyro.PyroProxyFactory">
+		<property name="service_url"><value>PYROLOC://localhost:7766/RemoteService2</value></property>
+	</object>
 
-</components>
+</objects>

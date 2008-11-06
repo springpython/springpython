@@ -95,11 +95,17 @@ class Sqlite3ConnectionFactory(ConnectionFactory):
     def __init__(self, db = None):
         ConnectionFactory.__init__(self, [types.TupleType])
         self.db = db
+        self.using_sqlite3 = True
 
     def connect(self):
         """The import statement is delayed so the library is loaded ONLY if this factory is really used."""
-        import sqlite3
-        return sqlite3.connect(self.db)               
+        try:
+            import sqlite3
+            return sqlite3.connect(self.db)               
+        except:
+            import sqlite
+            self.using_sqlite3 = False
+            return sqlite.connect(self.db)
 
     def in_transaction(self):
         return True
@@ -108,8 +114,12 @@ class Sqlite3ConnectionFactory(ConnectionFactory):
         return types.IntType
 
     def convert_sql_binding(self, sql_query):
-        """sqlite3 uses the ? notation, like Java's JDBC."""
-        return re.sub(pattern="%s", repl="?", string=sql_query)
+        if self.using_sqlite3:
+            """sqlite3 uses the ? notation, like Java's JDBC."""
+            return re.sub(pattern="%s", repl="?", string=sql_query)
+        else:
+            """Older versions of sqlite use the %s notation"""
+            return re.sub(pattern="\?", repl="%s", string=sql_query)
 
 class cxoraConnectionFactory(ConnectionFactory):
     def __init__(self, username = None, password = None, hostname = None, db = None):

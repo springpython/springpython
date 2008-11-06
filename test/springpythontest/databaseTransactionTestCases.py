@@ -16,8 +16,10 @@
 import logging
 import os
 import subprocess
+import tempfile
 import types
 import unittest
+from springpython.context import ApplicationContext
 from springpython.database import factory
 from springpython.database import DataAccessException
 from springpython.database.core import DatabaseTemplate
@@ -30,7 +32,7 @@ from springpythontest.support.testSupportClasses import DatabaseTxTestAppContext
 from springpythontest.support.testSupportClasses import DatabaseTxTestDecorativeTransactions
 from springpythontest.support.testSupportClasses import DatabaseTxTestDecorativeTransactionsWithNoArguments
 from springpythontest.support.testSupportClasses import DatabaseTxTestDecorativeTransactionsWithLotsOfArguments
-from springpythontest.support.testSupportClasses import DatabaseTxTestAppContextWithNoAutoTransactionalComponent
+from springpythontest.support.testSupportClasses import DatabaseTxTestAppContextWithNoAutoTransactionalObject
 from springpythontest.support.testSupportClasses import BankException
 from springpythontest.support.testSupportClasses import TransactionalBank
 
@@ -117,8 +119,8 @@ class AbstractTransactionTestCase(unittest.TestCase):
         self.assertEquals(len(self.dt.query_for_list("SELECT * FROM animal")), 0)
 
     def testDeclarativeTransactions(self):
-        appContext = DatabaseTxTestAppContext(self.factory)
-        bank = appContext.get_component("bank")
+        appContext = ApplicationContext(DatabaseTxTestAppContext(self.factory))
+        bank = appContext.get_object("bank")
 
         bank.open("Checking")
         bank.open("Savings")
@@ -157,8 +159,8 @@ class AbstractTransactionTestCase(unittest.TestCase):
         self.assertEquals(bank.balance("Checking"), 140.00, "Bad transfer did NOT fail atomically!")
 
     def testDecoratorBasedTransactions(self):
-        appContext = DatabaseTxTestDecorativeTransactions(self.factory)
-        bank = appContext.get_component("bank")
+        appContext = ApplicationContext(DatabaseTxTestDecorativeTransactions(self.factory))
+        bank = appContext.get_object("bank")
 
         bank.open("Checking")
         bank.open("Savings")
@@ -196,8 +198,8 @@ class AbstractTransactionTestCase(unittest.TestCase):
         self.assertEquals(bank.balance("Checking"), 140.00, "Bad transfer did NOT fail atomically!")
 
     def testDecoratorBasedTransactionsWithNoArguments(self):
-        appContext = DatabaseTxTestDecorativeTransactionsWithNoArguments(self.factory)
-        bank = appContext.get_component("bank")
+        appContext = ApplicationContext(DatabaseTxTestDecorativeTransactionsWithNoArguments(self.factory))
+        bank = appContext.get_object("bank")
 
         bank.open("Checking")
         bank.open("Savings")
@@ -236,8 +238,8 @@ class AbstractTransactionTestCase(unittest.TestCase):
         self.assertEquals(bank.balance("Checking"), 140.00, "Bad transfer did NOT fail atomically!")
         
     def testDecoratorBasedTransactionsWithLotsOfArguments(self):
-        appContext = DatabaseTxTestDecorativeTransactionsWithLotsOfArguments(self.factory)
-        bank = appContext.get_component("bank")
+        appContext = ApplicationContext(DatabaseTxTestDecorativeTransactionsWithLotsOfArguments(self.factory))
+        bank = appContext.get_object("bank")
 
         bank.open("Checking")
         bank.open("Savings")
@@ -277,8 +279,8 @@ class AbstractTransactionTestCase(unittest.TestCase):
         self.assertEquals(bank.balance("Checking"), 140.00, "Bad transfer did NOT fail atomically!")
         
     def testOtherPropagationLevels(self):
-        appContext = DatabaseTxTestDecorativeTransactionsWithLotsOfArguments(self.factory)
-        bank = appContext.get_component("bank")
+        appContext = ApplicationContext(DatabaseTxTestDecorativeTransactionsWithLotsOfArguments(self.factory))
+        bank = appContext.get_object("bank")
 
         # Call a mandatory operation outside a transaction, and verify it fails.
         try:
@@ -301,8 +303,8 @@ class AbstractTransactionTestCase(unittest.TestCase):
             pass
 
     def testTransactionProxyMethodFilters(self):
-        appContext = DatabaseTxTestAppContext(self.factory)
-        bank = appContext.get_component("bank")
+        appContext = ApplicationContext(DatabaseTxTestAppContext(self.factory))
+        bank = appContext.get_object("bank")
  
         bank.open("Checking")
         bank.open("Savings")
@@ -340,9 +342,9 @@ class AbstractTransactionTestCase(unittest.TestCase):
         self.assertEquals(bank.balance("Savings"), 225.00, "Bad transfer did NOT fail atomically!")
         self.assertEquals(bank.balance("Checking"), 140.00, "Bad transfer did NOT fail atomically!")
  
-    def testTransactionalBankWithNoAutoTransactionalComponent(self):
-        appContext = DatabaseTxTestAppContextWithNoAutoTransactionalComponent(self.factory)
-        bank = appContext.get_component("bank")
+    def testTransactionalBankWithNoAutoTransactionalObject(self):
+        appContext = ApplicationContext(DatabaseTxTestAppContextWithNoAutoTransactionalObject(self.factory))
+        bank = appContext.get_object("bank")
  
         bank.open("Checking")
         bank.open("Savings")
@@ -378,7 +380,7 @@ class AbstractTransactionTestCase(unittest.TestCase):
             pass
 
         self.assertEquals(bank.balance("Savings"), 225.00, "Bad transfer did NOT fail atomically!")
-        self.assertEquals(bank.balance("Checking"), -60.00, "Bad transfer did NOT fail as expected (not atomically due to lack of AutoTransactionalComponent)")
+        self.assertEquals(bank.balance("Checking"), -60.00, "Bad transfer did NOT fail as expected (not atomically due to lack of AutoTransactionalObject)")
        
 class MySQLTransactionTestCase(AbstractTransactionTestCase):
 
@@ -479,21 +481,27 @@ class PostGreSQLTransactionTestCase(AbstractTransactionTestCase):
             """)
             raise e
 
+
 class SqliteTransactionTestCase(AbstractTransactionTestCase):
 
     def __init__(self, methodName='runTest'):
         AbstractTransactionTestCase.__init__(self, methodName)
+        self.db_filename = tempfile.gettempdir() + "/springpython.db"
 
     def createTables(self):
         self.createdTables = True
         try:
             try:
-                os.remove("/tmp/springpython.db")
-            except OSError:
+                os.remove(self.db_filename)
+            except OSError, e:
                 pass
-            self.factory = factory.Sqlite3ConnectionFactory("/tmp/springpython.db")
+            
+            self.factory = factory.Sqlite3ConnectionFactory(self.db_filename)
             dt = DatabaseTemplate(self.factory)
 
+            dt.execute("DROP TABLE IF EXISTS animal")
+            dt.execute("DROP TABLE IF EXISTS account")
+            
             dt.execute("""
                 CREATE TABLE animal (
                   id serial PRIMARY KEY,

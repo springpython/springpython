@@ -18,9 +18,9 @@ import logging
 import re
 import types
 from springpython.aop import MethodInterceptor
-from springpython.aop import ProxyFactoryComponent
-from springpython.context import DecoratorBasedApplicationContext
-from springpython.context.decorator import decorator
+from springpython.aop import ProxyFactoryObject
+from springpython.context import ObjectPostProcessor
+from springpython.config.decorator import decorator
 
 logger = logging.getLogger("springpython.database.transaction")
 
@@ -187,7 +187,7 @@ class TransactionCallbackWithoutResult(TransactionCallback):
         pass
 
 class TransactionalInterceptor(MethodInterceptor):
-    """This interceptor is used by the TransactionProxyFactoryComponent in order to wrap
+    """This interceptor is used by the TransactionProxyFactoryObject in order to wrap
     method calls with transactions."""
     def __init__(self, tx_manager, tx_attributes):
         self.logger = logging.getLogger("springpython.database.transaction.TransactionalInterceptor")
@@ -217,12 +217,12 @@ class TransactionalInterceptor(MethodInterceptor):
         self.logger.debug("Return from TransactionTemplate")
         return results
 
-class TransactionProxyFactoryComponent(ProxyFactoryComponent):
+class TransactionProxyFactoryObject(ProxyFactoryObject):
     """This class acts like the target object, and routes function calls through a
     transactional interceptor."""
     def __init__(self, tx_manager, target, tx_attributes):
-        self.logger = logging.getLogger("springpython.database.transaction.TransactionProxyFactoryComponent")
-        ProxyFactoryComponent.__init__(self, target, TransactionalInterceptor(tx_manager, tx_attributes))
+        self.logger = logging.getLogger("springpython.database.transaction.TransactionProxyFactoryObject")
+        ProxyFactoryObject.__init__(self, target, TransactionalInterceptor(tx_manager, tx_attributes))
 
 def Transactional(tx_attributes = None):
     """
@@ -266,7 +266,7 @@ def Transactional(tx_attributes = None):
                 return f(*args, **kwargs)
 
         try:
-            # Assumes tx_manager is supplied by AutoTransactionalComponent
+            # Assumes tx_manager is supplied by AutoTransactionalObject
             tx_template = TransactionTemplate(tx_manager)
             if tx_attributes is not None:
                 tx_template.setTxAttributes(tx_attributes)
@@ -274,7 +274,7 @@ def Transactional(tx_attributes = None):
                 logger.debug("There are NO tx_attributes! %s" % tx_attributes)
             return tx_template.execute(tx_def())
         except NameError:
-            # If no AutoTransactionalComponent found in IoC container, then pass straight through.
+            # If no AutoTransactionalObject found in IoC container, then pass straight through.
             return tx_def().do_in_transaction(None)
 
     if type(tx_attributes) == types.FunctionType:
@@ -283,21 +283,21 @@ def Transactional(tx_attributes = None):
         return transactional_wrapper
 
 
-class AutoTransactionalComponent(object):
+class AutoTransactionalObject(ObjectPostProcessor):
     """
-    This component is used to automatically scan objects in an IoC container, and if @Transaction
-    is found applied to any of the component's methods, link it with a TransactionManager.
+    This object is used to automatically scan objects in an IoC container, and if @Transaction
+    is found applied to any of the object's methods, link it with a TransactionManager.
     """
 
     def __init__(self, tx_manager):
         self.tx_manager = tx_manager
-        self.logger = logging.getLogger("springpython.database.transaction.AutoTransactionalComponent")
+        self.logger = logging.getLogger("springpython.database.transaction.AutoTransactionalObject")
 
-    def post_process_after_initialization(self, container):
+    def post_process_after_initialization(self, app_context):
         """This setup is run after all objects in the container have been created."""
-        for component in container.components:
-            # Check every method in the component...
-            for name, method in inspect.getmembers(component, inspect.ismethod):
+        for obj in app_context.objects.values():
+            # Check every method in the object...
+            for name, method in inspect.getmembers(obj, inspect.ismethod):
                 try:
                     # If the method contains _call_, then you are looking at a wrapper...
                     wrapper = method.im_func.func_globals["_call_"]

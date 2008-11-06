@@ -20,7 +20,7 @@ import cherrypy
 import pickle
 import types
 from springpython.context import ApplicationContextAware
-from springpython.context.pycontainer import utils
+from springpython.aop import utils
 from springpython.security import AccessDeniedException
 from springpython.security import AuthenticationException
 from springpython.security.context import SecurityContext
@@ -73,8 +73,8 @@ class FilterChainProxy(Filter, ApplicationContextAware):
     wrapping applications for WSGI, because each URL pattern might have a different chained combination
     of the WSGI filters.
     
-    Because most middleware components define the wrapped application using __init__, Spring provides
-    the MiddlewareFilter, to help wrap any middleware component so that it can participate in a 
+    Because most middleware objects define the wrapped application using __init__, Spring provides
+    the MiddlewareFilter, to help wrap any middleware object so that it can participate in a 
     FilterChain.
     """
     
@@ -95,7 +95,7 @@ class FilterChainProxy(Filter, ApplicationContextAware):
             if re.compile(urlPattern).match(environ["PATH_INFO"].lower()):
                 for filter in chainOfFilters:
                         try:
-                            filterChain.addFilter(self.applicationContext.get_component(filter))
+                            filterChain.addFilter(self.applicationContext.get_object(filter))
                         except AttributeError, e:
                             filterChain.addFilter(filter)
                 break
@@ -416,7 +416,7 @@ class SimpleAccessDeniedHandler(AccessDeniedHandler):
 class MiddlewareFilter(Filter):
     """
     This filter allows you to wrap any WSGI-compatible middleware and use it as a Spring Python filter.
-    This is primary because lots of middleware components requires the wrapped WSGI app to be included
+    This is primary because lots of middleware objects requires the wrapped WSGI app to be included
     in the __init__ method. Spring's IoC container currently doesn't support constructor arguments.
     """
     

@@ -20,7 +20,7 @@ import springpythontest
 
 if __name__ == "__main__":    
     logger = logging.getLogger("springpython")
-    loggingLevel = logging.INFO
+    loggingLevel = logging.DEBUG
     logger.setLevel(loggingLevel)
     ch = logging.StreamHandler()
     ch.setLevel(loggingLevel)

@@ -1,78 +1,127 @@
-<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
 
-        <component id="roleVoter" class="springpython.security.vote.RoleVoter">
-        	<property name="role_prefix">"role"</property>
-        </component>
+        <object id="roleVoter" class="springpython.security.vote.RoleVoter">
+        	<property name="role_prefix" value="role"/>
+        </object>
         
-        <component id="labelBasedAclVoter" class="springpython.security.vote.LabelBasedAclVoter">
+        <object id="labelBasedAclVoter" class="springpython.security.vote.LabelBasedAclVoter">
         	<property name="label_dict">
-        		{
-        			"LABEL_BLUE": ["blue", "blue-orange"],
-        			"LABEL_ORANGE": ["orange", "blue-orange"],
-					"LABEL_SHARED": ["blue", "orange", "blue-orange"]
-				}
+        		<dict>
+        			<entry>
+        				<key><value>LABEL_BLUE</value></key>
+        				<list><value>blue</value><value>blue-orange</value></list>
+        			</entry>
+        			<entry>
+        				<key><value>LABEL_ORANGE</value></key>
+        				<list><value>orange</value><value>blue-orange</value></list>
+        			</entry>
+        			<entry>
+        				<key><value>LABEL_SHARED</value></key>
+        				<list><value>blue</value><value>orange</value><value>blue-orange</value></list>
+        			</entry>
+        		</dict>
 			</property>
-			<property name="attr_indicating_labeled_op">"LABELED_OPERATION"</property>
-		</component>        
+			<property name="attr_indicating_labeled_op" value="LABELED_OPERATION"/>
+		</object>        
         
-		<component id="dataSource" class="springpythontest.support.testSupportClasses.StubDBFactory"/>
+		<object id="dataSource" class="springpythontest.support.testSupportClasses.StubDBFactory"/>
         
-        <component id="user_details_service" class="springpython.security.userdetails.dao.DatabaseUserDetailsService">
-			<property name="dataSource" local="dataSource"/>
-        </component>
+        <object id="user_details_service" class="springpython.security.userdetails.dao.DatabaseUserDetailsService">
+			<property name="dataSource" ref="dataSource"/>
+        </object>
         
-		<component id="dao_provider_hiding_exceptions" class="springpython.security.providers.dao.DaoAuthenticationProvider">
-			<property name="user_details_service" local="user_details_service"/>
-		</component>
+		<object id="dao_provider_hiding_exceptions" class="springpython.security.providers.dao.DaoAuthenticationProvider">
+			<property name="user_details_service" ref="user_details_service"/>
+		</object>
 		
-        <component id="dao_mgr_hiding_exception" class="springpython.security.providers.AuthenticationManager">
+        <object id="dao_mgr_hiding_exception" class="springpython.security.providers.AuthenticationManager">
         	<property name="auth_providers">
-        		<list local="dao_provider_hiding_exceptions"/>
+        		<list><ref object="dao_provider_hiding_exceptions"/></list>
         	</property>
-        </component>
+        </object>
         
-		<component id="dao_provider_not_hiding_exceptions" class="springpython.security.providers.dao.DaoAuthenticationProvider">
-			<property name="user_details_service" local="user_details_service"/>
-			<property name="hide_user_not_found_exceptions">False</property>
-		</component>
+		<object id="dao_provider_not_hiding_exceptions" class="springpython.security.providers.dao.DaoAuthenticationProvider">
+			<property name="user_details_service" ref="user_details_service"/>
+			<property name="hide_user_not_found_exceptions"><value>False</value></property>
+		</object>
 		
-        <component id="dao_mgr_not_hiding_exceptions" class="springpython.security.providers.AuthenticationManager">
+        <object id="dao_mgr_not_hiding_exceptions" class="springpython.security.providers.AuthenticationManager">
         	<property name="auth_providers">
-        		<list local="dao_provider_not_hiding_exceptions"/>
+        		<list><ref object="dao_provider_not_hiding_exceptions"/></list>
         	</property>
-        </component>
+        </object>
         
-        <component id="inMemoryUserDetailsService" class="springpython.security.userdetails.InMemoryUserDetailsService">
+        <object id="inMemoryUserDetailsService" class="springpython.security.userdetails.InMemoryUserDetailsService">
         	<property name="user_dict">
-        		{
-		        	"user1": ("password1", ["role1", "blue"], True),
-		        	"user2": ("password2", ["role1", "orange"], True),
-		  			"adminuser": ("password3", ["role1", "admin"], True),
-		        	"disableduser": ("password4", ["role1", "blue"], False),
-		        	"emptyuser": ("", [], True)
-	        	}
+        		<dict>
+        			<entry>
+        				<key><value>user1</value></key>
+        				<tuple>
+        					<value>password1</value>
+        					<list><value>role1</value><value>blue</value></list>
+        					<value>True</value>
+        				</tuple>
+        			</entry>
+        			<entry>
+        				<key><value>user2</value></key>
+        				<tuple>
+        					<value>password2</value>
+        					<list><value>role1</value><value>orange</value></list>
+        					<value>True</value>
+        				</tuple>
+        			</entry>
+        			<entry>
+        				<key><value>adminuser</value></key>
+        				<tuple>
+        					<value>password3</value>
+        					<list><value>role1</value><value>admin</value></list>
+        					<value>True</value>
+        				</tuple>
+        			</entry>
+        			<entry>
+        				<key><value>disableduser</value></key>
+        				<tuple>
+        					<value>password4</value>
+        					<list><value>role1</value><value>blue</value></list>
+        					<value>False</value>
+        				</tuple>
+        			</entry>
+        			<entry>
+        				<key><value>emptyuser</value></key>
+        				<tuple>
+        					<value/>
+        					<list/>
+        					<value>True</value>
+        				</tuple>
+        			</entry>
+        		</dict>
 	        </property>
-        </component>
+        </object>
         
-		<component id="inMemoryDaoAuthenticationProvider" class="springpython.security.providers.dao.DaoAuthenticationProvider">
-			<property name="user_details_service" local="inMemoryUserDetailsService"/>
-		</component>
+		<object id="inMemoryDaoAuthenticationProvider" class="springpython.security.providers.dao.DaoAuthenticationProvider">
+			<property name="user_details_service" ref="inMemoryUserDetailsService"/>
+		</object>
 		
-        <component id="inMemoryDaoAuthenticationManager" class="springpython.security.providers.AuthenticationManager">
+        <object id="inMemoryDaoAuthenticationManager" class="springpython.security.providers.AuthenticationManager">
         	<property name="auth_providers">
-        		<list local="inMemoryDaoAuthenticationProvider"/>
+        		<list><ref object="inMemoryDaoAuthenticationProvider"/></list>
         	</property>
-        </component>
+        </object>
         
-        <component id="accessDecisionManager" class="springpython.security.vote.UnanimousBased">
+        <object id="accessDecisionManager" class="springpython.security.vote.UnanimousBased">
         	<property name="access_decision_voters">
-        		<list local="roleVoter"/>
-        		<list local="labelBasedAclVoter"/>
+        		<list>
+        			<ref object="roleVoter"/>
+        			<ref object="labelBasedAclVoter"/>
+        		</list>
         	</property>
         	<property name="allow_if_all_abstain">False</property>
-        </component>
+        </object>
         
-		<component id="sampleService" class="springpythontest.support.testSecurityClasses.SampleService"/>        
+		<object id="sampleService" class="springpythontest.support.testSecurityClasses.SampleService"/>        
 
-</components>
+</objects>

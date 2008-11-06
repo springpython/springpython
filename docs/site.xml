@@ -28,7 +28,6 @@
 
     <menu name="Documentation">
       <item name="HTML" href="reference/html/index.html" />
-      <item name="Single HTML" href="reference/html_single/index.html"/>
       <item name="PDF" href="reference/pdf/springpython-reference.pdf"/>
       <item name="XML schema specs" href="schema/context"/>
     </menu>

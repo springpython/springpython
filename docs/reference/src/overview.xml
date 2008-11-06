@@ -2,14 +2,21 @@
 <chapter id="overview">
   <title>Overview</title>
 
-	<section id="overview-introduction">
-	  	<title>Introduction</title>
-  	
-			<para><quote>Spring Python is an offshoot of the Java-based Spring Framework and Spring Security Framework,
+	<sidebar id="overview-quote">
+		<epigraph><attribution>Greg Turnquist, Spring Python project lead</attribution>
+			<para>"Spring Python is an offshoot of the Java-based Spring Framework and Spring Security Framework,
 		 	targeted for <ulink url="http://python.org">Python</ulink>. Spring provides many useful features, and
-		 	I wanted those same features available when working with Python.</quote> -- Greg Turnquist, Spring Python project lead</para>
-  	
-	</section>
+		 	I wanted those same features available when working with Python."</para>
+	 	</epigraph>
+	</sidebar>
+
+	<para>Spring Python intends to take the concepts that were developed, tested, and proven with
+	the Spring Framework, and carry them over to the language of Python. If anyone has developed a solution
+	using multiple technologies including Java, C#/.NET, and Python, they will realize that certain
+	issues exist in all these platforms.</para>
+	
+	<para>This is not a direct port of existing source code, but rather, a port of proven solutions,
+	while still remaining faithful to the style, idioms, and overall user community of Python.</para>
 
 	<section id="overview-key-features">
 	 	<title>Key Features</title>
@@ -19,11 +26,12 @@
 		<itemizedlist>
 		
 			<listitem>
-				<para><link linkend="components">Inversion Of Control</link> - The idea is to
+				<para><link linkend="objects">Inversion Of Control</link> - The idea is to
 				decouple two classes at the interface level. This lets you build many reusable
 				parts in your software, and your whole application becomes more pluggable. You
-				can use either the <classname>XmlApplicationContext</classname> or the
-				<classname>DecoratorBasedApplicationContext</classname>.</para>
+				can use either the <classname>PyContainerConfig</classname> or the
+				<classname>PythonConfig</classname> to plugin your object definition to an
+				<classname>ApplicationContext</classname>.</para>
 			</listitem>
 		
 			<listitem>
@@ -85,23 +93,23 @@
 		</itemizedlist>
 
 	</section>
-  
+	
 	<section id="overview-what-springpython-is-not">
   		<title>What Spring Python is NOT</title>
   		
   		<para>Spring Python is NOT another web framework. I think there are plenty that are fine to
   		use, like Zope, CherryPy, Quixote, and more. Spring Python is meant to provide utilities to
   		support any python application, including a web-based one.</para>
-
+  		
 		<para>So far, the demos have been based on CherryPy, but the idea is that these features
-		should work with any WSGI framework. The web components have been developed against CherryPy,
-		but the Spring Python team has made the parts WSGI-compatible, so they are reusable with any
-		WSGI-based framework. In the future, it would be nice to expand PetClinic to other frameworks
-		as well, so see how it is used.</para>
+		should work with any python web framework. The Spring Python team is striving to make things
+		reusable with any python-based web framework. There is always the goal of expanding the samples
+		into other frameworks, whether they are web-based,
+		<ulink url="http://en.wikipedia.org/wiki/Rich_Internet_application">RIA</ulink>, or thick-client.</para>
   
   	</section>
   	
-  	<section id="overview-support">
+   	<section id="overview-support">
   		<title>Support</title>
   		
 		<section id="overview-support-forums">
@@ -138,7 +146,7 @@
   	</section>
   	
   	<section id="overview-downloads">
-  		<title>Downloads</title>
+  		<title>Downloads / Source Code</title>
   		
   		<para>If you want a release, check out
   		<ulink url="http://s3browse.com/explore/dist.springframework.org/release/EXT/se-springpython-py/">Spring's download site for Spring Python</ulink>.</para>
@@ -171,7 +179,7 @@ svn co https://src.springframework.org/svn/se-springpython-py/trunk/springpython
 
 		<itemizedlist>
 			<listitem><para>Project Lead: Greg L. Turnquist</para></listitem>
-			<listitem><para>Spring Source Sponsor: Russ Miles</para></listitem>
+			<listitem><para>SpringSource Sponsor: Russ Miles</para></listitem>
 		</itemizedlist>
 		
 		<para>Many others have also contributed through reporting issues, raising questions, and even
@@ -211,7 +219,7 @@ svn co https://src.springframework.org/svn/se-springpython-py/trunk/springpython
 					url="http://lists.springsource.com/listmanager/listinfo/springpython-users">
 					springpython-developer</ulink> mailing list. That way, you'll get notified about
 					big items as well be on the inside for important developments that may or may
-					not get published to the web site. <emphasis>NOTE: Use springsource list, NOT the
+					not get published to the web site. <emphasis>NOTE: Use the springsource list, NOT the
 					sourceforge one.</emphasis></para>
 				</listitem>
 				<listitem>

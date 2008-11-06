@@ -87,34 +87,34 @@ print service.method("something")
 		
 	</section>
 	
-	<section id="aop-proxy-factory-components">
-		<title>Proxy Factory Components</title>
+	<section id="aop-proxy-factory-objects">
+		<title>Proxy Factory Objects</title>
 		
 		<para>The earlier usage of a <classname>ProxyFactory</classname> is useful, but often
 		times we only need the factory to create one proxy. There is a shortcut called
-		<classname>ProxyFactoryComponent</classname>.</para>
+		<classname>ProxyFactoryObject</classname>.</para>
 		
 <programlisting><![CDATA[
 from springpython.aop import *
-service = ProxyFactoryComponent()
+service = ProxyFactoryObject()
 service.target = SampleService()
 service.interceptors = [WrappingInterceptor()]
-print service.method(" proxy factory component")
+print service.method(" proxy factory object")
 
-"You sent me a 'proxy factory component'"
+"You sent me a 'proxy factory object'"
 ]]></programlisting>
 
-		<para>In this case, the <classname>ProxyFactoryComponent</classname> acts as both a proxy
+		<para>In this case, the <classname>ProxyFactoryObject</classname> acts as both a proxy
 		and a factory. As a proxy, it behaves just like the target service would, and it also provides
 		the ability to wrap the service with aspects. It saved us a step of coding, but more importantly,
-		the <classname>ProxyFactoryComponent</classname> took on the persona of being our service
+		the <classname>ProxyFactoryObject</classname> took on the persona of being our service
 		right from the beginning.</para>
 
 		<para>To be more pythonic, Spring Python also allows you to initialize everything at once.</para>
 		
 <programlisting><![CDATA[
 from springpython.aop import *
-service = ProxyFactoryComponent(target = SampleService(), interceptors = [WrappingInterceptor()])
+service = ProxyFactoryObject(target = SampleService(), interceptors = [WrappingInterceptor()])
 ]]></programlisting>
 
 	</section>
@@ -132,7 +132,7 @@ service = ProxyFactoryComponent(target = SampleService(), interceptors = [Wrappi
 <programlisting><![CDATA[
 from springpython.aop import *
 pointcutAdvisor = RegexpMethodPointcutAdvisor(advice = [WrappingInterceptor()], patterns = [".*do.*"])
-service = ProxyFactoryComponent(target = SampleService(), interceptors = pointcutAdvisor)
+service = ProxyFactoryObject(target = SampleService(), interceptors = pointcutAdvisor)
 print service.method("nothing changed here")
 
 "You sent me 'nothing changed here'"
@@ -145,14 +145,14 @@ print service.doSomething()
 		<note>
 			<title>The power of <classname>RegexpMethodPointAdvisor</classname></title>
 			
-			<para><classname>RegexpMethodPointAdvisor</classname> is a powerful component in
+			<para><classname>RegexpMethodPointAdvisor</classname> is a powerful object in
 			Spring Python that acts as <emphasis>pointcut</emphasis>, a <emphasis>join point</emphasis>,
 			and a <emphasis>method interceptor</emphasis>. It fetches the fullpath of the target's
 			module, class, and method name, and then checks to see if it matches any of the patterns
 			in the <emphasis>patterns</emphasis> list using Python's regular expression module.</para>
 		</note>
 
-		<para>By plugging this into a <classname>ProxyFactoryComponent</classname> as an interceptor, it evaluates
+		<para>By plugging this into a <classname>ProxyFactoryObject</classname> as an interceptor, it evaluates
 		whether to route method calls through the advice, or directly to the target service.</para>
 
 	</section>
@@ -172,14 +172,14 @@ print service.doSomething()
 		interceptor gets converted into a list of one. So, you can do either of the following:</para>
 		
 <programlisting><![CDATA[
-service = ProxyFactoryComponent()
+service = ProxyFactoryObject()
 service.interceptors = WrappingInterceptor()
 ]]></programlisting>
 
 or
 
 <programlisting><![CDATA[
-service = ProxyFactoryComponent()
+service = ProxyFactoryObject()
 factory.interceptors = [WrappingInterceptor()]
 ]]></programlisting>
 

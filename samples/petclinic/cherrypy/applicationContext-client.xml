@@ -1,15 +1,18 @@
-<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?>
+<components xmlns="http://www.springframework.org/springpython/schema/pycontainer-components"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/pycontainer-components
+       		http://springpython.webfactional.com/schema/context/spring-python-pycontainer-context-1.0.xsd">
 
 	<component id="controller" class="springpython.remoting.pyro.PyroProxyFactory">
 		<property name="service_url">"PYROLOC://localhost:7766/Controller"</property>
 	</component>
 		
-	<component id="view" class="view.PetClinicView">
+	<component id="root" class="view.PetClinicView">
 		<property name="controller" local="controller"/>
 	</component>
 
-	<component id="user_details_service" class="springpython.remoting.pyro.PyroProxyFactory">
+	<component id="userDetailsService" class="springpython.remoting.pyro.PyroProxyFactory">
 		<property name="service_url">"PYROLOC://localhost:7766/UserDetails"</property>
 	</component>
 	
@@ -46,7 +49,7 @@
 	<component id="plainEncoder" class="springpython.security.providers.encoding.PlaintextPasswordEncoder"/>
 
 	<component id="plainAuthenticationProvider" class="springpython.security.providers.dao.DaoAuthenticationProvider">
-		<property name="user_details_service" local="user_details_service"/>
+		<property name="user_details_service" local="userDetailsService"/>
 		<property name="password_encoder" local="plainEncoder"/>
 	</component>
 

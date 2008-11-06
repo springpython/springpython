@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+
+	<object id="user_details_service4" class="springpython.security.userdetails.InMemoryUserDetailsService">
+		<property name="user_dict">
+			<dict>
+                                <entry>
+                               	<key><value>list</value></key>
+	                        <list>
+       	                                <object class="springpython.security.userdetails.InMemoryUserDetailsService">
+       	                                         <property name="user_dict"><value>Test1</value></property>
+                                        </object>
+                                        <object class="springpython.security.userdetails.InMemoryUserDetailsService">
+                                                <property name="user_dict"><value>Test2</value></property>
+                                        </object>
+                                </list>
+                                </entry>
+
+                                <entry>
+                                <key><value>tuple</value></key>
+				<tuple>
+					<object class="springpython.security.userdetails.InMemoryUserDetailsService">
+						<property name="user_dict"><value>Test1</value></property>
+					</object>
+					<object class="springpython.security.userdetails.InMemoryUserDetailsService">
+						<property name="user_dict"><value>Test2</value></property>
+					</object>
+				</tuple>
+				</entry>
+
+                                <entry>
+                                <key><value>inner_object</value></key>
+				<object class="springpython.security.userdetails.InMemoryUserDetailsService">
+					<property name="user_dict"><value>Test3</value></property>
+				</object>
+				</entry>
+
+                                <entry>
+                                <key><value>set1</value></key>
+				<set>
+					<object class="springpython.security.userdetails.InMemoryUserDetailsService">
+						<property name="user_dict"><value>Test4</value></property>
+					</object>
+					<object class="springpython.security.userdetails.InMemoryUserDetailsService">
+						<property name="user_dict"><value>Test5</value></property>
+					</object>
+				</set>
+				</entry>
+
+                                <entry>
+                                <key><value>frozenset1</value></key>
+				<frozenset>
+					<object class="springpython.security.userdetails.InMemoryUserDetailsService">
+						<property name="user_dict"><value>Test6</value></property>
+					</object>
+					<object class="springpython.security.userdetails.InMemoryUserDetailsService">
+						<property name="user_dict"><value>Test7</value></property>
+					</object>
+				</frozenset>
+				</entry>
+
+                                <entry>
+                                <key><value>set2</value></key>
+				<set>
+					<object class="springpython.security.userdetails.InMemoryUserDetailsService">
+						<property name="user_dict"><value>Test8</value></property>
+					</object>
+				</set>
+				</entry>
+
+                                <entry>
+                                <key><value>frozenset2</value></key>
+				<frozenset>
+					<object class="springpython.security.userdetails.InMemoryUserDetailsService">
+						<property name="user_dict"><value>Test9</value></property>
+					</object>
+				</frozenset>
+				</entry>
+
+				<entry>
+				<key><value>value</value></key>
+				<value>Test10</value>
+				</entry>
+			</dict>
+		</property>
+	</object>
+	
+</objects>

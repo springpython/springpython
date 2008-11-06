@@ -15,6 +15,14 @@
   or on the <ulink
   url="http://forum.springframework.org/forumdisplay.php?f=45">Spring Python
   support forums</ulink>.</para>
+  
+  <note>
+  	<title>What we mean by "Spring Java"</title>
+  	
+  	<para>Throughout this documentation, the term <emphasis>Spring Java</emphasis> is used on
+  	occasion as shorthand for <emphasis>The Spring Framework</emphasis>, referring to the original,
+  	java-based framework.</para>
+  </note>
 
   <para>Before we go on, a few words of gratitude are due to the SpringSource
   team for putting together a framework for writing this reference documentation.</para>

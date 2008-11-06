@@ -9,10 +9,12 @@
 </HEAD>
 <BODY LANG="en-US" DIR="LTR">
 <H1 ALIGN=CENTER>The Spring Python PetClinic Application</H1>
-<P><FONT SIZE=4><B>Updated : <BR></B>&nbsp;&nbsp;&nbsp; 30-APR-2008 -
-Greg Turnquist, updated for new site<BR>&nbsp;&nbsp;&nbsp; 09-DEC-2006 -
-Greg Turnquist, adapted for Spring Python<BR>&nbsp;&nbsp;&nbsp;
-01-DEC-2004 - Ken Krebs<BR>&nbsp;&nbsp;&nbsp; 16-AUG-2003 - Ken Krebs</FONT></P>
+<P><FONT SIZE=4><B>Updated : <BR></B>
+&nbsp;&nbsp;&nbsp; 23-OCT-2008 - Greg Turnquist, updated with new terminology<BR>
+&nbsp;&nbsp;&nbsp; 30-APR-2008 - Greg Turnquist, updated for new site<BR>
+&nbsp;&nbsp;&nbsp; 09-DEC-2006 - Greg Turnquist, adapted for Spring Python<BR>
+&nbsp;&nbsp;&nbsp; 01-DEC-2004 - Ken Krebs<BR>
+&nbsp;&nbsp;&nbsp; 16-AUG-2003 - Ken Krebs</FONT></P>
 <H2>Introduction</H2>
 <P><A HREF="https://springpython.webfactional.com">Spring Python</A> is a collection of small, well-focused, loosely
 coupled <A HREF="http://www.python.org/">Python</A> frameworks that
@@ -23,7 +25,7 @@ frameworks can be used to build simple, but powerful
 database-oriented applications. It will demonstrate the use of Spring
 Python's core functionality:</P>
 <UL>
-	<LI><P STYLE="margin-bottom: 0in">Component-based application
+	<LI><P STYLE="margin-bottom: 0in">Object-based application
 	configuration using Inversion-Of-Control (In java, these are called
 	JavaBeans)</P>
 	<LI><P STYLE="margin-bottom: 0in">Model-View-Controller web
@@ -46,10 +48,10 @@ This infrastructure helps developers to create applications that are
 	<LI><P STYLE="margin-bottom: 0in"><B><U>flexible</U></B> by
 	simplifying the process of external application configuration
 	through the use of <A HREF="http://diveintopython.org/power_of_introspection/index.html">Introspection</A>
-	and component creation. This allows the developer to achieve a clean
+	and object creation. This allows the developer to achieve a clean
 	separation of configuration data from application code. All
 	application objects, including database connection factories,
-	templates, and proxies are components that can be configured
+	templates, and proxies are objects that can be configured
 	externally. 
 	</P>
 	<LI><P><B><U>maintainable</U></B> by facilitating a clean separation
@@ -116,7 +118,7 @@ Cases:</B></P>
 <P><B><U>Server Technology</U></B><BR>The sample application is
 written using <A HREF="http://www.cherrypy.org/">CherryPy</A> as the
 web container. CherryPy applications are self-contained web servers
-utilizing Python's built in HTTPServer components. CherryPy
+utilizing Python's built in HTTPServer objects. CherryPy
 applications do not require a 3rd party web server, such as Apache or
 IIS. However, it is possible to <A HREF="http://cherrypy.org/wiki/BehindApache">configure
 the CherryPy web application</A> to be fronted by a web server, and
@@ -229,7 +231,7 @@ FOREIGN KEY <B>pet_id</B> references the <B><I>pets </I></B>table <B>id
 <H3><U><B>Controller Layer</B></U></H3>
 <P>The Controller Layer consists of the APIs used to contain the
 business logic needed by the View layer. For the PetClinic sample
-application, this is principally database calls. These components are
+application, this is principally database calls. These objects are
 defined in the <B>controller.py</B> module.</P>
 <P>Since the Spring Python PetClinic application is all about
 database access and there is very little business logic in the
@@ -245,11 +247,11 @@ Persistence Layer currently <B>only</B> supports MySQL.</P>
 <H3 STYLE="font-style: normal"><U>Model Layer</U></H3>
 <P STYLE="font-style: normal; text-decoration: none">The <B>Model
 Layer</B> defines the entities returned from the database by the
-Controller layer. These components are defined in the <B>model.py</B>
+Controller layer. These objects are defined in the <B>model.py</B>
 module.</P>
 <H3><U>Presentation Layer</U></H3>
 <P>The <B>Presentation Layer</B>, or View is run on the CherryPy web
-application framework. The components are defined in the <B>view.py</B>
+application framework. The objects are defined in the <B>view.py</B>
 module. It contains several functions which are mapped to URLs by the
 framework. For each page, there is a defined function. Each of the
 functions is responsible for returning HTML content. To keep
@@ -258,23 +260,23 @@ presentation information decoupled from controller logic, the
 <H3><U>Launcher</U></H3>
 <P>A fourth module is the <B>petclinic.py</B> bootstrapping script.
 It is responsible for loading the Application Context, which wires
-all the components together. It also launches the CherryPy web
+all the objects together. It also launches the CherryPy web
 server, making it ready to serve content.</P>
 <P>A Spring Python <B><FONT SIZE=3>springpython.context<I>.</I>ApplicationContext</FONT>
-</B>object provides a map of user-defined components. These
-components constitute the <B>View</B> and <B>Controller </B><SPAN STYLE="font-weight: medium">layers</SPAN>
-of PetClinic. The following components are defined in the PetClinic
+</B>object provides a map of user-defined objects. These
+objects constitute the <B>View</B> and <B>Controller </B><SPAN STYLE="font-weight: medium">layers</SPAN>
+of PetClinic. The following objects are defined in the PetClinic
 <I>applicationContext.xml</I> file:</P>
 <OL>
 	<LI><P STYLE="margin-bottom: 0in"><B><I>connectionFactory </I></B>is
-	a component that holds the connection information and the call to
+	a object that holds the connection information and the call to
 	connect to the database. It is DBMS specific. 
 	</P>
 	<LI><P STYLE="margin-bottom: 0in"><B><I>controller </I></B>is a
-	component that defines the implementation of the <B>Clinic </B>interface
+	object that defines the implementation of the <B>Clinic </B>interface
 	that provides the primary Business Layer API of the application. 
 	</P>
-	<LI><P STYLE="margin-bottom: 0in"><B><I>view </I></B>is a component
+	<LI><P STYLE="margin-bottom: 0in"><B><I>view </I></B>is a object
 	that defines all the CherryPy exposed functions that end up getting
 	mapped to URLs.</P>
 </OL>

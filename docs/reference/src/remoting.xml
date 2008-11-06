@@ -7,17 +7,17 @@
 	doesn't use AOP. However, it is very similar in the concept that you won't have to modify either your servers
 	or your clients.</para>
 
-	<para>Distributed applications have multiple components. These can be spread across different instances of
+	<para>Distributed applications have multiple objects. These can be spread across different instances of
 	the Python interpreter on the same machine, as well on different machines on the network. The key factor is
 	that they need to talk to each other. The developer shouldn't have to spend a large effort coding a custom
 	solution. Another common practice in the realm of distributed programming is that fact that programmers often
 	develop standalone. When it comes time to distribute the application to production, the configuration may be
-	very different. Spring Python solves this by making the link between client and server components a step of
+	very different. Spring Python solves this by making the link between client and server objects a step of
 	configuration not coding.</para>
 
 	<para>In the context of this section of documentation, the term <emphasis>client</emphasis> refers to a
 	client-application that is trying to access some remote service. The service is referred to as the <emphasis>
-	server</emphasis> component. The term remote is subjective. It can either mean a different thread, a different
+	server</emphasis> object. The term remote is subjective. It can either mean a different thread, a different
 	interpretor, or the other side of the world over an Internet connection. As long as both parties agree on the
 	configuration, they all share the same solution.</para>
 
@@ -62,29 +62,35 @@ print service.get_data("Hello")
 				file called <emphasis>applicationContext.xml</emphasis>.</para>
 				
 <programlisting><![CDATA[
-<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <component id="service" class="Service"/>
-</components>
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+
+    <object id="service" class="Service"/>
+    
+</objects>
 ]]></programlisting>
 
 				<para>The client code is changed to this:</para>
 				
 <programlisting><![CDATA[
-appContext = XmlApplicationContext("applicationContext.xml")
-service = appContext.get_component("service")
+appContext = ApplicationContext(XMLConfig("applicationContext.xml"))
+service = appContext.get_object("service")
 print service.get_data("Hello")
 
 "You got remote data => Hello"
 ]]></programlisting>
 
 				<para>Not too tough, ehh? Well, guess what. That little step just decoupled the client from directly
-				creating the service. Now we can step in and configure things for remote procedure calls without the client know it.</para>
+				creating the service. Now we can step in and configure things for remote procedure calls without the
+				client knowing it.</para>
 				
 			</section>
 			
 			<section id="remoting-pyro-ioc">
-				<title>Exporting a Spring Service Using InversionOfControl</title>
+				<title>Exporting a Spring Service Using <link linkend="objects">Inversion Of Control</link></title>
 				
 				<para>In order to reach our service remotely, we have to export it. Spring Python
 				provides <classname>PyroServiceExporter</classname> to export your service through
@@ -92,30 +98,33 @@ print service.get_data("Hello")
 				application context.</para>
 
 <programlisting><![CDATA[
-<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
             
-    <component id="remoteService" class="Service"/>
+    <object id="remoteService" class="Service"/>
 
-    <component id="service_exporter" class="springpython.remoting.pyro.PyroServiceExporter">
-        <property name="service_name">"ServiceName"</property>
-        <property name="service" local="remoteService"/>
-    </component>
+    <object id="service_exporter" class="springpython.remoting.pyro.PyroServiceExporter">
+        <property name="service_name" value="ServiceName"/>
+        <property name="service" ref="remoteService"/>
+    </object>
 
-    <component id="service" class="springpython.remoting.pyro.PyroProxyFactory">
-        <property name="service_url">"PYROLOC://localhost:7766/ServiceName"</property>
-    </component>
+    <object id="service" class="springpython.remoting.pyro.PyroProxyFactory">
+        <property name="service_url" value="PYROLOC://localhost:7766/ServiceName"/>
+    </object>
 
-</components>
+</objects>
 ]]></programlisting>
 
 				<para>Three things have happened:</para>
 				<orderedlist>
 					<listitem>
-						<para>Our original service's component name has been changed to <emphasis>remoteService</emphasis>.</para>
+						<para>Our original service's object name has been changed to <emphasis>remoteService</emphasis>.</para>
 					</listitem>
 					<listitem>
-						<para>Another component was introduced called <emphasis>service_exporter</emphasis>. It references component
+						<para>Another object was introduced called <emphasis>service_exporter</emphasis>. It references object
 						<emphasis>remoteService</emphasis>, and provides a proxied interface through a Pyro URL.</para>
 					</listitem>
 					<listitem>
@@ -128,7 +137,7 @@ print service.get_data("Hello")
 				to look up the exported module, and end up calling our remote Spring service. And notice how neither our service
 				nor the client have changed!</para>
 
-				<para>We can now split up this application into two components. Running the remote service on another server only
+				<para>We can now split up this application into two objects. Running the remote service on another server only
 				requires us to edit the client's application context, changing the URL to get to the service. All without telling
 				the client and server code.</para>
 				

@@ -1,11 +1,14 @@
-<components xmlns="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
 
-	<component id="connection_factory" class="springpython.database.factory.PgdbConnectionFactory">
-        <property name="user">"springpython"</property>
-        <property name="password">"springpython"</property>
-        <property name="host">"localhost"</property>
-        <property name="database">"springpython"</property>
-    </component>
+	<object id="connection_factory" class="springpython.database.factory.PgdbConnectionFactory">
+        <property name="user" value="springpython"/>
+        <property name="password" value="springpython"/>
+        <property name="host" value="localhost"/>
+        <property name="database" value="springpython"/>
+    </object>
 	
-</components>
+</objects>

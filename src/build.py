@@ -19,8 +19,8 @@ import sys
 from distutils.core import setup
 from optparse import OptionParser
 
-if sys.version_info < (2, 3):
-    print "Spring Python only supports Python 2.3 and higher"
+if sys.version_info < (2, 4):
+    print "Spring Python only supports Python 2.4 and higher"
     sys.exit(1)
 
 parser = OptionParser(usage="usage: %prog [-h|--help] [options]")
@@ -38,14 +38,17 @@ setup(name='springpython',
       author='Greg L. Turnquist',
       author_email='gregturn at mindspring dot com',
       url='http://springpython.webfactional.com',
-      platforms = ["Python >= 2.3"],
+      platforms = ["Python >= 2.4"],
       license='Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
       packages=['springpython', 
                 'springpython.aop', 
+                'springpython.config',
+                'springpython.container',
                 'springpython.context',
-                'springpython.context.pycontainer', 
                 'springpython.database', 
+                'springpython.factory', 
                 'springpython.remoting', 
+                'springpython.remoting.hessian', 
                 'springpython.remoting.pyro', 
                 'springpython.security',
                 'springpython.security.context',
