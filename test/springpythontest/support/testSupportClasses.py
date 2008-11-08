@@ -31,7 +31,7 @@ from springpython.database.transaction import ConnectionFactoryTransactionManage
 from springpython.database.transaction import TransactionTemplate
 from springpython.database.transaction import TransactionCallbackWithoutResult
 from springpython.database.transaction import TransactionProxyFactoryObject
-from springpython.database.transaction import Transactional
+from springpython.database.transaction import transactional
 
 class Person(object):
     def __init__(self, name, phone):
@@ -306,7 +306,7 @@ class TransactionalBank(object):
     def balance(self, account_num):
         return self.dt.query_for_object("SELECT balance FROM account WHERE account_num = ?", (account_num,), types.FloatType)
 
-    @Transactional()
+    @transactional()
     def transfer(self, amount, from_account, to_account):
         self.logger.debug("Transferring $%s from %s to %s." % (amount, from_account, to_account))
         self.withdraw(amount, from_account)
@@ -358,7 +358,7 @@ class TransactionalBankWithNoTransactionalArguments(object):
     def balance(self, account_num):
         return self.dt.query_for_object("SELECT balance FROM account WHERE account_num = ?", (account_num,), types.FloatType)
 
-    @Transactional
+    @transactional
     def transfer(self, amount, from_account, to_account):
         self.logger.debug("Transferring $%s from %s to %s." % (amount, from_account, to_account))
         self.withdraw(amount, from_account)
@@ -390,19 +390,19 @@ class TransactionalBankWithLotsOfTransactionalArguments(object):
         self.logger = logging.getLogger("springpythontest.testSupportClasses.TransactionalBankWithLotsOfTransactionalArguments")
         self.dt = DatabaseTemplate(factory)
 
-    @Transactional(["PROPAGATION_REQUIRED"])
+    @transactional(["PROPAGATION_REQUIRED"])
     def open(self, account_num):
         self.logger.debug("Opening account %s with $0 balance." % account_num)
         self.dt.execute("INSERT INTO account (account_num, balance) VALUES (?,?)", (account_num, 0))
 
-    @Transactional(["PROPAGATION_REQUIRED"])
+    @transactional(["PROPAGATION_REQUIRED"])
     def deposit(self, amount, account_num):
         self.logger.debug("Depositing $%s into %s" % (amount, account_num))
         rows = self.dt.execute("UPDATE account SET balance = balance + ? WHERE account_num = ?", (amount, account_num))
         if rows == 0:
             raise BankException("Account %s does NOT exist" % account_num)
 
-    @Transactional(["PROPAGATION_REQUIRED"])
+    @transactional(["PROPAGATION_REQUIRED"])
     def withdraw(self, amount, account_num):
         self.logger.debug("Withdrawing $%s from %s" % (amount, account_num))
         rows = self.dt.execute("UPDATE account SET balance = balance - ? WHERE account_num = ?", (amount, account_num))
@@ -410,31 +410,31 @@ class TransactionalBankWithLotsOfTransactionalArguments(object):
             raise BankException("Account %s does NOT exist" % account_num)
         return amount
 
-    @Transactional(["PROPAGATION_SUPPORTS","readOnly"])
+    @transactional(["PROPAGATION_SUPPORTS","readOnly"])
     def balance(self, account_num):
         self.logger.debug("Checking balance for %s" % account_num)
         return self.dt.query_for_object("SELECT balance FROM account WHERE account_num = ?", (account_num,), types.FloatType)
 
-    @Transactional(["PROPAGATION_REQUIRED"])
+    @transactional(["PROPAGATION_REQUIRED"])
     def transfer(self, amount, from_account, to_account):
         self.logger.debug("Transferring $%s from %s to %s." % (amount, from_account, to_account))
         self.withdraw(amount, from_account)
         self.deposit(amount, to_account)
 
-    @Transactional(["PROPAGATION_NEVER"])
+    @transactional(["PROPAGATION_NEVER"])
     def nonTransactionalOperation(self):
         self.logger.debug("Executing non-transactional operation.")
 
-    @Transactional(["PROPAGATION_MANDATORY"])
+    @transactional(["PROPAGATION_MANDATORY"])
     def mandatoryOperation(self):
         self.logger.debug("Executing mandatory transactional operation.")
 
-    @Transactional(["PROPAGATION_REQUIRED"])
+    @transactional(["PROPAGATION_REQUIRED"])
     def mandatoryOperationTransactionalWrapper(self):
         self.mandatoryOperation()
         self.mandatoryOperation()
 
-    @Transactional(["PROPAGATION_REQUIRED"])
+    @transactional(["PROPAGATION_REQUIRED"])
     def nonTransactionalOperationTransactionalWrapper(self):
         self.nonTransactionalOperation()
 

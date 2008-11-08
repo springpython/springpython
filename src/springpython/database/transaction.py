@@ -224,23 +224,23 @@ class TransactionProxyFactoryObject(ProxyFactoryObject):
         self.logger = logging.getLogger("springpython.database.transaction.TransactionProxyFactoryObject")
         ProxyFactoryObject.__init__(self, target, TransactionalInterceptor(tx_manager, tx_attributes))
 
-def Transactional(tx_attributes = None):
+def transactional(tx_attributes = None):
     """
     This decorator is actually a utility function that returns an embedded decorator, in order
     to handle whether it was called in any of the following ways:
 
-    @Transactional()
+    @transactional()
     def foo():
         pass
 
-    @Transactional
+    @transactional
     def foo():
         pass
 
     The first two ways get parsed by Python as:
 
-    foo = Transactional("some contextual string")(foo)      # first way
-    foo = Transactional()(foo)                              # second way
+    foo = transactional("some contextual string")(foo)      # first way
+    foo = transactional()(foo)                              # second way
 
     Since this is expected, they are granted direct access to the embedded transactional_wrapper.
 
@@ -278,7 +278,7 @@ def Transactional(tx_attributes = None):
             return tx_def().do_in_transaction(None)
 
     if type(tx_attributes) == types.FunctionType:
-        return Transactional()(tx_attributes)
+        return transactional()(tx_attributes)
     else:
         return transactional_wrapper
 
@@ -301,7 +301,7 @@ class AutoTransactionalObject(ObjectPostProcessor):
                 try:
                     # If the method contains _call_, then you are looking at a wrapper...
                     wrapper = method.im_func.func_globals["_call_"]
-                    if wrapper.func_name == "transactional_wrapper":  # name of @Transactional's wrapper method
+                    if wrapper.func_name == "transactional_wrapper":  # name of @transactional's wrapper method
                         self.logger.debug("Linking tx_manager with %s" % name)
                         wrapper.func_globals["tx_manager"] = self.tx_manager
                 except KeyError, e:   # If the method is NOT wrapped, there will be no _call_ attribute
