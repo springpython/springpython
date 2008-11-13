@@ -22,6 +22,7 @@
     </menu>
 
     <menu name="Support">
+      <item name="News/Blog" href="http://blog.springpython.webfactional.com"/>
       <item name="Discussion Forum" href="http://forum.springframework.org/forumdisplay.php?f=45"/>
       <item name="Mailing List" href="mail-lists.html"/>
     </menu>
