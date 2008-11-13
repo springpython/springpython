@@ -17,7 +17,7 @@ Key Features
 
     * {{{reference/html/objects.html}Inversion Of Control}} - The idea is to decouple two classes at the
     interface level. This lets you build many reusable parts in your software, and your whole application becomes
-    more pluggable. You can XMLConfig, PythonConfig/@Object, PyContainerConfig, or SpringJavaConfig, allowing you
+    more pluggable. You can use XMLConfig, PythonConfig/@Object, PyContainerConfig, or SpringJavaConfig, allowing you
     to read multiple formats.	
 
     * {{{reference/html/aop.html}Aspect-oriented Programming}} - Spring Python provides great ways to wrap advice
@@ -63,38 +63,6 @@ What's Coming?
 
 Spring Python News
 
-  <<NEWS>> - Spring Python 0.8.0 has been released. This release contains a refactored IoC container supporting
-  four formats (XMLConfig, PythonConfig/@Object, PyContainerConfig, and SpringJavaConfig); replacement
-  of the term "component" with "object" in all APIs, classnames, etc.; and other bug fixes and API cleanup. 11/06/2007 G.Turnquist
-
-  <<NEWS>> - Spring Python 0.7.1 has been released. This release contains improvements to reference documentation as well
-  as integration with {{{http://s3browse.com/explore/dist.springframework.org/release/EXT/se-springpython-py}Spring's new
-  download site}}. - 10/17/2008 G.Turnquist
-
-  <<NEWS>> - Spring Python 0.7.0 has been released. This release contains several upgrades and improvements, including
-  scrubbing the APIs to better match {{{http://www.python.org/dev/peps/pep-0008/}PEP-0008}}. - 9/25/2008 G.Turnquist
-
-  <<NEWS>> - Spring Python's web page has been updated. It now uses the maven-generate material, with links to the official
-  documents released earlier. The former trac site is still online and available through a link on the site. While the site
-  may appear low on information, all the main articles of documentation are contained in the reference documents themselves. 
-  - 9/19/2008 G.Turnquist
-
-  <<NEWS>> - Spring Python's official documentation has been staged at
-  {{{http://springpython.webfactional.com/reference/html}http://springpython.webfactional.com/reference/html}}. - 9/17/2008 G.Turnquist
-
-  <<NEWS>> - Spring Python was given as a "sneak peek" into Spring Extensions to the London Spring User's Group at the
-  end of a presentation on Spring.NET given by Russ Miles. If you follow that link to the Spring Python forums, there is another
-  link to see the online video clip. - 9/15/2008 G.Turnquist
-
-  <<NEWS>> - Spring Python 0.6.0 has been released. This is the release with Spring Python as an official Spring Extension.
-  The primary task was quality, and the first step was to integrate all the unit tests with SpringSource's build team and a
-  continuous integration server. This has been accomplished and one sample of such a run can be found at
-  http://build.springframework.org/browse/EXT-PYQUICK-19. A couple cosmetic issues were closed at the same time. Also, a
-  new email distribution list has been created (mailto:springpython-users@lists.springsource.com), hosted by SpringSource,
-  and existing members have been migrated to it. - 9/5/2008 G.Turnquist
-
-  <<NEWS>> - SpringSource has noticed Spring Python! Russ Miles from Spring Source recently contacted me and invited Spring
-  Python to become an official Spring Extension. Russ is in charge of the Spring Extensions project, a process they are
-  setting up to incubate projects that can potentially become official parts of Spring Source's software portfolio. Read more
-  on our new discussion forum. - 8/11/2008 G.Turnquist
-
+  Visit {{{http://blog.springpython.webfactional.com}Spring Python's blog site}} for news, postings, and
+  other up-to-the-minute information.
+  
