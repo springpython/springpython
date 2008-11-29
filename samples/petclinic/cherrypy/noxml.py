@@ -197,13 +197,6 @@ class PetClinicClientAndServer(PythonConfig):
         return filter
 
     @Object
-    def exceptionFilter(self):
-        filter = MiddlewareFilter()
-        filter.clazz = "paste.evalexception.middleware.EvalException"
-        filter.appAttribute = "application"
-        return filter 
-    
-    @Object
     def authenticationProcessingFilterEntryPoint(self):
         filter = AuthenticationProcessingFilterEntryPoint()
         filter.loginFormUrl = "/login"
@@ -228,11 +221,10 @@ class PetClinicClientAndServer(PythonConfig):
     def filterChainProxy(self):
         return FilterChainProxy(filterInvocationDefinitionSource = 
             [
-            ("/images.*", [self.exceptionFilter(), ]),
-            ("/html.*",   [self.exceptionFilter(), ]),
-            ("/login.*",  [self.exceptionFilter(), self.httpContextFilter()]),
-            ("/.*",       [self.exceptionFilter(),
-                           self.httpContextFilter(),
+            ("/images.*", []),
+            ("/html.*",   []),
+            ("/login.*",  [self.httpContextFilter()]),
+            ("/.*",       [self.httpContextFilter(),
                            self.exceptionTranslationFilter(),
                            self.authenticationProcessingFilter(),
                            self.filterSecurityInterceptor()])
@@ -448,13 +440,6 @@ class PetClinicClientOnly(PythonConfig):
         return filter
 
     @Object
-    def exceptionFilter(self):
-        filter = MiddlewareFilter()
-        filter.clazz = "paste.evalexception.middleware.EvalException"
-        filter.appAttribute = "application"
-        return filter
-    
-    @Object
     def authenticationProcessingFilterEntryPoint(self):
         filter = AuthenticationProcessingFilterEntryPoint()
         filter.loginFormUrl = "/login"
@@ -479,11 +464,10 @@ class PetClinicClientOnly(PythonConfig):
     def filterChainProxy(self):
         return FilterChainProxy(filterInvocationDefinitionSource = 
             [
-            ("/images.*", [self.exceptionFilter(), ]),
-            ("/html.*",   [self.exceptionFilter(), ]),
-            ("/login.*",  [self.exceptionFilter(), self.httpContextFilter()]),
-            ("/.*",       [self.exceptionFilter(),
-                           self.httpContextFilter(),
+            ("/images.*", []),
+            ("/html.*",   []),
+            ("/login.*",  [self.httpContextFilter()]),
+            ("/.*",       [self.httpContextFilter(),
                            self.exceptionTranslationFilter(),
                            self.authenticationProcessingFilter(),
                            self.filterSecurityInterceptor()])
