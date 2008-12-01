@@ -19,7 +19,7 @@ import termios
 import subprocess
 from getpass import getpass
 from springpython.database.core import DatabaseTemplate
-from springpython.database.mysql import MySQLConnectionFactory
+from springpython.database.factory import MySQLConnectionFactory
 
 def tryMySQL():
     """Try to setup the database through MySQL. If it fails, return None. Otherwise, return

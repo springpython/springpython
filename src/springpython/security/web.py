@@ -93,17 +93,27 @@ class FilterChainProxy(Filter, ApplicationContextAware):
         filterChain = FilterChain()
         for urlPattern, chainOfFilters in self.filterInvocationDefinitionSource:
             if re.compile(urlPattern).match(environ["PATH_INFO"].lower()):
+		self.logger.debug("We had a match of %s against %s" % (environ["PATH_INFO"], urlPattern))
                 for filter in chainOfFilters:
                         try:
-                            filterChain.addFilter(self.applicationContext.get_object(filter))
+                            filterChain.addFilter(self.app_context.get_object(filter))
                         except AttributeError, e:
                             filterChain.addFilter(filter)
                 break
 
         # Put the actual application on the end of the chain.
-        filterChain.addFilter(self.application)
+        if self.application:
+            filterChain.addFilter(self.application)
         environ["SPRINGPYTHON_FILTER_CHAIN"] = filterChain.getFilterChain()
         return self.doNextFilter(environ, start_response)
+
+class CP3FilterChainProxy(FilterChainProxy):
+    def __init__(self, filterInvocationDefinitionSource=None):
+        FilterChainProxy.__init__(self, filterInvocationDefinitionSource)
+        cherrypy.tools.filterChainProxy = cherrypy.Tool('before_handler', self, priority=75)
+
+    def __call__(self, environ=None, start_response=None):
+        return FilterChainProxy.__call__(self, cherrypy.request.wsgi_environ, start_response)
 
 class SessionStrategy(object):
     """
@@ -113,6 +123,22 @@ class SessionStrategy(object):
     
     def getHttpSession(self, environ):
         raise NotImplementedError()
+
+    def setHttpSession(self, key, value):
+        raise NotImplementedError()
+
+class CP3SessionStrategy(SessionStrategy):
+    def __init__(self):
+        SessionStrategy.__init__(self)
+        self.logger = logging.getLogger("springpython.security.web.CP3SessionStrategy")
+
+    def getHttpSession(self, environ):
+        return cherrypy.session.get("session_id")
+    
+    def setHttpSession(self, key, value):
+        if "session_id" not in cherrypy.session:
+            cherrypy.session["session_id"] = {}
+        cherrypy.session["session_id"][key] = value
 
 class CherryPySessionStrategy(SessionStrategy):
     """
@@ -199,11 +225,11 @@ class HttpSessionContextIntegrationFilter(Filter):
              
         results = self.doNextFilter(environ, start_response)
 
-        if httpSession is not None and str(SecurityContextHolder.getContext()) != contextWhenChainProceeded:
-            httpSession[self.SPRINGPYTHON_SECURITY_CONTEXT_KEY] = pickle.dumps(SecurityContextHolder.getContext())
-            self.logger.debug("SecurityContext stored to HttpSession: '%s'" % SecurityContextHolder.getContext())
+        self.sessionStrategy.setHttpSession(self.SPRINGPYTHON_SECURITY_CONTEXT_KEY,
+                                            pickle.dumps(SecurityContextHolder.getContext()))
+        self.logger.debug("SecurityContext stored to HttpSession: '%s'" % SecurityContextHolder.getContext())
 
-        SecurityContextHolder.clearContext();
+        SecurityContextHolder.clearContext()
         self.logger.debug("SecurityContextHolder cleared out, as request processing completed")
 
         return results
@@ -218,6 +244,10 @@ class HttpSessionContextIntegrationFilter(Filter):
         context.authentication = UsernamePasswordAuthenticationToken()
         return context
 
+    def saveContext(self):
+        self.sessionStrategy.setHttpSession(self.SPRINGPYTHON_SECURITY_CONTEXT_KEY,
+                                            pickle.dumps(SecurityContextHolder.getContext()))
+
 class RedirectStrategy(object):
     """
     This class provides a mechanism to redirect users to another page. Currently, it returns a 
@@ -228,6 +258,10 @@ class RedirectStrategy(object):
     def redirect(self, url):
         """This is a 0-second redirect."""
         return """<META HTTP-EQUIV="Refresh" CONTENT="0; URL=%s">""" % url
+
+class CP3RedirectStrategy(object):
+    def redirect(self, url):
+        raise cherrypy.HTTPRedirect(url)
 
 class AuthenticationProcessingFilter(Filter):
     """
@@ -260,7 +294,7 @@ class AuthenticationProcessingFilter(Filter):
             self.logger.debug("%s was successfully authenticated, access GRANTED." % token.username)
         except AuthenticationException, e:
             self.logger.debug("Authentication failure, access DENIED.")
-            raise e
+            raise
 
         return self.doNextFilter(environ, start_response)
 
@@ -279,7 +313,7 @@ class FilterInvocation:
 class AbstractFilterInvocationDefinitionSource(ObjectDefinitionSource):
     """Abstract implementation of ObjectDefinitionSource."""
     
-    def getAttributes(self, obj):
+    def get_attributes(self, obj):
         try:
             return self.lookupAttributes(obj.requestUrl())
         except AttributeError:
@@ -333,11 +367,12 @@ class FilterSecurityInterceptor(Filter, AbstractSecurityInterceptor):
         else:
             self.__dict__[name] = value
 
-    def obtainObjectDefinitionSource(self):
+    def obtain_obj_def_source(self):
         return self.obj_def_source
 
     def __call__(self, environ, start_response):
         httpSession = self.sessionStrategy.getHttpSession(environ)
+	self.logger.debug("Trying to check if you are authorized for this.")
         fi = FilterInvocation(environ)
         token = self.before_invocation(fi)
         if httpSession is not None:

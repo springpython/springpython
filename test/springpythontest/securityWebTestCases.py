@@ -43,7 +43,10 @@ class StubSessionStrategy(SessionStrategy):
         
     def getHttpSession(self, environ):
         return self.sessionData
-    
+
+    def setHttpSession(self, key, value):
+	self.sessionData[key] = value
+
 class StubAuthenticationFilter(Filter):
     """
     This is a pass-through filter, used to help test HttpSessionContextIntegrationFilter. That filter

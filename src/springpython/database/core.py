@@ -125,7 +125,7 @@ class DatabaseTemplate(object):
             self.logger.debug("query_for_list: I thought about kicking this up the chain => %s" % error)
 
         # Convert multi-item tuple into list
-        return [result for result in results]
+        return [result for result in results or []]
 
     def query_for_int(self, sql_query, args = None):
         """Execute a query that results in an int value, given static SQL. If args is provided, bind the arguments 

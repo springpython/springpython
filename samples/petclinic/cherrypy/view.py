@@ -24,9 +24,6 @@ from springpython.security.context import SecurityContext
 from springpython.security.context import SecurityContextHolder
 from springpython.security.providers import UsernamePasswordAuthenticationToken
 
-def notice():
-    return "<b><small>FilterSecurityInterceptor has NOT been upgraded to CherryPy 3.1 yet. Somes pages for certain users are not yet denying access as expected.</small></b>"
-
 def header():
     """Standard header used for all pages"""
     return """
@@ -55,7 +52,7 @@ def header():
             <br/>
             <br/>
             <br/>
-            """ + notice()
+            """
 
 def footer():
     """Standard footer used for all pages."""
@@ -63,18 +60,22 @@ def footer():
         <hr>
         <table style="width:100%"><tr>
                 <td><A href="/">Home</A></td>
-                <td style="text-align:right;color:silver">PetClinic :: a <a href="https://springpython.webfactional.com">Spring Python</a> demonstration (powered by <A HREF="http://www.cherrypy.org">CherryPy</A>)</td>
+                <td style="text-align:right;color:silver">PetClinic :: a <a href="http://springpython.webfactional.com">Spring Python</a> demonstration (powered by <A HREF="http://www.cherrypy.org">CherryPy</A>)</td>
         </tr></table>
-        """ + notice() + """
         </body>
         """
     
-class PetClinicView:
+class PetClinicView(object):
     """Presentation layer of the web application."""
 
-    def __init__(self, controller = None):
-        """Inject a controller object in order to fetch live data."""
+    def __init__(self, filter=None, controller = None, hashedUserDetailsServiceList = None, authenticationManager=None, redirectStrategy=None):
+        self.filter = filter
         self.controller = controller
+        self.hashedUserDetailsServiceList = hashedUserDetailsServiceList
+        self.authenticationManager = authenticationManager
+        self.redirectStrategy = redirectStrategy
+	self.httpContextFilter = None
+        self.logger = logging.getLogger("springpython.petclinic.view.PetClinicView")
         
     @cherrypy.expose
     def accessDenied(self):
@@ -98,7 +99,7 @@ class PetClinicView:
             <P>
             <A HREF="html/petclinic.html">Detailed description of this demo</A>
             <P>
-            <a href="/login/logout">Logout</a>
+            <a href="/logout">Logout</a>
             """ + footer()
 
     @cherrypy.expose
@@ -145,7 +146,7 @@ class PetClinicView:
             <A href="addOwner">Add Owner</A>
             <P>
             <BR>
-            <a href="/login/logout">Logout</a>
+            <a href="/logout">Logout</a>
             """ + footer()
         return results
 
@@ -192,7 +193,7 @@ class PetClinicView:
             </FORM>
             <P>
             <BR>
-            <a href="/login/logout">Logout</a>
+            <a href="/logout">Logout</a>
             """ % (kwargs["firstName"], kwargs["lastName"], kwargs["address"], kwargs["city"], kwargs["telephone"]) + footer()
         return results
     
@@ -241,7 +242,7 @@ class PetClinicView:
             <A href="addPet?id=%s">Add Pet</A>
             <P>
             <BR>
-            <a href="/login/logout">Logout</a>
+            <a href="/logout">Logout</a>
             """ % id + footer()
         return results
     
@@ -282,7 +283,7 @@ class PetClinicView:
             <A HREF="editOwner?id=%s">Back to Owner</A>
             <P>
             <BR>
-            <a href="/login/logout">Logout</a>
+            <a href="/logout">Logout</a>
             """ % id + footer()
         return results
 
@@ -318,7 +319,7 @@ class PetClinicView:
             <P>
             <A HREF="editOwner?id=%s">Back to owner</A>
             <BR>
-            <a href="/login/logout">Logout</a>
+            <a href="/logout">Logout</a>
             """ % (ownerId, pet.id, pet.name, ownerId) + footer()
         return results
 
@@ -339,7 +340,7 @@ class PetClinicView:
             <P>
             <A HREF="vetHistory?ownerId=%s&petId=%s">Back to history of visits</A>
             <P>
-            <a href="/login/logout">Logout</a>
+            <a href="/logout">Logout</a>
             """ % (name, name, ownerId, petId, ownerId, petId) + footer()
         return results
 
@@ -372,26 +373,12 @@ class PetClinicView:
             </TABLE>
             <P>
             <BR>
-            <a href="/login/logout">Logout</a>
+            <a href="/logout">Logout</a>
             """ + footer()
         return results
-
-class CherryPyAuthenticationForm:
-    """
-    This is simple authentication page used to test the PetClinic app. For production use, you
-    should use something like SSL to keep people from eavesdropping on passwords being passed
-    to the application server.
-    """
-    def __init__(self, filter=None, controller = None, hashedUserDetailsServiceList = None, authenticationManager=None, redirectStrategy=None):
-        self.filter = filter
-        self.controller = controller
-        self.hashedUserDetailsServiceList = hashedUserDetailsServiceList
-        self.authenticationManager = authenticationManager
-        self.redirectStrategy = redirectStrategy
-        self.logger = logging.getLogger("springpython.petclinic.view.CherryPyAuthenticationForm")
-        
+      
     @cherrypy.expose
-    def index(self, fromPage="/", login="", password="", errorMsg=""):
+    def login(self, fromPage="/", login="", password="", errorMsg=""):
         if login != "" and password != "":
             try:
                 self.attemptAuthentication(login, password)
@@ -414,7 +401,6 @@ class CherryPyAuthenticationForm:
                 </tr>
         """ % errorMsg
 
-#        for key, value in self.plainUserDetailsService.userMap.items():
         for (username, password, authorities, enabled) in self.controller.getUsers():
             results += """
                 <tr>
@@ -478,6 +464,7 @@ class CherryPyAuthenticationForm:
     def logout(self):
         """Replaces current authentication token, with an empty, non-authenticated one."""
         self.filter.logout()
+	self.httpContextFilter.saveContext()
         raise cherrypy.HTTPRedirect("/")
 
     def attemptAuthentication(self, username, password):
@@ -485,4 +472,5 @@ class CherryPyAuthenticationForm:
         self.logger.debug("Trying to authenticate %s using the authentication manager" % username)
         token = UsernamePasswordAuthenticationToken(username, password)
         SecurityContextHolder.getContext().authentication = self.authenticationManager.authenticate(token)
+	self.httpContextFilter.saveContext()
         self.logger.debug(SecurityContextHolder.getContext())

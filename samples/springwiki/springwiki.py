@@ -38,8 +38,14 @@ if __name__ == '__main__':
     logger.addHandler(ch)
 
     applicationContext = ApplicationContext(XMLConfig(config_location = "applicationContext.xml"))
-    
-    conf = {"/":                {"tools.staticdir.root": os.getcwd()},
+    filterChainProxy = applicationContext.get_object("filterChainProxy")
+
+    SecurityContextHolder.setStrategy(SecurityContextHolder.MODE_GLOBAL)
+    SecurityContextHolder.getContext()
+
+    conf = {"/":                {"tools.staticdir.root": os.getcwd(),
+                                 'tools.sessions.on': True,
+                                 "tools.filterChainProxy.on": True},
             "/images":          {"tools.staticdir.on": True,
                                  "tools.staticdir.dir": "images"},
             "/html":            {"tools.staticdir.on": True,
@@ -67,8 +73,11 @@ if __name__ == '__main__':
             }
 
     cherrypy.config.update({'server.socket_port': port})
-    
-    cherrypy.tree.mount(applicationContext.get_object(name = "read"), '/', config=conf)
+
+    app = applicationContext.get_object(name = "read")
+    app.login = applicationContext.get_object(name = "loginForm")
+
+    cherrypy.tree.mount(app, '/', config=conf)
 
     cherrypy.engine.start()
     cherrypy.engine.block()

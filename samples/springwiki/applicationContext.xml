@@ -10,15 +10,122 @@
 		<property name="controller" ref="controller"/>
 	</object>
 	
-	<object id="filterChainProxy" class="springpython.security.web.FilterChainProxy">
-		<property name="filterInvocationDefinitionSource">
+	<object id="userDetailsService2" class="springpython.security.userdetails.InMemoryUserDetailsService">
+		<property name="user_dict">
+			<dict>
+				<entry>
+					<key><value>writer</value></key>
+					<tuple>
+						<value>comein</value>
+						<list><value>VET_ANY</value></list>
+						<value>True</value>
+					</tuple>
+				</entry>
+			</dict>
+		</property>
+	</object>
+
+	<object id="plainEncoder" class="springpython.security.providers.encoding.PlaintextPasswordEncoder"/>
+
+	<object id="plainAuthenticationProvider" class="springpython.security.providers.dao.DaoAuthenticationProvider">
+		<property name="user_details_service" ref="userDetailsService2"/>
+		<property name="password_encoder" ref="plainEncoder"/>
+	</object>
+
+	<object id="authenticationManager" class="springpython.security.providers.AuthenticationManager">
+		<property name="auth_providers">
+			<list>
+			  <ref object="plainAuthenticationProvider"/>
+			</list>
+		</property>
+	</object>
+
+	<object id="authenticationProcessingFilter" class="springpython.security.web.AuthenticationProcessingFilter">
+		<property name="auth_manager" ref="authenticationManager"/>
+		<property name="alwaysReauthenticate">False</property>
+	</object>
+	
+	<object id="cherrypySessionStrategy" class="springpython.security.web.CP3SessionStrategy"/>
+
+	<object id="redirectStrategy" class="springpython.security.web.CP3RedirectStrategy"/>
+	
+	<object id="httpContextFilter" class="springpython.security.web.HttpSessionContextIntegrationFilter">
+		<property name="sessionStrategy" ref="cherrypySessionStrategy"/>
+	</object>
+	
+	<object id="authenticationProcessingFilterEntryPoint" class="springpython.security.web.AuthenticationProcessingFilterEntryPoint">
+		<property name="loginFormUrl" value="/login"></property>
+		<property name="redirectStrategy" ref="redirectStrategy"/>
+	</object>
+	
+	<object id="accessDeniedHandler" class="springpython.security.web.SimpleAccessDeniedHandler">
+		<property name="errorPage" value="/accessDenied"></property>
+		<property name="redirectStrategy" ref="redirectStrategy"/>
+	</object>
+		
+	<object id="exceptionTranslationFilter" class="springpython.security.web.ExceptionTranslationFilter">
+		<property name="authenticationEntryPoint" ref="authenticationProcessingFilterEntryPoint"/>
+		<property name="accessDeniedHandler" ref="accessDeniedHandler"/>
+	</object>
+	
+	<object id="filterSecurityInterceptor" class="springpython.security.web.FilterSecurityInterceptor">
+		<property name="validate_config_attributes" value="False"/>
+		<property name="auth_manager" ref="authenticationManager"/>
+		<property name="access_decision_mgr" ref="accessDecisionManager"/>
+		<property name="sessionStrategy" ref="cherrypySessionStrategy"/>
+		<property name="obj_def_source">
 			<list>
 				<tuple>
 					<value>/.*</value>
-					<list/>
+					<list><value>VET_ANY</value><value>CUSTOMER_ANY</value></list>
 				</tuple>
 			</list>
 		</property>
 	</object>
 	
+	<object id="vetRoleVoter" class="springpython.security.vote.RoleVoter">
+		<property name="role_prefix" value="VET"/>
+	</object>
+	
+	<object id="customerRoleVoter" class="springpython.security.vote.RoleVoter">
+		<property name="role_prefix" value="CUSTOMER"/>
+	</object>
+	
+	<object id="accessDecisionManager" class="springpython.security.vote.AffirmativeBased">
+		<property name="allow_if_all_abstain" value="False"/>
+		<property name="access_decision_voters">
+			<list>
+				<ref object="vetRoleVoter"/>
+				<ref object="customerRoleVoter"/>
+			</list>
+		</property>
+	</object>
+	
+	<object id="filterChainProxy" class="springpython.security.web.CP3FilterChainProxy">
+		<property name="filterInvocationDefinitionSource">
+			<list>
+				<tuple>
+					<value>/login.*</value>
+					<list><value>httpContextFilter</value></list>
+				</tuple>
+				<tuple>
+					<value>/.*</value>
+					<list>
+						<value>httpContextFilter</value>
+						<value>exceptionTranslationFilter</value>
+						<value>authenticationProcessingFilter</value>
+						<value>filterSecurityInterceptor</value>
+					</list>
+				</tuple>				
+			</list>
+		</property>
+	</object>
+	
+	<object id="loginForm" class="view.CherryPyAuthenticationForm">
+		<property name="filter" ref="authenticationProcessingFilter"/>
+		<property name="controller" ref="controller"/>
+		<property name="authenticationManager" ref="authenticationManager"/>
+		<property name="redirectStrategy" ref="redirectStrategy"/>
+		<property name="httpContextFilter" ref="httpContextFilter" />
+	</object>
 </objects>
