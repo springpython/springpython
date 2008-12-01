@@ -33,13 +33,13 @@ from springpython.security.vote import AffirmativeBased
 from springpython.security.vote import RoleVoter
 from springpython.security.web import AuthenticationProcessingFilter
 from springpython.security.web import AuthenticationProcessingFilterEntryPoint
-from springpython.security.web import CherryPySessionStrategy
+from springpython.security.web import CP3SessionStrategy
 from springpython.security.web import ExceptionTranslationFilter
-from springpython.security.web import FilterChainProxy
+from springpython.security.web import CP3FilterChainProxy
 from springpython.security.web import FilterSecurityInterceptor
 from springpython.security.web import HttpSessionContextIntegrationFilter
 from springpython.security.web import MiddlewareFilter
-from springpython.security.web import RedirectStrategy
+from springpython.security.web import CP3RedirectStrategy
 from springpython.security.web import SimpleAccessDeniedHandler
 
 class PetClinicClientAndServer(PythonConfig):
@@ -62,11 +62,18 @@ class PetClinicClientAndServer(PythonConfig):
     
     @Object
     def controller(self):
-        return controller.PetClinicController(self.connectionFactory())   
+        return controller.PetClinicController(self.connectionFactory())
     
     @Object
     def root(self):
-        return view.PetClinicView(self.controller())    
+        form = view.PetClinicView(controller = self.controller())
+        form.filter = self.authenticationProcessingFilter()
+        form.hashedUserDetailsServiceList = [self.md5UserDetailsService(),
+                                             self.shaUserDetailsService()]
+        form.authenticationManager = self.authenticationManager()
+        form.redirectStrategy = self.redirectStrategy()
+	form.httpContextFilter = self.httpContextFilter()
+        return form
     
     @Object
     def userDetailsService(self):
@@ -164,11 +171,11 @@ class PetClinicClientAndServer(PythonConfig):
     
     @Object
     def cherrypySessionStrategy(self):
-        return CherryPySessionStrategy()
+        return CP3SessionStrategy()
 
     @Object
     def redirectStrategy(self):
-        return RedirectStrategy()
+        return CP3RedirectStrategy()
     
     @Object
     def httpContextFilter(self):
@@ -187,7 +194,7 @@ class PetClinicClientAndServer(PythonConfig):
     def filterSecurityInterceptor(self):
         filter = FilterSecurityInterceptor()
         filter.auth_manager = self.authenticationManager()
-        filter.access_decision_manager = self.accessDecisionManager()
+        filter.access_decision_mgr = self.accessDecisionManager()
         filter.sessionStrategy = self.cherrypySessionStrategy()
         filter.obj_def_source = [
                                          ("/vets.*", ["VET_ANY"]),
@@ -219,27 +226,16 @@ class PetClinicClientAndServer(PythonConfig):
     
     @Object
     def filterChainProxy(self):
-        return FilterChainProxy(filterInvocationDefinitionSource = 
+        return CP3FilterChainProxy(filterInvocationDefinitionSource = 
             [
             ("/images.*", []),
             ("/html.*",   []),
-            ("/login.*",  [self.httpContextFilter()]),
-            ("/.*",       [self.httpContextFilter(),
-                           self.exceptionTranslationFilter(),
-                           self.authenticationProcessingFilter(),
-                           self.filterSecurityInterceptor()])
+            ("/login.*",  ["httpContextFilter"]),
+            ("/.*",       ["httpContextFilter",
+                           "exceptionTranslationFilter",
+                           "authenticationProcessingFilter",
+                           "filterSecurityInterceptor"])
             ])
-
-    @Object
-    def loginForm(self):
-        loginForm = view.CherryPyAuthenticationForm()
-        loginForm.filter = self.authenticationProcessingFilter()
-        loginForm.controller = self.controller()
-        loginForm.hashedUserDetailsServiceList = [self.md5UserDetailsService(),
-                                                  self.shaUserDetailsService()]
-        loginForm.authenticationManager = self.authenticationManager()
-        loginForm.redirectStrategy = self.redirectStrategy()
-        return loginForm
 
 class PetClinicServerOnly(PythonConfig):
     """
@@ -308,7 +304,16 @@ class PetClinicClientOnly(PythonConfig):
 
     @Object
     def root(self):
-        return view.PetClinicView(self.controller())    
+        form = view.PetClinicView(self.controller())    
+        form.filter = self.authenticationProcessingFilter()
+        form.controller = self.controller()
+        form.hashedUserDetailsServiceList = []
+        form.hashedUserDetailsServiceList.append(self.md5UserDetailsService())
+        form.hashedUserDetailsServiceList.append(self.shaUserDetailsService())
+        form.authenticationManager = self.authenticationManager()
+        form.redirectStrategy = self.redirectStrategy()
+	form.httpContextFilter = self.httpContextFilter()
+	return form
 
     @Object
     def userDetailsService(self):
@@ -408,11 +413,11 @@ class PetClinicClientOnly(PythonConfig):
     
     @Object
     def cherrypySessionStrategy(self):
-        return CherryPySessionStrategy()
+        return CP3SessionStrategy()
 
     @Object
     def redirectStrategy(self):
-        return RedirectStrategy()
+        return CP3RedirectStrategy()
     
     @Object
     def httpContextFilter(self):
@@ -432,7 +437,7 @@ class PetClinicClientOnly(PythonConfig):
         filter = FilterSecurityInterceptor()
         filter.validate_config_attributes = False
         filter.auth_manager = self.authenticationManager()
-        filter.access_decision_manager = self.accessDecisionManager()
+        filter.access_decision_mgr = self.accessDecisionManager()
         filter.sessionStrategy = self.cherrypySessionStrategy()
         filter.obj_def_source = [("/vets.*", ["VET_ANY"]),
                                          ("/editOwner.*", ["VET_ANY", "OWNER"]),
@@ -462,25 +467,14 @@ class PetClinicClientOnly(PythonConfig):
     
     @Object
     def filterChainProxy(self):
-        return FilterChainProxy(filterInvocationDefinitionSource = 
+        return CP3FilterChainProxy(filterInvocationDefinitionSource = 
             [
             ("/images.*", []),
             ("/html.*",   []),
-            ("/login.*",  [self.httpContextFilter()]),
-            ("/.*",       [self.httpContextFilter(),
-                           self.exceptionTranslationFilter(),
-                           self.authenticationProcessingFilter(),
-                           self.filterSecurityInterceptor()])
+            ("/login.*",  ["httpContextFilter"]),
+            ("/.*",       ["httpContextFilter",
+                           "exceptionTranslationFilter",
+                           "authenticationProcessingFilter",
+                           "filterSecurityInterceptor"])
             ])
 
-    @Object
-    def loginForm(self):
-        loginForm = view.CherryPyAuthenticationForm()
-        loginForm.filter = self.authenticationProcessingFilter()
-        loginForm.controller = self.controller()
-        loginForm.hashedUserDetailsServiceList = []
-        loginForm.hashedUserDetailsServiceList.append(self.md5UserDetailsService())
-        loginForm.hashedUserDetailsServiceList.append(self.shaUserDetailsService())
-        loginForm.authenticationManager = self.authenticationManager()
-        loginForm.redirectStrategy = self.redirectStrategy()
-        return loginForm
