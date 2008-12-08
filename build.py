@@ -23,6 +23,7 @@ import sys
 import getopt
 import shutil
 import S3
+import sha   # Need to support python 2.4, see SESPRINGPYTHONPY-56
 
 ############################################################################
 # Get external properties and load into a dictionary. NOTE: These properties
@@ -136,13 +137,19 @@ def package(dir, version):
     build("samples", version)
     os.system("mv *.tar.gz %s" % dir)
 
-def publish(filename, BUCKET_NAME, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
-    KEY_NAME = p["s3.key_prefix"] + filename.split("/")[-1]
+def publish(filepath, s3bucket, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
+    filename = filepath.split("/")[-1]
+    s3key = "/".join([ p['release.type'],
+                       p['project.key'],
+                       p['natural.name'],
+                       filename ])
 
-    print "Reading in content from %s" % filename
-    filedata = open(filename, "rb").read()
+    print "Reading in content from %s" % filepath
+    filedata = open(filepath, "rb").read()
 
-    print "Preparing to upload %s to %s/%s" % (filename, BUCKET_NAME, KEY_NAME)
+    filehash = sha.new(filedata).hexdigest()
+
+    print "Preparing to upload %s to %s/%s" % (filename, s3bucket, s3key)
 
     content_type = mimetypes.guess_type(filename)[0]
     if content_type is None:
@@ -153,14 +160,26 @@ def publish(filename, BUCKET_NAME, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
     print "Connecting to S3..."
     conn = S3.AWSAuthConnection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
 
-    print "Checking if bucket %s exists..." % BUCKET_NAME
-    check = conn.check_bucket_exists(BUCKET_NAME)
+    print "Checking if bucket %s exists..." % s3bucket
+    check = conn.check_bucket_exists(s3bucket)
     if (check.status == 200):
-        print "It does! Now uploading %s to %s/%s" % (filename, BUCKET_NAME, KEY_NAME)
+        print "Uploading %s to %s/%s" % (filename, s3bucket, s3key)
         print conn.put(
-            BUCKET_NAME,
-            KEY_NAME,
+            s3bucket,
+            s3key,
             S3.S3Object(filedata),
+            { 'Content-Type': content_type,
+              'x-amz-acl': 'public-read', 
+              'x-amz-meta-project.name': 'Spring Extensions',
+              'x-amz-meta-release.type': p['release.type'],
+              'x-amz-meta-bundle.version': p['version'],
+              'x-amz-meta-package.file.name': filename } ).message
+
+        print "Uploading SHA1 digest to %s/%s" % (s3bucket, s3key + '.sha1')
+        print conn.put(
+            s3bucket,
+            s3key + '.sha1',
+            S3.S3Object(filehash + ' ' + filename + "\n" ),
             { 'Content-Type': content_type, 'x-amz-acl': 'public-read'}).message
     else:
         print "Error code %s: Unable to publish" % check.status
