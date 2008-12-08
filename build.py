@@ -18,6 +18,7 @@ from datetime import datetime
 from glob import glob
 import mimetypes
 import os
+import pydoc
 import re
 import sys
 import getopt
@@ -74,6 +75,7 @@ def usage():
     print "\t--docs-html-single\tgenerate HTML documentation in a single file"
     print "\t--docs-pdf\t\tgenerate PDF documentation"
     print "\t--docs-all\t\tgenerate all documents"
+    print "\t--pydoc\t\tgenerate pydoc information"
     print
 
 try:
@@ -81,7 +83,7 @@ try:
                                   "hct",
                                   ["help", "clean", "test", "coverage", "package", "build-stamp=", \
                                    "publish", "register", \
-                                   "site", "docs-html-multi", "docs-html-single", "docs-pdf", "docs-all"])
+                                   "site", "docs-html-multi", "docs-html-single", "docs-pdf", "docs-all", "pydoc"])
 except getopt.GetoptError:
     # print help information and exit:
     print "Invalid command found in %s" % sys.argv
@@ -226,6 +228,7 @@ def site(version):
     shutil.copy(cur + "/docs/spring.ico", p["targetDir"]+"/docs/favicon.ico")
     os.system("mvn -Dspringpython.version=%s site" % version)
     os.system("cp docs/resources/css/* target/docs/css/")
+    create_pydocs()
 
 def docs_all(version):
     copy("xml/schema/context/", p["targetDir"] + "/docs/schema/context/", ["*.xsd"])
@@ -283,6 +286,65 @@ def docs_pdf(version):
     os.remove("docbook_fop.tmp")
     os.remove(ref+"/src/mangled.xml")
     os.chdir(cur)
+
+def create_pydocs():
+    sys.path.append(os.getcwd() + "/src")
+    import springpython
+
+    if not os.path.exists("target/docs/pydoc"):
+        os.mkdir("target/docs/pydoc")
+ 
+    os.chdir("target/docs/pydoc")
+
+    pydoc.writedoc("springpython")
+    pydoc.writedoc("springpython.aop")
+    pydoc.writedoc("springpython.aop.utils")
+    pydoc.writedoc("springpython.config")
+    pydoc.writedoc("springpython.config.decorator")
+    pydoc.writedoc("springpython.container")
+    pydoc.writedoc("springpython.context")
+    pydoc.writedoc("springpython.context.scope")
+    pydoc.writedoc("springpython.database")
+    pydoc.writedoc("springpython.database.core")
+    pydoc.writedoc("springpython.database.factory")
+    pydoc.writedoc("springpython.database.transaction")
+    pydoc.writedoc("springpython.factory")
+    pydoc.writedoc("springpython.remoting")
+    pydoc.writedoc("springpython.remoting.hessian")
+    pydoc.writedoc("springpython.remoting.hessian.hessianlib")
+    pydoc.writedoc("springpython.remoting.pyro")
+    pydoc.writedoc("springpython.remoting.pyro.PyroDaemonHolder")
+    pydoc.writedoc("springpython.security")
+    pydoc.writedoc("springpython.security.cherrypy31")
+    pydoc.writedoc("springpython.security.intercept")
+    pydoc.writedoc("springpython.security.context")
+    pydoc.writedoc("springpython.security.context.SecurityContextHolder")
+    pydoc.writedoc("springpython.security.providers")
+    pydoc.writedoc("springpython.security.providers.dao")
+    pydoc.writedoc("springpython.security.providers.encoding")
+    pydoc.writedoc("springpython.security.userdetails")
+    pydoc.writedoc("springpython.security.userdetails.dao")
+    pydoc.writedoc("springpython.security.web")
+
+    top_color = "#7799ee"
+    pkg_color = "#aa55cc"
+    class_color = "#ee77aa"
+    class_highlight = "#ffc8d8"
+    function_color = "#eeaa77"
+    data_color = "#55aa55"
+
+    for file in os.listdir("."):
+        print "Altering appearance of %s" % file
+        file_input = open(file).read()
+        file_input = re.compile(top_color).sub("GREEN", file_input)
+        file_input = re.compile(pkg_color).sub("GREEN", file_input)
+        file_input = re.compile(class_color).sub("GREEN", file_input)
+        file_input = re.compile(class_highlight).sub("LIGHTGREEN", file_input)
+        file_input = re.compile(function_color).sub("LIGHTGREEN", file_input)
+        file_input = re.compile(data_color).sub("LIGHTGREEN", file_input)
+        file_output = open(file, "w")
+        file_output.write(file_input)
+        file_output.close()
 
 
 ############################################################################
@@ -362,5 +424,8 @@ for option in optlist:
 
     if option[0] in ("--docs-pdf"):
         docs_pdf(completeVersion)
+
+    if option[0] in ("--pydoc"):
+        create_pydocs()
     
 

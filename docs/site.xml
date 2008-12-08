@@ -31,6 +31,7 @@
       <item name="HTML" href="reference/html/index.html" />
       <item name="PDF" href="reference/pdf/springpython-reference.pdf"/>
       <item name="XML schema specs" href="schema/context"/>
+      <item name="APIs" href="pydoc/springpython.html"/>
     </menu>
 
     <menu name="Technologies"/>
