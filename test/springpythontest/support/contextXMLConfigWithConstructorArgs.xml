@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+
+    <object id="controller-list" class="springpythontest.support.testSupportClasses.Controller">
+        <constructor-arg name="executors">
+            <list>
+                <ref object="exec1"/>
+                <ref object="exec2"/>
+            </list>
+        </constructor-arg>
+    </object>
+
+    <object id="controller-set" class="springpythontest.support.testSupportClasses.Controller">
+        <constructor-arg name="executors">
+            <set>
+                <ref object="exec1"/>
+                <ref object="exec2"/>
+            </set>
+        </constructor-arg>
+    </object>
+
+    <object id="controller-frozenset" class="springpythontest.support.testSupportClasses.Controller">
+        <constructor-arg name="executors">
+            <frozenset>
+                <ref object="exec1"/>
+                <ref object="exec2"/>
+            </frozenset>
+        </constructor-arg>
+    </object>
+
+    <object id="controller-dict" class="springpythontest.support.testSupportClasses.Controller">
+        <constructor-arg name="executors">
+            <dict>
+                <entry><key><value>exec1</value></key><ref object="exec1"/></entry>
+                <entry><key><value>exec2</value></key><ref object="exec2"/></entry>
+            </dict>
+        </constructor-arg>
+    </object>
+
+    <object id="controller-tuple" class="springpythontest.support.testSupportClasses.Controller">
+        <constructor-arg name="executors">
+            <tuple>
+                <ref object="exec1"/>
+                <ref object="exec2"/>
+            </tuple>
+        </constructor-arg>
+    </object>
+
+    <object id="exec1" class="springpythontest.support.testSupportClasses.Executor"/>
+
+    <object id="exec2" class="springpythontest.support.testSupportClasses.Executor"/>
+
+</objects>

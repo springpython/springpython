@@ -480,3 +480,10 @@ class ConstructorBasedContainer(PythonConfig):
     @Object
     def MultiValueHolder2(self):
         return MultiValueHolder(c="alt c", b="alt b")
+
+class Controller(object):
+    def __init__(self, executors=None):
+        self.executors = executors
+
+class Executor(object):
+    pass
