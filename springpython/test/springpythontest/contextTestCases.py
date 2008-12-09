@@ -504,6 +504,9 @@ class XMLConfigTestCase(unittest.TestCase):
         self.assertTrue(isinstance(value_holder.some_tuple, tuple))
         self.assertEquals(3, len(value_holder.some_tuple))
         self.assertEquals("Hello, world!", value_holder.some_tuple[0])
+        print "xxx value_holder = %s" % value_holder
+        print "xxx value_holder.some_tuple = %s" % str(value_holder.some_tuple)
+        print "xxx value_holder.some_tuple[1] = %s" % value_holder.some_tuple[1]
         self.assertTrue(isinstance(value_holder.some_tuple[1], testSupportClasses.StringHolder))
         self.assertEquals("There should only be one copy of this string", value_holder.some_tuple[1].str)
         self.assertEquals("Spring Python", value_holder.some_tuple[2])
@@ -782,4 +785,43 @@ class XMLConfigTestCase6(unittest.TestCase):
         self.assertTrue("Test9" in [item.user_dict for item in service4.user_dict["frozenset2"]])
 
         self.assertEquals("Test10", service4.user_dict["value"])
+
+class XMLConfigConstructorBasedTestCase(unittest.TestCase):
+    """This test case exercises the constructors for XMLConfig"""
+
+    def testUsingConstructorWithObjectReference(self):
+        ctx = ApplicationContext(XMLConfig("support/contextXMLConfigWithConstructorArgs.xml"))
+
+        controller = ctx.get_object("controller-list")
+        self.assertTrue(isinstance(controller.executors, list))
+        self.assertEquals(2, len(controller.executors))
+        for executor in controller.executors:
+            self.assertTrue(isinstance(executor, testSupportClasses.Executor))
+
+        controller = ctx.get_object("controller-set")
+        self.assertTrue(isinstance(controller.executors, set))
+        self.assertEquals(2, len(controller.executors))
+        for executor in controller.executors:
+            self.assertTrue(isinstance(executor, testSupportClasses.Executor))
+
+        controller = ctx.get_object("controller-dict")
+        self.assertTrue(isinstance(controller.executors, dict))
+        self.assertEquals(2, len(controller.executors))
+        for key in controller.executors:
+            self.assertTrue(isinstance(controller.executors[key], testSupportClasses.Executor))
+
+        controller = ctx.get_object("controller-frozenset")
+        self.assertTrue(isinstance(controller.executors, frozenset))
+        self.assertEquals(2, len(controller.executors))
+        for executor in controller.executors:
+            self.assertTrue(isinstance(executor, testSupportClasses.Executor))
+
+        controller = ctx.get_object("controller-tuple")
+        self.assertTrue(isinstance(controller.executors, tuple))
+        self.assertEquals(2, len(controller.executors))
+        for executor in controller.executors:
+            self.assertTrue(isinstance(executor, testSupportClasses.Executor))
+
+
+
 

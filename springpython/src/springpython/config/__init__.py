@@ -128,13 +128,16 @@ class ValueDef(object):
             else:
                 return value
             
-      
     def get_value(self, container):
-        return self.value
+        val = self._replace_refs_with_actuals(self.value, container)
+        if val is None:
+            return self.value
+        else:
+            return val
         
     def set_value(self, obj, container):
         setattr(obj, self.name, self.value)
-        self._replace_refs_with_actuals(obj, container)
+        val = self._replace_refs_with_actuals(obj, container)
 
     def _replace_refs_with_actuals(self, obj, container):
         """Normal values do nothing for this step. However, sub-classes are defined for
@@ -184,7 +187,11 @@ class TupleDef(ValueDef):
                 new_value[i] = container.get_object(new_value[i].ref)
             else:
                 new_value[i] = self.scan_value(container, new_value[i])
-        setattr(obj, self.name, tuple(new_value))
+        try:
+            setattr(obj, self.name, tuple(new_value))
+        except AttributeError:
+            pass
+        return tuple(new_value)
 
 class SetDef(ValueDef):
     """Handles behavior for a set-based value."""
@@ -214,7 +221,11 @@ class FrozenSetDef(ValueDef):
             else:
                 new_set.remove(item)
                 new_set.add(self.scan_value(container, item))
-        setattr(obj, self.name, frozenset(new_set))
+        try:
+            setattr(obj, self.name, frozenset(new_set))
+        except AttributeError:
+            pass
+        return frozenset(new_set)
  
 class Config(object):
     """
@@ -464,16 +475,6 @@ class XMLConfig(Config):
                         dict[str(entry.key.value)] = self._convert_value(element, id, "%s.dict['%s']" % (name, entry.key.value))
                     else:
                         self.logger.debug("dict: Don't know how to handle %s" % element.localName)
-            #if hasattr(entry, "value"):
-            #    if len(entry.value.xml_child_elements) > 0:
-            #        self.logger.debug("This dict entry has child elements.")
-            #        dict[str(entry.key.value)] = self._convert_value(entry.value, id, name)
-            #    else:
-            #        dict[str(entry.key.value)] = str(entry.value)
-            #elif hasattr(entry, "ref"):
-            #    dict[str(entry.key.value)] = self._convert_ref(entry.ref, str(entry.key.value))
-            #else:
-            #    self.logger.debug("dict: Don't know how to handle %s" % entry)
         return DictDef(name, dict)
 
     def _convert_props(self, props_node, name):
@@ -563,6 +564,7 @@ class XMLConfig(Config):
         elif hasattr(p, "set"):
             return self._convert_set(p.set, comp.id, name)
         elif hasattr(p, "frozenset"):
+            self.logger.debug("Converting frozenset")
             return self._convert_frozen_set(p.frozenset, comp.id, name)
         elif hasattr(p, "object"):
             return self._convert_inner_object(p.object, comp.id, name)
