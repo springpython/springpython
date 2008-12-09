@@ -90,7 +90,7 @@
 			pulling an object out of the container.</para>
 				
 <programlisting><![CDATA[
-from springpython.container import ApplicationContext
+from springpython.context import ApplicationContext
 from springpython.config import XMLConfig
 
 container = ApplicationContext(XMLConfig("app-context.xml"))
@@ -228,7 +228,7 @@ service = container.get_object("sampleService")
 			container, the container utilizes an object factory to create the object and return it.</para>
 				
 <programlisting><![CDATA[
-from springpython.container import ApplicationContext
+from springpython.context import ApplicationContext
 from springpython.config import XMLConfig
 
 container = ApplicationContext(XMLConfig("app-context.xml"))
@@ -687,7 +687,7 @@ class MovieBasedApplicationContext(PythonConfig):
 			creating the container. Everything else is the same.</para>
 				
 <programlisting><![CDATA[
-from springpython.container import ApplicationContext
+from springpython.context import ApplicationContext
 
 container = ApplicationContext(MovieBasedApplicationContext())
 service = container.get_object("MovieLister")
@@ -744,7 +744,7 @@ service = container.get_object("MovieLister")
 			container utilizes an object factory to create an object and return it.</para>
 				
 <programlisting><![CDATA[
-from springpython.container import ApplicationContext
+from springpython.context import ApplicationContext
 from springpython.config import PyContainerConfig
 
 container = ApplicationContext(PyContainerConfig("app-context.xml"))
@@ -803,7 +803,7 @@ service = container.get_object("MovieLister")
 			container utilizes an object factory to create an object and return it.</para>
 				
 <programlisting><![CDATA[
-from springpython.container import ApplicationContext
+from springpython.context import ApplicationContext
 from springpython.config import SpringJavaConfig
 
 container = ApplicationContext(SpringJavaConfig("app-context.xml"))
@@ -885,7 +885,7 @@ class MixedApplicationContext(PythonConfig):
 			<para>With some simple code, this is all brought together when the container is created.</para>
 
 <programlisting><![CDATA[
-from springpython.container import ApplicationContext
+from springpython.context import ApplicationContext
 from springpython.config import PyContainerConfig
 
 container = ApplicationContext([MixedApplicationContext(),
