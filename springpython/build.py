@@ -75,7 +75,7 @@ def usage():
     print "\t--docs-html-single\tgenerate HTML documentation in a single file"
     print "\t--docs-pdf\t\tgenerate PDF documentation"
     print "\t--docs-all\t\tgenerate all documents"
-    print "\t--pydoc\t\tgenerate pydoc information"
+    print "\t--pydoc\t\t\tgenerate pydoc information"
     print
 
 try:
