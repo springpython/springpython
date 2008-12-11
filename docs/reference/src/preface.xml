@@ -2,7 +2,7 @@
 <preface id="preface">
   <title>Preface</title>
 
-  <para><ulink url="https://springpython.webfactional.com">Spring Python</ulink>
+  <para><ulink url="http://springpython.webfactional.com">Spring Python</ulink>
   is an extension of the Java-based Spring Framework and
   Spring Security Framework, targeted for Python. It is not a straight port,
   but instead an extension of the same concepts that need solutions applied

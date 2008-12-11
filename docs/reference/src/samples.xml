@@ -81,7 +81,7 @@ bash$ python petclinic.py
 		<para>This article will show how to write an IRC bot to manage a channel for your
 		open source project, like the <ulink url="https://scifi.homelinux.net/coily">one
 		I have managing #springpython</ulink>, the IRC chat channel for
-		<ulink url="https://springpython.webfactional.com">Spring Python</ulink>.</para>
+		<ulink url="http://springpython.webfactional.com">Spring Python</ulink>.</para>
 
 		<section id="samples-springbot-why">
 			<title>Why write a bot?</title>
