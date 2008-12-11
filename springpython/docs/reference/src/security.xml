@@ -40,13 +40,6 @@
 			</listitem>
  		</itemizedlist>
  		
-		<note>
-			<title>Web objects are still being upgraded for CherryPy 3</title>
-			
-			<para>While PetClinic has been upgraded to support CherryPy 3, the web-based
-			security objects have only been partially upgraded.</para>
-		</note>
-
 
 		<para>These objects are needed for both authentication and authorization.</para>
 
@@ -313,14 +306,6 @@ class SampleContainer(PythonConfig):
 	</property>
 </component>
 ]]></programlisting>
-
-		<note>
-			<title>Web-based Access Control not yet upgraded</title>
-			
-			<para>While PetClinic has been upgraded to CherryPy 3, we haven't successfully converted the around advice
-			yet, which means <classname>FilterSecurityInterceptor</classname> doesn't yet utilize the <classname>AccessDecisionManager</classname>
-			properly.</para>
-		</note>
 
 	</section>	
 </chapter>

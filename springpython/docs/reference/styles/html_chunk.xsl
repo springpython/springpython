@@ -86,7 +86,7 @@
     <!-- let's have a Spring and SpringSource banner across the top of each page -->
     <xsl:template name="user.header.navigation">
         <div style="background-color:white;border:none;height:90px;border:1px solid black;">
-            <a style="border:none;" href="https://springpython.webfactional.com/" title="Spring Python">
+            <a style="border:none;" href="http://springpython.webfactional.com/" title="Spring Python">
                 <img style="border:none;" src="images/spring_python_white.png"/>
             </a>
             <a style="border:none;" href="http://www.springsource.com/" title="SpringSource">
