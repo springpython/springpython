@@ -621,7 +621,7 @@ class PostGreSQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
 class SqliteDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
     def __init__(self, methodName='runTest'):
         AbstractDatabaseTemplateTestCase.__init__(self, methodName)
-        self.db_filename = tempfile.gettempdir() + "/springpython.db"
+        self.db_filename = "springpython.db"
 
     def createTables(self):
         self.createdTables = True
