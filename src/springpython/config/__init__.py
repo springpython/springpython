@@ -17,7 +17,6 @@ import amara
 import inspect
 import logging
 import re
-import tempfile
 import types
 from decorator import decorator
 from springpython.context import scope
