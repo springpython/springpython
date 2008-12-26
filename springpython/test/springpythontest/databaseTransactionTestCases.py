@@ -16,7 +16,6 @@
 import logging
 import os
 import subprocess
-import tempfile
 import types
 import unittest
 from springpython.context import ApplicationContext
@@ -486,7 +485,7 @@ class SqliteTransactionTestCase(AbstractTransactionTestCase):
 
     def __init__(self, methodName='runTest'):
         AbstractTransactionTestCase.__init__(self, methodName)
-        self.db_filename = tempfile.gettempdir() + "/springpython.db"
+        self.db_filename = "springpython.db"
 
     def createTables(self):
         self.createdTables = True

@@ -16,7 +16,6 @@
 import logging
 import os
 import sys
-import tempfile
 import types
 import unittest
 from pmock import *
