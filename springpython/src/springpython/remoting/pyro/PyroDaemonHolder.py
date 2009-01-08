@@ -13,59 +13,75 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
+import logging
 import threading
 import Pyro.core, Pyro.naming
 
-pyro_thread = None
-serviceList = {}
+from socket import getaddrinfo, gethostbyname_ex
 
-def register(pyro_obj, service_name, verbose = False):
+pyro_threads = {}
+serviceList = {}
+logger = logging.getLogger("springpython.remoting.pyro.PyroDaemonHolder")
+
+def resolve(host, port):
+    canonhost = gethostbyname_ex(host)[2][0]
+    canonport = getaddrinfo(host, port)[0][4][1]
+    
+    return canonhost, canonport
+
+def register(pyro_obj, service_name, host, port):
     """
     Register the pyro object and its service name with the daemon.
     Also add the service to a dictionary of objects. This allows the
     PyroDaemonHolder to intelligently know when to start and stop the
     daemon thread.
     """
-    global pyro_thread
-    
-    if verbose: print "Registering %s with the Pyro server" % service_name
-    
-    serviceList[service_name] = pyro_obj
-    if pyro_thread is None:
-        
-        if verbose: print "Pyro thread needs to be started"
-        
-        pyro_thread = _PyroThread()
-        pyro_thread.start()
-        
-    uri = pyro_thread.daemon.connect(pyro_obj, service_name)
-    
-    if verbose: print uri
+    logger.debug("Registering %s at %s:%s with the Pyro server" % (service_name, host, port))
 
-def deregister(service_name, verbose = False):
+    host, port = resolve(host, port)
+    
+    serviceList[(service_name, host, port)] = pyro_obj
+
+    if (host, port) not in pyro_threads:
+    
+        logger.debug("Pyro thread needs to be started at %s:%s" % (host, port))
+      
+        pyro_threads[(host, port)] = _PyroThread(host, port)
+        pyro_threads[(host, port)].start()
+        
+    pyro_threads[(host, port)].daemon.connect(pyro_obj, service_name)
+
+def deregister(service_name, host, port):
     """
     Deregister the named service by removing it from the list of
     managed services and also disconnect from the daemon.
     """
-    if verbose: print "Deregistering %s from the Pyro server" % service_name
-    
-    pyro_thread.daemon.disconnect(serviceList[service_name])
-    del(serviceList[service_name])
-    if len(serviceList) == 0:       
-        shutdown(verbose)
+    logger.debug("Deregistering %s at %s:%s with the Pyro server" % (service_name, host, port))
 
-def shutdown(verbose = False):
-    """This provides a hook so an application can deliberately shutdown the
+    host, port = resolve(host, port)
+    
+    pyro_threads[(host, port)].daemon.disconnect(serviceList[(service_name, host, port)])
+    del(serviceList[(service_name, host, port)])
+
+    def get_address((service_name, host, port)):
+        return (host, port)
+
+    if len([True for x in serviceList.keys() if get_address(x) == (host, port)]) == 0:
+        logger.debug("Shutting down thread on %s:%s" % (host, port))
+        shutdown(host, port)
+
+def shutdown(daemon_host, daemon_port):
+    """This provides a hook so an application can deliberately shutdown a
     daemon thread."""
-    global pyro_thread
-    
-    if verbose: print "We no longer have any services. Shutting down pyro daemon."
-    
+    logger.debug("Shutting down pyro daemon at %s:%s" % (daemon_host, daemon_port))
+
+    daemon_host, daemon_port = resolve(daemon_host, daemon_port)
+
     try:
-        pyro_thread.shutdown()
+        pyro_threads[(daemon_host, daemon_port)].shutdown()
+        del(pyro_threads[(daemon_host, daemon_port)])
     except:
-        pass
-    pyro_thread = None
+        logger.debug("Failed to shutdown %s:%s" % (daemon_host, daemon_port))
 
 class _PyroThread(threading.Thread):
     """
@@ -73,12 +89,16 @@ class _PyroThread(threading.Thread):
     from within PyroServiceExporter.
     """
     
-    def __init__(self):
+    def __init__(self, host, port):
         """
         When this class is created, it also created a Pyro core daemon to manage.
         """
         threading.Thread.__init__(self)
-        self.daemon = Pyro.core.Daemon()
+        self.host = host
+        self.port = port
+        self.logger = logging.getLogger("springpython.remoting.pyro.PyroDaemonHolder._PyroThread")
+
+        self.daemon = Pyro.core.Daemon(host=host, port=port)
     
     def run(self):
         """
@@ -86,6 +106,7 @@ class _PyroThread(threading.Thread):
         daemon into listen mode so it can process remote requests.
         """
         self._running = True
+        self.logger.debug("Starting up Pyro server thread for %s:%s" % (self.host, self.port))
         Pyro.core.initServer()
         self.daemon.requestLoop(condition = lambda:self._running)
 
@@ -95,4 +116,6 @@ class _PyroThread(threading.Thread):
         the Pyro daemon.
         """
         self._running = False
+        self.logger.debug("Signaling shutdown of Pyro server thread for %s:%s" % (self.host, self.port))
+
 

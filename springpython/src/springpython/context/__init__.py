@@ -43,6 +43,8 @@ class ApplicationContext(ObjectContainer):
             
     def _apply(self, obj):
         if len([True for type_to_avoid in self.types_to_avoid if isinstance(obj, type_to_avoid)]) == 0: 
+            if hasattr(obj, "after_properties_set"):
+               obj.after_properties_set()
             if hasattr(obj, "post_process_after_initialization"):
                 obj.post_process_after_initialization(self)
             if hasattr(obj, "set_app_context"):

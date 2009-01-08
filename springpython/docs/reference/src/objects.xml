@@ -431,7 +431,7 @@ service = container.get_object("MovieLister")
 			<section id="objects-config-xmlconfig-constructors">
 				<title>Constructors</title>
 				
-				<para>Python funtions can have both positional and named arguments. Positional arguments get assembled
+				<para>Python functions can have both positional and named arguments. Positional arguments get assembled
 				into a tuple, and named arguments are assembled into a dictionary, before being passed to a function
 				call. Spring Python takes advantage of that option when it comes to constructor calls. The following
 				block of configuration data shows defining positional constructors.</para>
