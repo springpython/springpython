@@ -57,7 +57,80 @@ class PyroRemotingTestCase(unittest.TestCase):
 
         self.assertEquals(clientSideProxy2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
         self.assertEquals(clientSideProxy2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
-                       
+
+    def testExportingAServiceUsingNonStandardPortsWithValueElement(self):
+        appContext = ApplicationContext(XMLConfig("support/remotingPyroTestApplicationContext.xml"))
+
+        time.sleep(0.01)
+
+        remoteService1 = appContext.get_object("remoteServiceServer1")
+        serviceExporter3 = appContext.get_object("serviceExporter3")
+        clientSideProxy3 = appContext.get_object("accountServiceClient3")
+
+        time.sleep(0.01)
+
+        argument = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(remoteService1.getMoreData(argument), "You got more remote data => %s" % argument)
+
+        self.assertEquals(clientSideProxy3.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(clientSideProxy3.getMoreData(argument), "You got more remote data => %s" % argument)
+
+    def testExportingAServiceUsingNonStandardPortsWithValueAttribute(self):
+        appContext = ApplicationContext(XMLConfig("support/remotingPyroTestApplicationContext.xml"))
+
+        time.sleep(0.01)
+
+        remoteService1 = appContext.get_object("remoteServiceServer1")
+        serviceExporter4 = appContext.get_object("serviceExporter4")
+        clientSideProxy4 = appContext.get_object("accountServiceClient4")
+
+        time.sleep(0.01)
+
+        argument = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(remoteService1.getMoreData(argument), "You got more remote data => %s" % argument)
+
+        self.assertEquals(clientSideProxy4.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(clientSideProxy4.getMoreData(argument), "You got more remote data => %s" % argument)
+
+    def testExportingAServiceUsingNonStandardPortsWithConstructorArgsByAttribute(self):
+        appContext = ApplicationContext(XMLConfig("support/remotingPyroTestApplicationContext.xml"))
+
+        time.sleep(0.01)
+
+        remoteService1 = appContext.get_object("remoteServiceServer1")
+        serviceExporter5 = appContext.get_object("serviceExporter5")
+        clientSideProxy5 = appContext.get_object("accountServiceClient5")
+
+        time.sleep(0.01)
+
+        argument = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(remoteService1.getMoreData(argument), "You got more remote data => %s" % argument)
+
+        self.assertEquals(clientSideProxy5.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(clientSideProxy5.getMoreData(argument), "You got more remote data => %s" % argument)
+
+
+    def testExportingAServiceUsingNonStandardPortsWithConstructorArgsByElement(self):
+        appContext = ApplicationContext(XMLConfig("support/remotingPyroTestApplicationContext.xml"))
+
+        time.sleep(0.01)
+
+        remoteService1 = appContext.get_object("remoteServiceServer1")
+        serviceExporter6 = appContext.get_object("serviceExporter6")
+        clientSideProxy6 = appContext.get_object("accountServiceClient6")
+
+        time.sleep(0.01)
+
+        argument = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(remoteService1.getMoreData(argument), "You got more remote data => %s" % argument)
+
+        self.assertEquals(clientSideProxy6.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(clientSideProxy6.getMoreData(argument), "You got more remote data => %s" % argument)
+
     def testExportingAServiceThroughIoCWithoutPullingTheIntermediateComponent(self):
         appContext = ApplicationContext(XMLConfig("support/remotingPyroTestApplicationContext.xml"))
         
@@ -88,6 +161,7 @@ class PyroRemotingTestCase(unittest.TestCase):
         serviceExporter1 = PyroServiceExporter()
         serviceExporter1.service_name = "RemoteService1"
         serviceExporter1.service = remoteService1
+        serviceExporter1.after_properties_set()
         clientSideProxy1 = PyroProxyFactory()
         clientSideProxy1.service_url = "PYROLOC://localhost:7766/RemoteService1"
                
@@ -95,6 +169,7 @@ class PyroRemotingTestCase(unittest.TestCase):
         serviceExporter2 = PyroServiceExporter()
         serviceExporter2.service_name = "RemoteService2"
         serviceExporter2.service = remoteService2
+        serviceExporter2.after_properties_set()
         clientSideProxy2 = PyroProxyFactory()
         clientSideProxy2.service_url = "PYROLOC://localhost:7766/RemoteService2"
            
@@ -104,6 +179,80 @@ class PyroRemotingTestCase(unittest.TestCase):
         self.assertEquals(remoteService1.getData(argument1), "You got remote data => %s" % argument1)
         self.assertEquals(remoteService1.getMoreData(argument1), "You got more remote data => %s" % argument1)
         
+        self.assertEquals(clientSideProxy1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(clientSideProxy1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+
+        routineToRun = "testit"
+        self.assertEquals(remoteService2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(remoteService2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+        self.assertEquals(clientSideProxy2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(clientSideProxy2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+    def testExportingAServiceThroughProgrammaticallyWithNonStandardPorts(self):
+        remoteService1 = RemoteService1()
+        serviceExporter1 = PyroServiceExporter()
+        serviceExporter1.service_name = "RemoteService1"
+        serviceExporter1.service = remoteService1
+        serviceExporter1.service_host = "127.0.0.1"
+        serviceExporter1.service_port = 7000
+        serviceExporter1.after_properties_set()
+        clientSideProxy1 = PyroProxyFactory()
+        clientSideProxy1.service_url = "PYROLOC://localhost:7000/RemoteService1"
+
+        remoteService2 = RemoteService2()
+        serviceExporter2 = PyroServiceExporter()
+        serviceExporter2.service_name = "RemoteService2"
+        serviceExporter2.service = remoteService2
+        serviceExporter2.service_host = "127.0.0.1"
+        serviceExporter2.service_port = 7000
+        serviceExporter2.after_properties_set()
+        clientSideProxy2 = PyroProxyFactory()
+        clientSideProxy2.service_url = "PYROLOC://localhost:7000/RemoteService2"
+
+        time.sleep(0.01)
+
+        argument1 = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(remoteService1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+
+        self.assertEquals(clientSideProxy1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(clientSideProxy1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+
+        routineToRun = "testit"
+        self.assertEquals(remoteService2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(remoteService2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+        self.assertEquals(clientSideProxy2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(clientSideProxy2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+    def testExportingAServiceThroughProgrammaticallyWithNonStandardPortsAndStrings(self):
+        remoteService1 = RemoteService1()
+        serviceExporter1 = PyroServiceExporter()
+        serviceExporter1.service_name = "RemoteService1"
+        serviceExporter1.service = remoteService1
+        serviceExporter1.service_host = "127.0.0.1"
+        serviceExporter1.service_port = 7000
+        serviceExporter1.after_properties_set()
+        clientSideProxy1 = PyroProxyFactory()
+        clientSideProxy1.service_url = "PYROLOC://localhost:7000/RemoteService1"
+
+        remoteService2 = RemoteService2()
+        serviceExporter2 = PyroServiceExporter()
+        serviceExporter2.service_name = "RemoteService2"
+        serviceExporter2.service = remoteService2
+        serviceExporter2.service_host = "127.0.0.1"
+        serviceExporter2.service_port = 7000
+        serviceExporter2.after_properties_set()
+        clientSideProxy2 = PyroProxyFactory()
+        clientSideProxy2.service_url = "PYROLOC://localhost:7000/RemoteService2"
+
+        time.sleep(0.01)
+
+        argument1 = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(remoteService1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+
         self.assertEquals(clientSideProxy1.getData(argument1), "You got remote data => %s" % argument1)
         self.assertEquals(clientSideProxy1.getMoreData(argument1), "You got more remote data => %s" % argument1)
 

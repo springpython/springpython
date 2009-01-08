@@ -20,7 +20,7 @@ import springpythontest
 
 if __name__ == "__main__":    
     logger = logging.getLogger("springpython")
-    loggingLevel = logging.DEBUG
+    loggingLevel = logging.INFO
     logger.setLevel(loggingLevel)
     ch = logging.StreamHandler()
     ch.setLevel(loggingLevel)
@@ -30,4 +30,4 @@ if __name__ == "__main__":
 
     suite = unittest.TestSuite()
     suite.addTest(unittest.defaultTestLoader.loadTestsFromModule(springpythontest))
-    unittest.TextTestRunner(verbosity=2).run(suite)
+    unittest.TextTestRunner(verbosity=3).run(suite)

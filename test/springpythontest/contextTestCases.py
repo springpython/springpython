@@ -504,9 +504,6 @@ class XMLConfigTestCase(unittest.TestCase):
         self.assertTrue(isinstance(value_holder.some_tuple, tuple))
         self.assertEquals(3, len(value_holder.some_tuple))
         self.assertEquals("Hello, world!", value_holder.some_tuple[0])
-        print "xxx value_holder = %s" % value_holder
-        print "xxx value_holder.some_tuple = %s" % str(value_holder.some_tuple)
-        print "xxx value_holder.some_tuple[1] = %s" % value_holder.some_tuple[1]
         self.assertTrue(isinstance(value_holder.some_tuple[1], testSupportClasses.StringHolder))
         self.assertEquals("There should only be one copy of this string", value_holder.some_tuple[1].str)
         self.assertEquals("Spring Python", value_holder.some_tuple[2])

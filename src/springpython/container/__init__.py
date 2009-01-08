@@ -33,7 +33,7 @@ class ObjectContainer(object):
     can refer to another object in another source OF ANY FORMAT as a property.
     """
     def __init__(self, config = None):
-        self.logger = logging.getLogger("springpython.context.ObjectContainer")
+        self.logger = logging.getLogger("springpython.container.ObjectContainer")
 
         if config is None:
             self.configs = []

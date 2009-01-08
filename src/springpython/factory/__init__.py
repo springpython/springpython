@@ -60,3 +60,8 @@ class PythonObjectFactory(ObjectFactory):
 
     def __str__(self):
         return "PythonObjectFactory(%s)" % self.method
+
+class InitializingObject(object):
+    """This allows definition of a method which is invoked by the container after an object has had all properties set."""
+    def after_properties_set(self):
+        pass
