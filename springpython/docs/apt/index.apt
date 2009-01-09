@@ -38,6 +38,9 @@ Key Features
     one. If you have already built your client and server pieces using the IoC container, then going from local to
     distributed is just a configuration change.
 
+    * {{{reference/html/plugins.html}Plug-ins/command-line tool}} - Use the plugin system designed to help you rapidly 
+    develop applications.
+
     * {{{reference/html/samples.html}Samples}} - to help demonstrate various features of Spring Python, some sample
     applications have been created:
 
@@ -60,8 +63,6 @@ What's Coming?
   We are working on creating a fluent DSL for configuring the IoC container. With a refactored core container
   that already supports four formats, it shouldn't be hard to extend things and offer a useful, succinct
   alternative. The import thing is that with Spring Python, you don't HAVE to get bogged down with XML.
-
-  We are also developing a {{{reference/html/plugins.html}plugin-based, command-line tool}} to help you utilize Spring Python in writing applications.
 
 Spring Python News
 
