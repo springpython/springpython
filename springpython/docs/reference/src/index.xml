@@ -4,10 +4,11 @@
 <!ENTITY overview			SYSTEM "overview.xml">
 <!ENTITY objects			SYSTEM "objects.xml">
 <!ENTITY aop				SYSTEM "aop.xml">
-<!ENTITY transaction		SYSTEM "transaction.xml">
+<!ENTITY transaction			SYSTEM "transaction.xml">
 <!ENTITY dao				SYSTEM "dao.xml">
 <!ENTITY remoting			SYSTEM "remoting.xml">
 <!ENTITY security			SYSTEM "security.xml">
+<!ENTITY plugins			SYSTEM "plugins.xml">
 <!ENTITY samples			SYSTEM "samples.xml">
 ]>
 <book>
@@ -39,6 +40,7 @@
 	&transaction;
 	&security;
 	&remoting;
+	&plugins;
 	&samples;
 	
 </book>
