@@ -208,7 +208,7 @@ class DatabaseTxTestDecorativeTransactions(PythonConfig):
 				need to be part of transactions. There are several levels of propagation defined:</para>
 		
 				<itemizedlist>
-					<listitem><para>PROPAGATION_REQUIRED - If there is no current transaction, one will be started.</para></listitem>
+					<listitem><para>PROPAGATION_SUPPORTS - Code can run inside or outside a transaction.</para></listitem>
 					<listitem><para>PROPAGATION_REQUIRED - If there is no current transaction, one will be started.</para></listitem>
 					<listitem><para>PROPAGATION_MANDATORY - Code MUST be run inside an already started transaction.</para></listitem>
 					<listitem><para>PROPAGATION_NEVER - Code must NOT be run inside an existing transaction.</para></listitem>
