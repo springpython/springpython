@@ -65,6 +65,10 @@
 				server pieces using the IoC container, then going from local to distributed is
 				just a configuration change.</para>
 			</listitem>
+			<listitem>
+				<para><link linkend="plugins">Plug-ins/command-line tool</link> - Use the plugin
+				system designed to help you rapidly develop applications.</para>
+			</listitem>
 		
 			<listitem>
 				<para><link linkend="samples">Samples</link> - to help demonstrate various features of Spring Python, some sample
