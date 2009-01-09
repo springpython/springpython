@@ -21,6 +21,7 @@ import os
 import pydoc
 import re
 import sys
+import tarfile
 import getopt
 import shutil
 import S3
@@ -120,24 +121,32 @@ def test_coverage(dir):
     os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s --with-coverage --cover-package=springpython" % dir)
 
 def build(dir, version):
-    input = open(dir + "/build.py")
+    input = open(dir + "/build.py").read()
     output = open(dir + "/setup.py", "w") 
-    for line in input.readlines():
-        skip = ["sys.argv =", "parser = OptionParser", "parser.add_option", "(options, args)", "# NOTE:", "# Remove version argument", "from optparse"]
-        if len([True for criteria in skip if criteria in line]) > 0:
-            continue
-        if "options.version" in line:
-            output.write(re.sub("options.version", "'" + version + "'", line))
-            continue
-        output.write(line)
+    patterns_to_replace = [("version", version)]
+    for pattern, replacement in patterns_to_replace:
+        input = re.compile(r"\$\{%s}" % pattern).sub(replacement, input)
+    output.write(input)
     output.close()
-    os.system("cd %s ; python build.py --version %s sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % (dir, version))
+    os.system("cd %s ; python setup.py sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % dir)
 
 def package(dir, version):
     os.makedirs(dir)
     build("src", version)
     build("samples", version)
     os.system("mv *.tar.gz %s" % dir)
+
+    curdir = os.getcwd()
+    os.chdir("src/plugins")
+    for item in os.listdir("."):
+        if item in ["coily", ".svn"]: continue
+        t = tarfile.open("../../%s/springpython-plugin-%s-%s.tar.gz" % (dir, item, version), "w:gz")
+        for path, dirs, files in os.walk(item):
+            if ".svn" not in path:  # Don't want to include version information
+                t.add(path, recursive=False)
+                [t.add(path + "/" + file, recursive=False) for file in files]
+        t.close()
+    os.chdir(curdir)
 
 def publish(filepath, s3bucket, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
     filename = filepath.split("/")[-1]

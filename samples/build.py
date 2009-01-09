@@ -24,16 +24,8 @@ import sys
 from distutils.core import setup
 from optparse import OptionParser
 
-parser = OptionParser(usage="usage: %prog [-h|--help] [options]")
-parser.add_option("", "--version", action="store", dest="version", help="Define the version of this build.")
-(options, args) = parser.parse_args()
-
-# NOTE: This assumes setup.py is called from build.py. It can NOT be run standalone.
-# Remove version argument
-sys.argv = [sys.argv[0]] + sys.argv[-1:]
-
 setup(name='springpython-samples',
-      version=options.version,
+      version='${version}',
       description='Spring Python samples',
       long_description='A collection of small samples utilizing the features of Spring Python.',
       author='Greg L. Turnquist',

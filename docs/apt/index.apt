@@ -6,13 +6,13 @@
 
 Introduction
 
-  Spring Python is an offshoot of the Java-based Spring Framework and Spring Security, targeted for Python. Spring
-  provides many useful features, and I wanted those same features available when working with Python.
+  "Spring Python is an offshoot of the Java-based Spring Framework and Spring Security, targeted for Python. Spring
+  provides many useful features, and I wanted those same features available when working with Python." -- Greg Turnquist,
+  project lead
 
-  This used to be a trac site, but since Spring Python became an official Spring Extension, it has been replaced
-  with a maven-generated one. Documentation stored in various trac articles has been migrated to the documentation
-  set found in left-hand side of this page. You can view either HTML or a PDF document.
-  
+  This project takes the concepts of Spring and applies it to the language and environment of Python. This includes
+  pragmatic libraries and useful abstractions that quickly gets you back to working on the code that makes you money.
+
 Key Features
 
     * {{{reference/html/objects.html}Inversion Of Control}} - The idea is to decouple two classes at the
@@ -60,6 +60,8 @@ What's Coming?
   We are working on creating a fluent DSL for configuring the IoC container. With a refactored core container
   that already supports four formats, it shouldn't be hard to extend things and offer a useful, succinct
   alternative. The import thing is that with Spring Python, you don't HAVE to get bogged down with XML.
+
+  We are also developing a {{{reference/html/plugins.html}plugin-based, command-line tool}} to help you utilize Spring Python in writing applications.
 
 Spring Python News
 

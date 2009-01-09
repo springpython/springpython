@@ -17,22 +17,13 @@
 import re
 import sys
 from distutils.core import setup
-from optparse import OptionParser
 
 if sys.version_info < (2, 4):
     print "Spring Python only supports Python 2.4 and higher"
     sys.exit(1)
 
-parser = OptionParser(usage="usage: %prog [-h|--help] [options]")
-parser.add_option("", "--version", action="store", dest="version", help="Define the version of this build.")
-(options, args) = parser.parse_args()
-
-# NOTE: This assumes setup.py is called from build.py. It can NOT be run stand alone.
-# Remove version argument
-sys.argv = [sys.argv[0]] + sys.argv[-1:]
-
 setup(name='springpython',
-      version=options.version,
+      version='${version}',
       description='Spring Python',
       long_description='Spring Python is an offshoot of the Java-based SpringFramework, targeted for Python. Spring provides many useful features, and I wanted those same features available when working with Python.',
       author='Greg L. Turnquist',
@@ -40,6 +31,7 @@ setup(name='springpython',
       url='http://springpython.webfactional.com',
       platforms = ["Python >= 2.4"],
       license='Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
+      scripts=['plugins/coily'],
       packages=['springpython', 
                 'springpython.aop', 
                 'springpython.config',

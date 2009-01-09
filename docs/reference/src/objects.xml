@@ -31,12 +31,27 @@
 	<para>In Spring, there are certain classes whose instances form the backbone of your application and that
 	are managed by the Spring IoC container. While Spring Java calls them
 	<ulink url="http://en.wikipedia.org/wiki/Javabean">
-	beans</ulink>, Spring Python and Spring.NET call them <emphasis>objects</emphasis>.
+	beans</ulink>, Spring Python and Spring for .NET call them <emphasis>objects</emphasis>.
 	An object is simply a class instance that was instantiated, assembled and otherwise managed by a Spring
 	IoC container instead of directly by your code; other than that, there is nothing special about a
 	object. It is in all other respects one of probably many objects in your application. These
 	objects, and the dependencies between them, are reflected in the configuration meta-data used
 	by a container.</para>
+
+	<para>The following diagram demonstrates a key Spring concept: building useful services on top of simple
+	objects, configured through a container's set of blueprints, provides powerful services that are
+	easier to maintain.</para>
+	
+	<para><mediaobject>
+		<imageobject role="fo">
+			<imagedata align="center" fileref="images/spring_triangle.png"
+				format="PNG" scale="100%" width="100%"/>
+		</imageobject>
+		<imageobject role="html">
+			<imagedata align="center" fileref="images/spring_triangle.png"
+				format="PNG"/>
+		</imageobject>
+	</mediaobject></para>
 	
 	<para>This chapter provides the basics of Spring Python's IoC container by using examples
 	with explanations. If you are familiar with Spring Java, then you may notice many similarities. Also,
