@@ -293,18 +293,18 @@ class AutoTransactionalObject(ObjectPostProcessor):
         self.tx_manager = tx_manager
         self.logger = logging.getLogger("springpython.database.transaction.AutoTransactionalObject")
 
-    def post_process_after_initialization(self, app_context):
+    def post_process_after_initialization(self, obj, obj_name):
         """This setup is run after all objects in the container have been created."""
-        for obj in app_context.objects.values():
-            # Check every method in the object...
-            for name, method in inspect.getmembers(obj, inspect.ismethod):
-                try:
-                    # If the method contains _call_, then you are looking at a wrapper...
-                    wrapper = method.im_func.func_globals["_call_"]
-                    if wrapper.func_name == "transactional_wrapper":  # name of @transactional's wrapper method
-                        self.logger.debug("Linking tx_manager with %s" % name)
-                        wrapper.func_globals["tx_manager"] = self.tx_manager
-                except KeyError, e:   # If the method is NOT wrapped, there will be no _call_ attribute
-                    pass
+        # Check every method in the object...
+        for name, method in inspect.getmembers(obj, inspect.ismethod):
+            try:
+                # If the method contains _call_, then you are looking at a wrapper...
+                wrapper = method.im_func.func_globals["_call_"]
+                if wrapper.func_name == "transactional_wrapper":  # name of @transactional's wrapper method
+                    self.logger.debug("Linking tx_manager with %s" % name)
+                    wrapper.func_globals["tx_manager"] = self.tx_manager
+            except KeyError, e:   # If the method is NOT wrapped, there will be no _call_ attribute
+                pass
+        return obj
 
 

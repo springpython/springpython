@@ -15,6 +15,7 @@
 """
 import unittest
 from springpython.context import ApplicationContext
+from springpython.context import ObjectPostProcessor
 from springpython.config import PyContainerConfig
 from springpython.config import SpringJavaConfig
 from springpython.config import XMLConfig
@@ -819,6 +820,16 @@ class XMLConfigConstructorBasedTestCase(unittest.TestCase):
         for executor in controller.executors:
             self.assertTrue(isinstance(executor, testSupportClasses.Executor))
 
+class ObjectPostProcessorsTestCase(unittest.TestCase):
+    """This test case exercises object post processors"""
 
-
+    def testSimpleObjectPostProcessor(self):
+         ctx = ApplicationContext(XMLConfig("support/contextObjectPostProcessing.xml"))
+         processor = ctx.get_object("postProcessor")
+         self.assertTrue(isinstance(processor, ObjectPostProcessor))
+         self.assertFalse(hasattr(processor, "processedBefore"))
+         self.assertFalse(hasattr(processor, "processedAfter"))
+         obj = ctx.get_object("value")
+         self.assertTrue(hasattr(obj, "processedBefore"))
+         self.assertTrue(hasattr(obj, "processedAfter"))
 

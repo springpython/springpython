@@ -20,6 +20,7 @@ from springpython.aop import MethodInterceptor
 from springpython.config import PythonConfig
 from springpython.config import Object
 from springpython.context import scope
+from springpython.context import ObjectPostProcessor
 from springpython.database.core import DaoSupport
 from springpython.database.core import DatabaseTemplate
 from springpython.database.core import RowMapper
@@ -487,3 +488,14 @@ class Controller(object):
 
 class Executor(object):
     pass
+
+class SamplePostProcessor(ObjectPostProcessor):
+    def post_process_after_initialization(self, obj, obj_name):
+        setattr(obj, "processedAfter", obj_name)
+        return obj
+
+class SamplePostProcessor2(ObjectPostProcessor):
+    def post_process_before_initialization(self, obj, obj_name):
+        setattr(obj, "processedBefore", obj_name)
+        return obj
+
