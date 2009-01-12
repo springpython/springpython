@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+
+    <object id="value" class="springpythontest.support.testSupportClasses.Person">
+        <constructor-arg name="name" value="Greg"/>
+        <constructor-arg name="phone" value="123"/>
+    </object>
+
+    <object id="postProcessor"  class="springpythontest.support.testSupportClasses.SamplePostProcessor"/>
+    <object id="postProcessor2" class="springpythontest.support.testSupportClasses.SamplePostProcessor2"/>
+
+</objects>

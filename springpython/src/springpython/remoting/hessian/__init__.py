@@ -33,7 +33,7 @@ class HessianProxyFactory(object):
     def __getattr__(self, name):
         if name == "service_url":
             return self.service_url
-        elif name == "post_process_after_initialization":
+        elif name in ["post_process_before_initialization", "post_process_after_initialization"]:
             raise AttributeError, name
         else:
             if self.client_proxy is None:

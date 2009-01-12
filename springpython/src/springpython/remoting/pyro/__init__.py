@@ -77,7 +77,7 @@ class PyroProxyFactory(object):
     def __getattr__(self, name):
         if name in ["service_url"]:
             return self.__dict__[name]
-        elif name == "post_process_after_initialization":
+        elif name in ["post_process_before_initialization", "post_process_after_initialization"]:
             raise AttributeError, name
         else:
             if self.client_proxy is None:

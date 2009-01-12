@@ -38,22 +38,37 @@ class ApplicationContext(ObjectContainer):
                 self.logger.debug("Eagerly fetching %s" % object_def.id)
                 self.get_object(object_def.id)
 
+        post_processors = [object for object in self.objects.values() if isinstance(object, ObjectPostProcessor)]
+
+        for obj_name, obj in self.objects.iteritems():
+            if not isinstance(obj, ObjectPostProcessor):
+                for post_processor in post_processors:
+                    self.objects[obj_name] = post_processor.post_process_before_initialization(obj, obj_name)
+
+
         for object in self.objects.values():
             self._apply(object)
+
+        for obj_name, obj in self.objects.iteritems():
+            if not isinstance(obj, ObjectPostProcessor):
+                for post_processor in post_processors:
+                    self.objects[obj_name] = post_processor.post_process_after_initialization(obj, obj_name)
             
     def _apply(self, obj):
         if len([True for type_to_avoid in self.types_to_avoid if isinstance(obj, type_to_avoid)]) == 0: 
             if hasattr(obj, "after_properties_set"):
                obj.after_properties_set()
-            if hasattr(obj, "post_process_after_initialization"):
-                obj.post_process_after_initialization(self)
+            #if hasattr(obj, "post_process_after_initialization"):
+            #    obj.post_process_after_initialization(self)
             if hasattr(obj, "set_app_context"):
                 obj.set_app_context(self)
             
 
 class ObjectPostProcessor(object):
-    def post_process_after_initialization(self, app_context):
-        raise NotImplementedError()
+    def post_process_before_initialization(self, obj, obj_name):
+        return obj
+    def post_process_after_initialization(self, obj, obj_name):
+        return obj
 
 class ApplicationContextAware(object):
     def __init__(self):
