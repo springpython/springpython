@@ -38,8 +38,33 @@ print service.method("something")
 "You sent me 'something'"
 ]]></programlisting>
 
-		<para>Now, let's write an interceptor that will catch any results, and wrap them
-		with <![CDATA[<Wrapped>]]> tags.</para>
+		<para>To configure the same thing using the IoC container, put the following text into a file named
+		<filename>app-context.xml</filename>.</para>
+		
+<programlisting><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+       		
+	<object id="service" class="SampleService"/>
+	
+</objects>
+]]></programlisting>
+
+		<para>To instantiate the IoC container, use the following code.</para>
+		
+<programlisting><![CDATA[
+from springpython.context import ApplicationContext
+from springpython.config import XMLConfig
+
+container = ApplicationContext(XMLConfig("app-context.xml"))
+service = container.get_object("service")
+]]></programlisting>
+
+		<para>You can use either mechanism to define an instance of your service. Now, let's write an interceptor
+		that will catch any results, and wrap them with <![CDATA[<Wrapped>]]> tags.</para>
 		
 <programlisting><![CDATA[
 from springpython.aop import *
@@ -62,12 +87,49 @@ class WrappingInterceptor(MethodInterceptor):
 		that is being intercepted. It is used to create the dynamic proxy object to give back to
 		the client.</para>
 		
+		<para>You can use the Spring Python APIs to directly create this proxied service.</para>
+		
 <programlisting><![CDATA[
 from springpython.aop import *
 factory = ProxyFactory()
 factory.target = SampleService()
 factory.interceptors.append(WrappingInterceptor())
 service = factory.getProxy()
+]]></programlisting>
+
+		<para>Or, you can insert this definition into your <filename>app-context.xml</filename> file.</para>
+		
+<programlisting><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+       		
+	<object id="targetService" class="SampleService"/>
+
+	<object id="serviceFactory" class="springpython.aop.ProxyFactory">
+		<property name="target" ref="targetService"/>
+		<property name="interceptors">
+			<object class="WrappingInterceptor"/>
+		</property>
+	</object>
+	
+</objects>
+]]></programlisting>
+
+		<para>If you notice, the original Spring Python "service" object has been renamed as "targetService", and there is, instead,
+		another object called "serviceFactory" which is a Spring AOP ProxyFactory. It points to the target service and also has an
+		interceptor plugged in. In this case, the interceptor is defined as an inner object, not having a name of its own,
+		indicating it is not meant to be referenced outside the IoC container. When you get a hold of this, you can request a proxy.</para>
+
+<programlisting><![CDATA[
+from springpython.context import ApplicationContext
+from springpython.config import XMLConfig
+
+container = ApplicationContext(XMLConfig("app-context.xml"))
+serviceFactory = container.get_object("serviceFactory")
+service = serviceFactory.getProxy()
 ]]></programlisting>
 
 		<para>Now, the client can call <emphasis>service</emphasis>, and all function calls will
@@ -102,6 +164,27 @@ service.interceptors = [WrappingInterceptor()]
 print service.method(" proxy factory object")
 
 "You sent me a 'proxy factory object'"
+]]></programlisting>
+
+		<para>To configure the same thing into your <filename>app-context.xml</filename> file, it looks like this:</para>
+
+<programlisting><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+       		
+	<object id="targetService" class="SampleService"/>
+
+	<object id="service" class="springpython.aop.ProxyFactoryObject">
+		<property name="target" ref="targetService"/>
+		<property name="interceptors">
+			<object class="WrappingInterceptor"/>
+		</property>
+	</object>
+	
+</objects>
 ]]></programlisting>
 
 		<para>In this case, the <classname>ProxyFactoryObject</classname> acts as both a proxy
