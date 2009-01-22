@@ -51,7 +51,7 @@ setup(name='springpython',
       download_url="http://www.springsource.com/download/community?project=Spring%20Extensions",
       classifiers=["License :: OSI Approved :: Apache Software License",
                    "Intended Audience :: Developers",
-                   "Development Status :: 4 - Beta",
+                   "Development Status :: 5 - Production/Stable",
                    "Topic :: Software Development :: Libraries :: Python Modules",
                    "Programming Language :: Python",
                    "Operating System :: OS Independent"
