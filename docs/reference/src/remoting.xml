@@ -209,7 +209,7 @@ service_exporter.after_properties_set()
 
 # Get a handle on a client-side proxy that will remotely call the service.
 service = PyroProxyFactory()
-service.service_url = "PYROLOC://localhost:7766/ServiceName"
+service.service_url = "PYROLOC://127.0.0.1:7000/ServiceName"
 
 # Call the service just you did in the original, simplified version.
 print service.get_data("Hello")
@@ -389,6 +389,36 @@ CLIENT: You got remote data => Hello
 	
 	<section id="remoting-hessian">
 		<title>Remoting with Hessian</title>
+
+		<note>
+			<title>Caucho's python library for Hessian is incomplete</title>
+
+			<para>Due to minimal functionality provided by Caucho's Hessian library for python, there is minimal documentation
+			to show its functionality.</para>
+		</note>
+
+
+		<para>The following shows how to connect a client to a Hessian-exported service. This can theoretically be any
+		technology. Currently, Java objects are converted into python dictionaries, meaning that the data and transferred, but
+		there are not method calls available.</para>
+
+<programlisting><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+                http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+
+	<object id="personService" class="springpython.remoting.hessian.HessianProxyFactory">
+		<property name="service_url"><value>http://localhost:8080/</value></property>
+	</object>
+
+</objects>
+]]></programlisting>
+
+		<para>The Caucho library appears to only support Python being a client, and not yet as a service, so there is no
+		<classname>HessianServiceExporter</classname> available yet.</para>
+
 	</section>
 	
 	<section id="remoting-solutions">
