@@ -90,24 +90,77 @@ class SampleContainer(PythonConfig):
         return user_details_service
 ]]></programlisting>
 
-				<para>XML configuration using <classname>PyContainerConfig</classname>...</para>
+				<para>XML configuration using <classname>XMLConfig</classname>:</para>
 
 <programlisting><![CDATA[
-<component id="inMemoryUserDetailsService" class="springpython.security.userdetails.InMemoryUserDetailsService">
-	<property name="user_dict">
-      		{
-        	"user1": ("password1", ["role1", "blue"], True),
-        	"user2": ("password2", ["role1", "orange"], True),
-  			"adminuser": ("password3", ["role1", "admin"], True),
-        	"disableduser": ("password4", ["role1", "blue"], False),
-        	"emptyuser": ("", [], True)
-       		}
-	</property>
-</component>
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+
+	<object id="inMemoryUserDetailsService" class="springpython.security.userdetails.InMemoryUserDetailsService">
+		<property name="user_dict">
+			<dict>
+				<entry>
+					<key><value>user1</value></key>
+					<value>
+						<tuple>
+							<value>password1</value>
+							<list><value>role1</value><value>blue</value></list>
+							<value>True</value>
+						</tuple>
+					</value>
+				</entry>
+				<entry>
+					<key><value>user2</value></key>
+					<value>
+						<tuple>
+							<value>password2</value>
+							<list><value>role1</value><value>orange</value></list>
+							<value>True</value>
+						</tuple>
+					</value>
+				</entry>
+				<entry>
+					<key><value>adminuser</value></key>
+					<value>
+						<tuple>
+							<value>password3</value>
+							<list><value>role1</value><value>admin</value></list>
+							<value>True</value>
+						</tuple>
+					</value>
+				</entry>
+				<entry>
+					<key><value>disableduser</value></key>
+					<value>
+						<tuple>
+							<value>password4</value>
+							<list><value>role1</value><value>blue</value></list>
+							<value>False</value>
+						</tuple>
+					</value>
+				</entry>
+				<entry>
+					<key><value>emptyuser</value></key>
+					<value>
+						<tuple>
+							<value/>
+							<list/>
+							<value>True</value>
+						</tuple>
+					</value>
+				</entry>
+			</dict>
+		</property>
+	</object>
       
-<component id="inMemoryDaoAuthenticationProvider" class="springpython.security.providers.dao.DaoAuthenticationProvider">
-	<property name="user_details_service" local="inMemoryUserDetailsService"/>
-</component>
+	<object id="inMemoryDaoAuthenticationProvider" class="springpython.security.providers.dao.DaoAuthenticationProvider">
+		<property name="user_details_service" ref="inMemoryUserDetailsService"/>
+	</object>
+	
+</objects>
 ]]></programlisting>
 
 				<para>This is the user map defined for one of the test cases. The first user, user1, has
@@ -149,14 +202,14 @@ class SampleContainer(PythonConfig):
         return AuthenticationManager(auth_providers = [self.authenticationProvider()])
 ]]></programlisting>
 
-			<para>XML-based configuration...</para>
+			<para>XML-based configuration with <classname>XMLConfig</classname>:</para>
 			
 <programlisting><![CDATA[
-<component id="authenticationManager" class="springpython.security.providers.AuthenticationManager">
+<object id="authenticationManager" class="springpython.security.providers.AuthenticationManager">
     <property name="auth_providers">
-        <list local="authenticationProvider"/>
-    </property>
-</component>
+    	<list><ref object="authenticationProvider"/></list>
+   	</property>
+</object>
 ]]></programlisting>
 
 			<para>This <classname>AuthenticationManager</classname> has a list referencing one object already
@@ -242,16 +295,16 @@ class SampleContainer(PythonConfig):
         return RoleVoter(role_prefix="CUSTOMER")
 ]]></programlisting>
 
-		<para>XML-based configuration...</para>
+		<para>XML-based configuration with <classname>XMLConfig</classname>:</para>
 		
 <programlisting><![CDATA[
-<component id="vetRoleVoter" class="springpython.security.vote.RoleVoter">
-	<property name="role_prefix">"VET"</property>
-</component>
+<object id="vetRoleVoter" class="springpython.security.vote.RoleVoter">
+	<property name="role_prefix"><value>VET</value></property>
+</object>
 
-<component id="customerRoleVoter" class="springpython.security.vote.RoleVoter">
-	<property name="role_prefix">"CUSTOMER"</property>
-</component>
+<object id="customerRoleVoter" class="springpython.security.vote.RoleVoter">
+	<property name="role_prefix"><value>CUSTOMER</value></property>
+</object>
 ]]></programlisting>
 
 		<para>The first one votes on VET authorities, and the second one votes on CUSTOMER authorities.</para>
@@ -269,12 +322,12 @@ class SampleContainer(PythonConfig):
         return OwnerVoter(controller = self.controller())
 ]]></programlisting>
 
-		<para>XML-based configuration...</para>
+		<para>XML-based configuration using <classname>XMLConfig</classname>:</para>
 		
 <programlisting><![CDATA[
-<component id="ownerVoter" class="controller.OwnerVoter">
-	<property name="controller" local="controller"/>
-</component>
+<object id="ownerVoter" class="controller.OwnerVoter">
+	<property name="controller" ref="controller"/>
+</object>
 ]]></programlisting>
 
 		<para>This class is wired in the PetClinic controller module as part of the sample, which demonstrates how easy
@@ -294,17 +347,19 @@ class SampleContainer(PythonConfig):
         return manager
 ]]></programlisting>
 
-		<para>XML-based configuration...</para>
+		<para>XML-based configuration using <classname>XMLConfig</classname>:</para>
 		
 <programlisting><![CDATA[
-<component id="accessDecisionManager" class="springpython.security.vote.AffirmativeBased">
-	<property name="allow_if_all_abstain">False</property>
+<object id="accessDecisionManager" class="springpython.security.vote.AffirmativeBased">
+	<property name="allow_if_all_abstain"><value>False</value></property>
 	<property name="access_decision_voters">
-		<list local="vetRoleVoter"/>
-		<list local="customerRoleVoter"/>
-		<list local="ownerVoter"/>
+		<list>
+			<ref object="vetRoleVoter"/>
+			<ref object="customerRoleVoter"/>
+			<ref object="ownerVoter"/>
+		</list>
 	</property>
-</component>
+</object>
 ]]></programlisting>
 
 	</section>	

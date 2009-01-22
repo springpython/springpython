@@ -139,9 +139,9 @@ class Bank:
 	</section>
 	
 	<section id="transaction-at-transactional">
-		<title><methodname>@Transactional</methodname></title>
+		<title><methodname>@transactional</methodname></title>
 		
-		<para>Another option is to use the <methodname>@Transactional</methodname> decorator, and mark which
+		<para>Another option is to use the <methodname>@transactional</methodname> decorator, and mark which
 		methods should be wrapped in a transaction when called.</para>
 
 <programlisting><![CDATA[
@@ -156,7 +156,7 @@ class Bank:
 ..
 ..
 ..
-    @Transactional
+    @transactional
     def transfer(self, transfer_amount, source_account_num, target_account_num):
         self.withdraw(transfer_amount, source_account_num)
         self.deposit(transfer_amount, target_account_num)
@@ -174,7 +174,7 @@ class Bank:
 			</listitem>
 			<listitem>
 				<para>an <classname>AutoTransactionalObject</classname>, which checks all objects to see
-				if they have <methodname>@Transactional</methodname> methods, and if so, links them with the 
+				if they have <methodname>@transactional</methodname> methods, and if so, links them with the 
 				<classname>TransactionManager</classname>.</para>
 			</listitem>
 		</itemizedlist> 
@@ -200,8 +200,35 @@ class DatabaseTxTestDecorativeTransactions(PythonConfig):
         return TransactionalBank(self.factory)
 ]]></programlisting>
 
+			<para>This can also be configured using <classname>XMLConfig</classname></para>
+			
+<programlisting><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+       		
+	<object id="transactionalObject" class="springpython.database.transaction.AutoTransactionalObject">
+		<constructor-arg ref="tx_mgr"/>
+	</object>
+	
+	<object id="tx_mgr" class="springpython.database.transaction.ConnectionFactoryTransactionManager">
+		<constructor-arg ref="factory"/>
+	</object>
+	
+	<object id="factory" class="...your DB connection factory definition here..."/>
+	
+	<object id="bank" class="TransactionalBank">
+		<constructor-arg ref="factory"/>
+	</object>
+	
+</objects>
+]]></programlisting>
+
+
 			<section id="transaction-at-transactional-arguments">
-				<title><methodname>@Transactional(["PROPAGATION_REQUIRED"])</methodname>...</title>
+				<title><methodname>@transactional(["PROPAGATION_REQUIRED"])</methodname>...</title>
 
 				<para>Declarative transactions includes the ability to define transaction propagation.
 				This allows you to define when a transaction should be started, and which operations
@@ -225,19 +252,19 @@ class TransactionalBankWithLotsOfTransactionalArguments(object):
         self.logger = logging.getLogger("springpython.test.testSupportClasses.TransactionalBankWithLotsOfTransactionalArguments")
         self.dt = DatabaseTemplate(factory)
 
-    @Transactional(["PROPAGATION_REQUIRED"])
+    @transactional(["PROPAGATION_REQUIRED"])
     def open(self, accountNum):
         self.logger.debug("Opening account %s with $0 balance." % accountNum)
         self.dt.execute("INSERT INTO account (account_num, balance) VALUES (?,?)", (accountNum, 0))
 
-    @Transactional(["PROPAGATION_REQUIRED"])
+    @transactional(["PROPAGATION_REQUIRED"])
     def deposit(self, amount, accountNum):
         self.logger.debug("Depositing $%s into %s" % (amount, accountNum))
         rows = self.dt.execute("UPDATE account SET balance = balance + ? WHERE account_num = ?", (amount, accountNum))
         if rows == 0:
             raise BankException("Account %s does NOT exist" % accountNum)
 
-    @Transactional(["PROPAGATION_REQUIRED"])
+    @transactional(["PROPAGATION_REQUIRED"])
     def withdraw(self, amount, accountNum):
         self.logger.debug("Withdrawing $%s from %s" % (amount, accountNum))
         rows = self.dt.execute("UPDATE account SET balance = balance - ? WHERE account_num = ?", (amount, accountNum))
@@ -245,31 +272,31 @@ class TransactionalBankWithLotsOfTransactionalArguments(object):
             raise BankException("Account %s does NOT exist" % accountNum)
         return amount
 
-    @Transactional(["PROPAGATION_SUPPORTS","readOnly"])
+    @transactional(["PROPAGATION_SUPPORTS","readOnly"])
     def balance(self, accountNum):
         self.logger.debug("Checking balance for %s" % accountNum)
         return self.dt.queryForObject("SELECT balance FROM account WHERE account_num = ?", (accountNum,), types.FloatType)
 
-    @Transactional(["PROPAGATION_REQUIRED"])
+    @transactional(["PROPAGATION_REQUIRED"])
     def transfer(self, amount, fromAccountNum, toAccountNum):
         self.logger.debug("Transferring $%s from %s to %s." % (amount, fromAccountNum, toAccountNum))
         self.withdraw(amount, fromAccountNum)
         self.deposit(amount, toAccountNum)
 
-    @Transactional(["PROPAGATION_NEVER"])
+    @transactional(["PROPAGATION_NEVER"])
     def nonTransactionalOperation(self):
         self.logger.debug("Executing non-transactional operation.")
 
-    @Transactional(["PROPAGATION_MANDATORY"])
+    @transactional(["PROPAGATION_MANDATORY"])
     def mandatoryOperation(self):
         self.logger.debug("Executing mandatory transactional operation.")
 
-    @Transactional(["PROPAGATION_REQUIRED"])
+    @transactional(["PROPAGATION_REQUIRED"])
     def mandatoryOperationTransactionalWrapper(self):
         self.mandatoryOperation()
         self.mandatoryOperation()
 
-    @Transactional(["PROPAGATION_REQUIRED"])
+    @transactional(["PROPAGATION_REQUIRED"])
     def nonTransactionalOperationTransactionalWrapper(self):
         self.nonTransactionalOperation()
 ]]></programlisting>
