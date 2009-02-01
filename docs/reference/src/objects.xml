@@ -971,5 +971,52 @@ class MixedApplicationContext2(PythonConfig):
 		the developer. They are instead used by the different types of configuration scanners.</para>
 		
 	</section>
+	
+	<section id="objects-testable-code">
+	    <title>Testable Code</title>
+	    
+	    <para>One key value of using the IoC container is the how you can isolate parts of your code for better testing.
+	    Imagine you had the following configuration:</para>
+	    
+<programlisting><![CDATA[
+from springpython.config import *
+from springpython.context import *
+
+class MovieBasedApplicationContext(PythonConfig):
+    def __init__(self):
+        super(MovieBasedApplicationContext, self).__init__()
+        
+    @Object(scope.PROTOTYPE)
+    def MovieLister(self):
+        lister = MovieLister()
+        lister.finder = self.MovieFinder()
+        lister.description = self.SingletonString()
+        self.logger.debug("Description = %s" % lister.description)
+        return lister
+    
+    @Object(scope.SINGLETON)
+    def MovieFinder(self):
+        return ColonMovieFinder(filename="support/movies1.txt")
+    
+    @Object    # scope.SINGLETON is the default
+    def SingletonString(self):
+        return StringHolder("There should only be one copy of this string")
+]]></programlisting>
+
+        <para>To inject a test double for <classname>MovieFinder</classname>, your test code would only have to
+        extend the class and override the <methodname>MovieFinder</methodname> method, and replace it with your
+        stub or mock object. Now you have a nicely isolated instance of <classname>MovieLister</classname>.</para>
+
+<programlisting><![CDATA[
+class MyTestableAppContext(MovieBasedApplicationContext):
+    def __init__(self):
+        super(MyTestableAppContext, self).__init__()
+        
+    @Object
+    def MovieFinder(self):
+        return MovieFinderStub()
+]]></programlisting>
+
+	</section>
 
 </chapter>
