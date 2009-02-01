@@ -269,5 +269,91 @@ factory.interceptors = [WrappingInterceptor()]
 It produces the same thing.
 
 	</section>
+	
+	<section id="aop-pure-python">
+	    <title>Coding AOP with Pure Python</title>
+	    
+	    <para>There is a long history of Spring being based on XML. However, Spring Python offers an easy to use alternative: a
+	    <link linkend="objects-config-object">pure python decorator-based PythonConfig</link>. Imagine you had set up a simple
+	    context like this:</para>
+	    
+<programlisting><![CDATA[
+from springpython.config import *
+from springpython.context import *
+
+class MovieBasedApplicationContext(PythonConfig):
+    def __init__(self):
+        super(MovieBasedApplicationContext, self).__init__()
+        
+    @Object(scope.PROTOTYPE)
+    def MovieLister(self):
+        lister = MovieLister()
+        lister.finder = self.MovieFinder()
+        lister.description = self.SingletonString()
+        self.logger.debug("Description = %s" % lister.description)
+        return lister
+    
+    @Object(scope.SINGLETON)
+    def MovieFinder(self):
+        return ColonMovieFinder(filename="support/movies1.txt")
+    
+    @Object    # scope.SINGLETON is the default
+    def SingletonString(self):
+        return StringHolder("There should only be one copy of this string")
+]]></programlisting>
+
+        <para>From an AOP perspective, it is easy to intercept <classname>MovieFinder</classname> and wrap it with some
+        advice. Because you have already exposed it as an injection point with this pure-python IoC container, you just need
+        to make this change:</para>
+        
+<programlisting><![CDATA[
+from springpython.aop import *
+from springpython.config import *
+from springpython.context import *
+
+class MovieBasedApplicationContext(PythonConfig):
+    def __init__(self):
+        super(MovieBasedApplicationContext, self).__init__()
+        
+    @Object(scope.PROTOTYPE)
+    def MovieLister(self):
+        lister = MovieLister()
+        lister.finder = self.MovieFinder()
+        lister.description = self.SingletonString()
+        self.logger.debug("Description = %s" % lister.description)
+        return lister
+    
+    # By renaming the original service to this...
+    def targetMovieFinder(self):
+        return ColonMovieFinder(filename="support/movies1.txt")
+
+    #...we can substitute a proxy that will wrap it with an interceptor
+    @Object(scope.SINGLETON)
+    def MovieFinder(self):
+    	return ProxyFactoryObject(target=self.targetMovieFinder(), 
+                                 interceptors=MyInterceptor())
+    
+    
+    @Object    # scope.SINGLETON is the default
+    def SingletonString(self):
+        return StringHolder("There should only be one copy of this string")
+
+class MyInterceptor(MethodInterceptor):
+    def invoke(self, invocation):
+        results = "<Wrapped>" + invocation.proceed() + "</Wrapped>"
+        return results
+]]></programlisting>
+
+        <para>Now, everything that was referring to the original <classname>ColonMovieFinder</classname> instance, is instead pointing
+        to a wrapping interceptor. The caller and callee involved don't know anything about it, keeping your code isolated and clean.</para>
+        
+        <note>
+            <title>Shouldn't you decouple the interceptor from the IoC configuration?</title>
+            
+            <para>It is usually good practice to split up configuration from actual business code. These two
+            were put together in the same file for demonstration purposes.</para>
+        </note>
+	    
+	</section>
 
 </chapter>
