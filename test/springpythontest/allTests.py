@@ -16,9 +16,15 @@
 import logging
 import unittest, os
 import springpython
-import springpythontest
+import sys
 
 if __name__ == "__main__":    
+    module_name = sys.argv[1]
+    print "Trying to import module %s" % module_name
+    mod = __import__("%s" % module_name)
+
+    print mod
+
     logger = logging.getLogger("springpython")
     loggingLevel = logging.INFO
     logger.setLevel(loggingLevel)
@@ -29,5 +35,5 @@ if __name__ == "__main__":
     logger.addHandler(ch)
 
     suite = unittest.TestSuite()
-    suite.addTest(unittest.defaultTestLoader.loadTestsFromModule(springpythontest))
+    suite.addTest(unittest.defaultTestLoader.loadTestsFromModule(mod))
     unittest.TextTestRunner(verbosity=3).run(suite)
