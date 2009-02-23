@@ -113,12 +113,12 @@ def clean(dir):
 def test(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
-    os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s" % dir)
+    os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s checkin" % dir)
     
 def test_coverage(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
-    os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s --with-coverage --cover-package=springpython" % dir)
+    os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s --with-coverage --cover-package=springpython checkin" % dir)
 
 def build(dir, version):
     input = open(dir + "/build.py").read()
