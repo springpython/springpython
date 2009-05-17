@@ -39,7 +39,7 @@ class DatabaseUserDetailsService(UserDetailsService):
 
     class UsersByUsernameMapping(RowMapper):
         """A row handler that processes one user entry."""
-        def map_row(self, row):
+        def map_row(self, row, metadata=None):
             username = row[0]
             password = row[1]
             enabled = row[2]
@@ -50,7 +50,7 @@ class DatabaseUserDetailsService(UserDetailsService):
         def __init__(self, role_prefix):
             self.role_prefix = role_prefix
             
-        def map_row(self, row):
+        def map_row(self, row, metadata=None):
             return self.role_prefix + row[1]
     
     def __init__(self, dataSource = None):

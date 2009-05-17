@@ -25,6 +25,7 @@ from springpython.database import ArgumentMustBeNamed
 from springpython.database import DataAccessException
 from springpython.database import InvalidArgumentType
 from springpython.database.core import DatabaseTemplate
+from springpython.database.core import SimpleRowMapper
 from springpython.database import factory
 from springpythontest.support import testSupportClasses
 
@@ -415,6 +416,13 @@ class AbstractDatabaseTemplateTestCase(unittest.TestCase):
         self.assertEquals(animals[0].category, "reptile")
         self.assertEquals(animals[1].name, "racoon")
         self.assertEquals(animals[1].category, "mammal")
+
+    def testProgrammaticStaticQueryWithSimpleRowMapper(self):
+        animals = self.databaseTemplate.query("select name, category from animal", rowhandler=SimpleRowMapper(testSupportClasses.Animal))
+        self.assertEquals(animals[0].name, "snake")
+        self.assertEquals(animals[0].category, "reptile")
+        self.assertEquals(animals[1].name, "racoon")
+        self.assertEquals(animals[1].category, "mammal")
         
     def testProgrammaticQueryWithBoundArguments(self):
         animals = self.databaseTemplate.query("select name, category from animal where name = %s", ("snake",), testSupportClasses.AnimalRowMapper())
@@ -422,6 +430,15 @@ class AbstractDatabaseTemplateTestCase(unittest.TestCase):
         self.assertEquals(animals[0].category, "reptile")
 
         animals = self.databaseTemplate.query("select name, category from animal where name = ?", ("snake",), testSupportClasses.AnimalRowMapper())
+        self.assertEquals(animals[0].name, "snake")
+        self.assertEquals(animals[0].category, "reptile")
+        
+    def testProgrammaticQueryWithBoundArgumentsWithSimpleRowMapper(self):
+        animals = self.databaseTemplate.query("select name, category from animal where name = %s", ("snake",), SimpleRowMapper(testSupportClasses.Animal))
+        self.assertEquals(animals[0].name, "snake")
+        self.assertEquals(animals[0].category, "reptile")
+
+        animals = self.databaseTemplate.query("select name, category from animal where name = ?", ("snake",), SimpleRowMapper(testSupportClasses.Animal))
         self.assertEquals(animals[0].name, "snake")
         self.assertEquals(animals[0].category, "reptile")
         
@@ -566,6 +583,13 @@ class MySQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
         
         databaseTemplate = DatabaseTemplate(factory)
         results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
+
+    def testIoCGeneralQueryWithSimpleRowMapper(self):
+        appContext = ApplicationContext(XMLConfig("support/databaseTestMySQLApplicationContext.xml"))
+        factory = appContext.get_object("connection_factory")
+        
+        databaseTemplate = DatabaseTemplate(factory)
+        results = databaseTemplate.query("select * from animal", rowhandler=SimpleRowMapper(testSupportClasses.Person))
         
 class PostGreSQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
     def __init__(self, methodName='runTest'):

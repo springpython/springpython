@@ -91,9 +91,15 @@ class DatabaseTemplate(object):
         if args and not rowhandler:
             raise ArgumentMustBeNamed(arg_name="rowhandler")
 
-        return [rowhandler.map_row(row) for row in self.query_for_list(sql_query, args)]
-    
+        results, metadata = self.__query_for_list(sql_query, args)
+        self.logger.info("Metadata = %s" % metadata)
+        return [rowhandler.map_row(row, metadata) for row in results]
+
     def query_for_list(self, sql_query, args = None):
+        results, metadata = self.__query_for_list(sql_query, args)
+        return results
+    
+    def __query_for_list(self, sql_query, args = None):
         """Execute a query for a result list, given static SQL. If args is provided, bind the arguments 
         (to avoid SQL injection attacks)."""
 
@@ -105,6 +111,7 @@ class DatabaseTemplate(object):
         cursor = self.__db.cursor()
         error = None
         results = None
+        metadata = None
         try:
             try:
                 if args:
@@ -112,6 +119,7 @@ class DatabaseTemplate(object):
                 else:
                     cursor.execute(sql_query)
                 results = cursor.fetchall()
+                metadata = [{"name":row[0], "type_code":row[1], "display_size":row[2], "internal_size":row[3], "precision":row[4], "scale":row[5], "null_ok":row[6]} for row in cursor.description]
             except Exception, e:
                 self.logger.debug("query_for_list.execute: Trapped %s while trying to execute '%s'" % (e, sql_query))
                 error = e
@@ -125,7 +133,7 @@ class DatabaseTemplate(object):
             self.logger.debug("query_for_list: I thought about kicking this up the chain => %s" % error)
 
         # Convert multi-item tuple into list
-        return [result for result in results or []]
+        return [result for result in results or []], metadata
 
     def query_for_int(self, sql_query, args = None):
         """Execute a query that results in an int value, given static SQL. If args is provided, bind the arguments 
@@ -179,6 +187,19 @@ class RowMapper(object):
     """
     This is an interface to handle one row of data.
     """
-    def map_row(self, row):
+    def map_row(self, row, metadata=None):
         raise NotImplementedError()
+class SimpleRowMapper(RowMapper):
+    """
+    This row mapper uses convention over configuration to create and populate attributes
+    of an object.
+    """
+    def __init__(self, clazz):
+        self.clazz = clazz
+
+    def map_row(self, row, metadata=None):
+        obj = self.clazz()
+        for i, column in enumerate(metadata):
+            setattr(obj, column["name"], row[i])
+        return obj
 
