@@ -780,6 +780,6 @@ class SqliteDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
         factory.commit()
         self.assertEquals(len(databaseTemplate.query_for_list("SELECT * FROM animal")), 4)
 
-        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
+        results = databaseTemplate.query("select * from animal", rowhandler=DictionaryRowMapper())
 
 
