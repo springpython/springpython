@@ -92,7 +92,6 @@ class DatabaseTemplate(object):
             raise ArgumentMustBeNamed(arg_name="rowhandler")
 
         results, metadata = self.__query_for_list(sql_query, args)
-        self.logger.info("Metadata = %s" % metadata)
         return [rowhandler.map_row(row, metadata) for row in results]
 
     def query_for_list(self, sql_query, args = None):
@@ -189,7 +188,21 @@ class RowMapper(object):
     """
     def map_row(self, row, metadata=None):
         raise NotImplementedError()
-class SimpleRowMapper(RowMapper):
+
+class DictionaryRowMapper(RowMapper):
+    """
+    This row mapper converts the tuple into a dictionary using the column names as the keys.
+    """
+    def map_row(self, row, metadata=None):
+        if metadata is not None:
+            obj = {}
+            for i, column in enumerate(metadata):
+                obj[column["name"]] = row[i]
+            return obj
+        else:
+            raise DataAccessException("metadata is None, unable to convert result set into a dictionary")
+
+class SimpleRowMapper(RowMapper):
     """
     This row mapper uses convention over configuration to create and populate attributes
     of an object.
@@ -198,8 +211,11 @@ class RowMapper(object):
         self.clazz = clazz
 
     def map_row(self, row, metadata=None):
-        obj = self.clazz()
-        for i, column in enumerate(metadata):
-            setattr(obj, column["name"], row[i])
-        return obj
+        if metadata is not None:
+            obj = self.clazz()
+            for i, column in enumerate(metadata):
+                setattr(obj, column["name"], row[i])
+            return obj
+        else:
+            raise DataAccessException("metadata is None, unable to map result set into %s instance" % self.clazz)
 

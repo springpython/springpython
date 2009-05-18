@@ -35,7 +35,7 @@ from springpython.database.transaction import TransactionProxyFactoryObject
 from springpython.database.transaction import transactional
 
 class Person(object):
-    def __init__(self, name, phone):
+    def __init__(self, name=None, phone=None):
         self.name = name
         self.phone = phone
         
