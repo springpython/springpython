@@ -70,10 +70,18 @@
     <developer>
       <id>russmiles</id>
       <name>Russ Miles</name>
-      <email>russell.miles at springsource.com</email>
+      <email>russ at russmiles.com</email>
+      <roles><role>Project Contributor</role></roles>
+      <organizationUrl>http://russmiles.com</organizationUrl>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <id>markpollack</id>
+      <name>Mark Pollack</name>
+      <email>mark.pollack at springsource.com</email>
       <roles><role>Project Sponsor</role></roles>
       <organizationUrl>http://springsource.com</organizationUrl>
-      <timezone>+1</timezone>
+      <timezone>-4</timezone>
     </developer>
   </developers>
   
