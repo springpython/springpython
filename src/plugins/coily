@@ -14,7 +14,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
-__version__ = "1.0.0"
+__version__ = "1.0.0-RC2"
 
 import os
 import re
@@ -99,7 +99,7 @@ def get_modules_from_s3():
         d = datetime(year=t.tm_year, month=t.tm_mon, day=t.tm_mday, hour=t.tm_hour, minute=t.tm_min)
         converted.append(("http://s3.amazonaws.com/" + item[0], item[1], item[2]+"K", item[3], d))
     modules = {}
-    baseR = re.compile("springpython-plugin-(.*)-([0-9]+.*)")
+    baseR = re.compile("springpython-plugin-([a-zA-Z-]*)-([0-9a-zA-Z]+.*).tar.gz")
     for item in converted:
         try:
             modules[baseR.match(item[1]).group(1)].append(item)
