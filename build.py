@@ -25,7 +25,13 @@ import tarfile
 import getopt
 import shutil
 import S3
-import sha   # Need to support python 2.4, see SESPRINGPYTHONPY-56
+
+try:
+    import hashlib
+    _sha = hashlib.sha1
+except ImportError:
+    import sha
+    _sha = sha.new
 
 ############################################################################
 # Get external properties and load into a dictionary. NOTE: These properties
@@ -96,7 +102,7 @@ except getopt.GetoptError:
 ############################################################################
 
 # Default build stamp value
-buildStamp = "BUILD-%s" % datetime.now().strftime("%Y%m%d%H%M%S")
+build_stamp = "BUILD-%s" % datetime.now().strftime("%Y%m%d%H%M%S")
 
 ############################################################################
 # Definition of operations this script can do.
@@ -140,7 +146,7 @@ def package(dir, version):
     os.chdir("src/plugins")
     for item in os.listdir("."):
         if item in ["coily", ".svn"]: continue
-        t = tarfile.open("../../%s/springpython-plugin-%s-%s.tar.gz" % (dir, item, version), "w:gz")
+        t = tarfile.open("../../%s/springpython-plugin-%s.%s.tar.gz" % (dir, item, version), "w:gz")
         for path, dirs, files in os.walk(item):
             if ".svn" not in path:  # Don't want to include version information
                 t.add(path, recursive=False)
@@ -158,7 +164,7 @@ def publish(filepath, s3bucket, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
     print "Reading in content from %s" % filepath
     filedata = open(filepath, "rb").read()
 
-    filehash = sha.new(filedata).hexdigest()
+    filehash = _sha(filedata).hexdigest()
 
     print "Preparing to upload %s to %s/%s" % (filename, s3bucket, s3key)
 
@@ -364,12 +370,12 @@ def create_pydocs():
 # No matter what order the command are specified in, the build-stamp must be extracted first.
 for option in optlist:
     if option[0] == "--build-stamp":
-        buildStamp = option[1]   # Override build stamp with user-supplied version
+        build_stamp = option[1]   # Override build stamp with user-supplied version
 
 # However, a springpython.properties entry can override the command-line
 if "build.stamp" in p:
-    buildStamp = p["build.stamp"]
-completeVersion = p["version"] + "-" + buildStamp
+    build_stamp = p["build.stamp"]
+completeVersion = p["version"] + "." + build_stamp
 
 # Check for help requests, which cause all other options to be ignored. Help can offer version info, which is
 # why it comes as the second check
