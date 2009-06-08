@@ -183,7 +183,8 @@ svn co https://src.springframework.org/svn/se-springpython-py/trunk/springpython
 
 		<itemizedlist>
 			<listitem><para>Project Lead: Greg L. Turnquist</para></listitem>
-			<listitem><para>SpringSource Sponsor: Russ Miles</para></listitem>
+			<listitem><para>SpringSource Sponsor: Mark Pollack</para></listitem>
+			<listitem><para>Project Contributor: Russ Miles</para></listitem>
 		</itemizedlist>
 		
 		<para>Many others have also contributed through reporting issues, raising questions, and even
