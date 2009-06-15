@@ -119,7 +119,16 @@ def clean(dir):
 def test(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
+    
     os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s checkin" % dir)
+    #############################
+    # Trying to get this to work programmatically, but somehow, this doesn't generate the XML report file ANYWHERE
+    #curdir = os.getcwd()
+    #import nose
+    #print "Dumping report into %s/%s" % (curdir, dir)
+    #nose.run(argv = ["--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s/%s" % (curdir, dir), "checkin"])
+    #os.chdir(curdir)
+    #############################
     
 def test_coverage(dir):
     if not os.path.exists(dir):
@@ -143,6 +152,7 @@ def build(dir, version):
 def package(dir, version):
     if not os.path.exists(dir):
         os.makedirs(dir)
+    print "Current dir = %s" % os.getcwd()
     _substitute("src/plugins/coily-template", "src/plugins/coily", [("version", version)])
     os.system("chmod 755 src/plugins/coily")
     build("src", version)
