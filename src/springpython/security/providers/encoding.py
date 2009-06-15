@@ -14,8 +14,15 @@
    limitations under the License.       
 """
 import logging
-import md5
-import sha
+
+try:
+    import hashlib
+    _sha = hashlib.sha1
+    _md5 = hashlib.md5
+except ImportError:
+    import sha
+    _sha = sha.new
+    _md5 = md5.new
 
 class PasswordEncoder(object):
     """Interface for performing authentication operations on a password."""
@@ -98,7 +105,7 @@ class AbstractOneWayPasswordEncoder(BasePasswordEncoder):
         
     def encodePassword(self, rawPass, salt):
         """Encodes the specified raw password with an implementation specific algorithm."""
-        hasher = self.onewayHashStrategy.new()
+        hasher = self.onewayHashStrategy()
         if not self.ignorePasswordCase:
             hasher.update(self.mergePasswordAndSalt(rawPass, salt, False))
         else:
@@ -114,7 +121,7 @@ class AbstractOneWayPasswordEncoder(BasePasswordEncoder):
         # authentication will fail as the encodePassword never allows them)
         pass2 = self.mergePasswordAndSalt(rawPass, salt, False)
 
-        hasher = self.onewayHashStrategy.new()
+        hasher = self.onewayHashStrategy()
         if self.ignorePasswordCase:
             hasher.update(pass2.lower())
         else:
@@ -137,7 +144,7 @@ class Md5PasswordEncoder(AbstractOneWayPasswordEncoder):
 
     def __init__(self):
         super(Md5PasswordEncoder, self).__init__()
-        self.onewayHashStrategy = md5
+        self.onewayHashStrategy = _md5
         self.logger = logging.getLogger("springpython.security.providers.Md5PasswordEncoder")
         
 class ShaPasswordEncoder(AbstractOneWayPasswordEncoder):
@@ -151,6 +158,6 @@ class ShaPasswordEncoder(AbstractOneWayPasswordEncoder):
 
     def __init__(self):
         super(ShaPasswordEncoder, self).__init__()
-        self.onewayHashStrategy = sha
+        self.onewayHashStrategy = _sha
         self.logger = logging.getLogger("springpython.security.providers.ShaPasswordEncoder")
 
