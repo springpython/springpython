@@ -21,6 +21,7 @@ try:
     _md5 = hashlib.md5
 except ImportError:
     import sha
+    import md5
     _sha = sha.new
     _md5 = md5.new
 
