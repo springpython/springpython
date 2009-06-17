@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-   Copyright 2006-2008 SpringSource (http://springsource.com), All Rights Reserved
+   Copyright 2006-2009 SpringSource (http://springsource.com), All Rights Reserved
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -176,9 +176,9 @@ def usage():
             print "\t%s/%s is not a valid plugin => %s" % (p["plugindir"], plugin, e)
     print
 
-print "Coily v%s - the command-line management tool for Spring Python" % __version__
+print "Coily v%s - the command-line management tool for Spring Python, http://springpython.webfactional.com" % __version__
 print "==============================================================================="
-print "Copyright 2006-2008 SpringSource (http://springsource.com), All Rights Reserved"
+print "Copyright 2006-2009 SpringSource (http://springsource.com), All Rights Reserved"
 print "Licensed under the Apache License, Version 2.0"
 print
 
