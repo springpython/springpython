@@ -14,8 +14,6 @@
    limitations under the License.       
 """
 import logging
-import md5
-import sha
 
 class PasswordEncoder(object):
     """Interface for performing authentication operations on a password."""
@@ -98,7 +96,7 @@ class AbstractOneWayPasswordEncoder(BasePasswordEncoder):
         
     def encodePassword(self, rawPass, salt):
         """Encodes the specified raw password with an implementation specific algorithm."""
-        hasher = self.onewayHashStrategy.new()
+        hasher = self.onewayHashStrategy()
         if not self.ignorePasswordCase:
             hasher.update(self.mergePasswordAndSalt(rawPass, salt, False))
         else:
@@ -114,7 +112,7 @@ class AbstractOneWayPasswordEncoder(BasePasswordEncoder):
         # authentication will fail as the encodePassword never allows them)
         pass2 = self.mergePasswordAndSalt(rawPass, salt, False)
 
-        hasher = self.onewayHashStrategy.new()
+        hasher = self.onewayHashStrategy()
         if self.ignorePasswordCase:
             hasher.update(pass2.lower())
         else:
@@ -137,7 +135,12 @@ class Md5PasswordEncoder(AbstractOneWayPasswordEncoder):
 
     def __init__(self):
         super(Md5PasswordEncoder, self).__init__()
-        self.onewayHashStrategy = md5
+        try:
+            import hashlib
+            self.onewayHashStrategy = hashlib.md5
+        except ImportError:
+            import md5
+            self.onewayHashStrategy = md5.new
         self.logger = logging.getLogger("springpython.security.providers.Md5PasswordEncoder")
         
 class ShaPasswordEncoder(AbstractOneWayPasswordEncoder):
@@ -151,6 +154,11 @@ class ShaPasswordEncoder(AbstractOneWayPasswordEncoder):
 
     def __init__(self):
         super(ShaPasswordEncoder, self).__init__()
-        self.onewayHashStrategy = sha
+        try:
+            import hashlib
+            self.onewayHashStrategy = hashlib.sha1
+        except ImportError:
+            import sha
+            self.onewayHashStrategy = sha.new
         self.logger = logging.getLogger("springpython.security.providers.ShaPasswordEncoder")
 
