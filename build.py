@@ -117,31 +117,31 @@ def clean(dir):
     os.system("find . -name '*.class' -exec rm -f {} \;")
 
 def test(dir):
+    """
+    Run nose programmatically, so that it uses the same python version as this script uses
+    
+    Nose expects to receive a sys.argv, of which the first arg is the script path (usually nosetests). Since this isn't 
+    being run that way, a filler entry was created to satisfy the library's needs.
+    """
     if not os.path.exists(dir):
         os.makedirs(dir)
     
-    #############################
-    # On Ubuntu Jaunty Jackelope, /usr/bin/nosetests was python 2.5 and /usr/local/bin/nosetests is python 2.6
-    #
-    # It appears that /usr/local/bin is the preferred path.
-    #############################
-
-    os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s checkin" % dir)
-
-    #############################
-    # Trying to get this to work programmatically, but somehow, this doesn't generate the XML report file ANYWHERE
-    #curdir = os.getcwd()
-    #import nose
-    #print "Dumping report into %s/%s" % (curdir, dir)
-    #nose.run(argv = ["--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s/%s" % (curdir, dir), "checkin"])
-    #os.chdir(curdir)
-    #############################
+    import nose
+    nose.run(argv=["", "--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s" % dir, "checkin"])
     
 def test_coverage(dir):
+    """
+    Run nose programmatically, so that it uses the same python version as this script uses
+
+    Nose expects to receive a sys.argv, of which the first arg is the script path (usually nosetests). Since this isn't
+    being run that way, a filler entry was created to satisfy the library's needs.
+    """
+
     if not os.path.exists(dir):
         os.makedirs(dir)
-    os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s --with-coverage --cover-package=springpython checkin" % dir)
 
+    import nose
+    nose.run(argv=["", "--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s" % dir, "--with-coverage", "--cover-package=springpython", "checkin"])
 
 def _substitute(input_file, output_file, patterns_to_replace):
     """Scan the input file, and do a pattern substitution, writing all results to output file."""
