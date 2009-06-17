@@ -73,8 +73,8 @@ def usage():
     print "\t--test\t\t\trun the test suite, leaving all artifacts in %s" % p["testDir"]
     print "\t--coverage\t\trun the test suite with coverage analysis, leaving all artifacts in %s" % p["testDir"]
     print "\t--package\t\tpackage everything up into a tarball for release to sourceforge in %s" % p["packageDir"]
-    print "\t--build-stamp [tag]\tfor --package, this specifies a special tag, generating version tag '%s-<tag>. springpython.properties can override with build.stamp'" % p["version"]
-    print "\t\t\t\tIf this option isn't used, default will be tag will be '%s-<current time>'" % p["version"]
+    print "\t--build-stamp [tag]\tfor --package, this specifies a special tag, generating version tag '%s.<tag>. springpython.properties can override with build.stamp'" % p["version"]
+    print "\t\t\t\tIf this option isn't used, default will be tag will be '%s.<current time>'" % p["version"]
     print "\t--publish\t\tpublish this release to the deployment server"
     print "\t--register\t\tregister this release with http://pypi.python.org/pypi"
     print "\t--site\t\t\tcreate the site and all its related documents"
