@@ -120,7 +120,14 @@ def test(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
     
+    #############################
+    # On Ubuntu Jaunty Jackelope, /usr/bin/nosetests was python 2.5 and /usr/local/bin/nosetests is python 2.6
+    #
+    # It appears that /usr/local/bin is the preferred path.
+    #############################
+
     os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s checkin" % dir)
+
     #############################
     # Trying to get this to work programmatically, but somehow, this doesn't generate the XML report file ANYWHERE
     #curdir = os.getcwd()
