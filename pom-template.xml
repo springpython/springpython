@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>springpython.webfactional.com</groupId>
   <artifactId>springpython</artifactId>
-  <version>1.0.0</version>
+  <version>${version}</version>
   <name>Spring Python</name>
   
   <description>

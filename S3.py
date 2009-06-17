@@ -13,12 +13,19 @@ import base64
 import hmac
 import httplib
 import re
-import sha
 import sys
 import time
 import urllib
 import urlparse
 import xml.sax
+
+try:
+    import hashlib
+    _sha = hashlib.sha1
+except ImportError:
+    import sha
+    _sha = sha
+
 
 DEFAULT_HOST = 's3.amazonaws.com'
 PORTS_BY_SECURITY = { True: 443, False: 80 }
@@ -81,7 +88,7 @@ def canonical_string(method, bucket="", key="", query_args={}, headers={}, expir
 # computes the base64'ed hmac-sha hash of the canonical string and the secret
 # access key, optionally urlencoding the result
 def encode(aws_secret_access_key, str, urlencode=False):
-    b64_hmac = base64.encodestring(hmac.new(aws_secret_access_key, str, sha).digest()).strip()
+    b64_hmac = base64.encodestring(hmac.new(aws_secret_access_key, str, _sha).digest()).strip()
     if urlencode:
         return urllib.quote_plus(b64_hmac)
     else:

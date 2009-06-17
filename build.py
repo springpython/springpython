@@ -25,7 +25,13 @@ import tarfile
 import getopt
 import shutil
 import S3
-import sha   # Need to support python 2.4, see SESPRINGPYTHONPY-56
+
+try:
+    import hashlib
+    _sha = hashlib.sha1
+except ImportError:
+    import sha
+    _sha = sha.new
 
 ############################################################################
 # Get external properties and load into a dictionary. NOTE: These properties
@@ -67,8 +73,8 @@ def usage():
     print "\t--test\t\t\trun the test suite, leaving all artifacts in %s" % p["testDir"]
     print "\t--coverage\t\trun the test suite with coverage analysis, leaving all artifacts in %s" % p["testDir"]
     print "\t--package\t\tpackage everything up into a tarball for release to sourceforge in %s" % p["packageDir"]
-    print "\t--build-stamp [tag]\tfor --package, this specifies a special tag, generating version tag '%s-<tag>. springpython.properties can override with build.stamp'" % p["version"]
-    print "\t\t\t\tIf this option isn't used, default will be tag will be '%s-<current time>'" % p["version"]
+    print "\t--build-stamp [tag]\tfor --package, this specifies a special tag, generating version tag '%s.<tag>. springpython.properties can override with build.stamp'" % p["version"]
+    print "\t\t\t\tIf this option isn't used, default will be tag will be '%s.<current time>'" % p["version"]
     print "\t--publish\t\tpublish this release to the deployment server"
     print "\t--register\t\tregister this release with http://pypi.python.org/pypi"
     print "\t--site\t\t\tcreate the site and all its related documents"
@@ -96,7 +102,7 @@ except getopt.GetoptError:
 ############################################################################
 
 # Default build stamp value
-buildStamp = "BUILD-%s" % datetime.now().strftime("%Y%m%d%H%M%S")
+build_stamp = "BUILD-%s" % datetime.now().strftime("%Y%m%d%H%M%S")
 
 ############################################################################
 # Definition of operations this script can do.
@@ -111,36 +117,61 @@ def clean(dir):
     os.system("find . -name '*.class' -exec rm -f {} \;")
 
 def test(dir):
+    """
+    Run nose programmatically, so that it uses the same python version as this script uses
+    
+    Nose expects to receive a sys.argv, of which the first arg is the script path (usually nosetests). Since this isn't 
+    being run that way, a filler entry was created to satisfy the library's needs.
+    """
     if not os.path.exists(dir):
         os.makedirs(dir)
-    os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s checkin" % dir)
+    
+    import nose
+    nose.run(argv=["", "--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s" % dir, "checkin"])
     
 def test_coverage(dir):
+    """
+    Run nose programmatically, so that it uses the same python version as this script uses
+
+    Nose expects to receive a sys.argv, of which the first arg is the script path (usually nosetests). Since this isn't
+    being run that way, a filler entry was created to satisfy the library's needs.
+    """
+
     if not os.path.exists(dir):
         os.makedirs(dir)
-    os.system("nosetests --with-nosexunit --source-folder=src --where=test/springpythontest --xml-report-folder=%s --with-coverage --cover-package=springpython checkin" % dir)
 
-def build(dir, version):
-    input = open(dir + "/build.py").read()
-    output = open(dir + "/setup.py", "w") 
-    patterns_to_replace = [("version", version)]
+    import nose
+    nose.run(argv=["", "--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s" % dir, "--with-coverage", "--cover-package=springpython", "checkin"])
+
+def _substitute(input_file, output_file, patterns_to_replace):
+    """Scan the input file, and do a pattern substitution, writing all results to output file."""
+    input = open(input_file).read()
+    output = open(output_file, "w")
     for pattern, replacement in patterns_to_replace:
         input = re.compile(r"\$\{%s}" % pattern).sub(replacement, input)
     output.write(input)
     output.close()
+
+def build(dir, version):
+    _substitute(dir + "/build.py", dir + "/setup.py", [("version", version)])
     os.system("cd %s ; python setup.py sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % dir)
 
 def package(dir, version):
-    os.makedirs(dir)
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+    _substitute("src/plugins/coily-template", "src/plugins/coily", [("version", version)])
+    os.system("chmod 755 src/plugins/coily")
     build("src", version)
     build("samples", version)
+    os.remove("src/plugins/coily")
     os.system("mv *.tar.gz %s" % dir)
 
     curdir = os.getcwd()
     os.chdir("src/plugins")
     for item in os.listdir("."):
-        if item in ["coily", ".svn"]: continue
-        t = tarfile.open("../../%s/springpython-plugin-%s-%s.tar.gz" % (dir, item, version), "w:gz")
+        if item in ["coily-template", ".svn"]: continue
+        t = tarfile.open("../../%s/springpython-plugin-%s.%s.tar.gz" % (dir, item, version), "w:gz")
         for path, dirs, files in os.walk(item):
             if ".svn" not in path:  # Don't want to include version information
                 t.add(path, recursive=False)
@@ -148,7 +179,7 @@ def package(dir, version):
         t.close()
     os.chdir(curdir)
 
-def publish(filepath, s3bucket, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
+def publish(filepath, s3bucket, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, version):
     filename = filepath.split("/")[-1]
     s3key = "/".join([ p['release.type'],
                        p['project.key'],
@@ -158,7 +189,7 @@ def publish(filepath, s3bucket, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
     print "Reading in content from %s" % filepath
     filedata = open(filepath, "rb").read()
 
-    filehash = sha.new(filedata).hexdigest()
+    filehash = _sha(filedata).hexdigest()
 
     print "Preparing to upload %s to %s/%s" % (filename, s3bucket, s3key)
 
@@ -183,7 +214,7 @@ def publish(filepath, s3bucket, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY):
               'x-amz-acl': 'public-read', 
               'x-amz-meta-project.name': 'Spring Extensions',
               'x-amz-meta-release.type': p['release.type'],
-              'x-amz-meta-bundle.version': p['version'],
+              'x-amz-meta-bundle.version': version,
               'x-amz-meta-package.file.name': filename } ).message
 
         print "Uploading SHA1 digest to %s/%s" % (s3bucket, s3key + '.sha1')
@@ -222,20 +253,17 @@ def setup(root, stylesheets=True):
              root,
              ["*.css", "*.js"])
 
-def sub_version(cur):
-    f = open(cur + "/" + p["doc.ref.dir"] + "/src/index.xml")
-    lines = "".join(f.readlines())
-    changed = re.sub(r"{version}", p["version"], lines)
-    f.close()
-    f = open(cur + "/" + p["doc.ref.dir"] + "/src/mangled.xml", "w")
-    f.write(changed)
-    f.close()
+def sub_version(cur, version):
+    _substitute(cur + "/" + p["doc.ref.dir"] + "/src/index.xml", cur + "/" + p["doc.ref.dir"] + "/src/mangled.xml", [("version", version)])
 
 def site(version):
+    _substitute("pom-template.xml", "pom.xml", [("version", version)])
+
     docs_all(version)
     cur = os.path.abspath(".")
     shutil.copy(cur + "/docs/spring.ico", p["targetDir"]+"/docs/favicon.ico")
     os.system("mvn -Dspringpython.version=%s site" % version)
+    os.remove("pom.xml")
     os.system("cp docs/resources/css/* target/docs/css/")
     create_pydocs()
 
@@ -251,8 +279,8 @@ def docs_multi(version):
 
     setup(root)
 
-    cur = os.path.abspath(".")
-    sub_version(cur)
+    cur = os.getcwd()
+    sub_version(cur, version)
     os.chdir(root)
     ref = cur + "/" + p["doc.ref.dir"]
     os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
@@ -266,8 +294,8 @@ def docs_single(version):
     
     setup(root)
     
-    cur = os.path.abspath(".")
-    sub_version(cur)
+    cur = os.getcwd()
+    sub_version(cur, version)
     os.chdir(root)
     ref = cur + "/" + p["doc.ref.dir"]
     os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
@@ -282,8 +310,8 @@ def docs_pdf(version):
     
     setup(root, stylesheets=False)
    
-    cur = os.path.abspath(".")
-    sub_version(cur)
+    cur = os.getcwd()
+    sub_version(cur, version)
     os.chdir(root)
     ref = cur + "/" + p["doc.ref.dir"]
     os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
@@ -303,6 +331,7 @@ def create_pydocs():
     if not os.path.exists("target/docs/pydoc"):
         os.mkdir("target/docs/pydoc")
  
+    cur = os.getcwd()
     os.chdir("target/docs/pydoc")
 
     pydoc.writedoc("springpython")
@@ -343,6 +372,7 @@ def create_pydocs():
     data_color = "#55aa55"
 
     for file in os.listdir("."):
+        if "springpython" not in file: continue
         print "Altering appearance of %s" % file
         file_input = open(file).read()
         file_input = re.compile(top_color).sub("GREEN", file_input)
@@ -355,6 +385,8 @@ def create_pydocs():
         file_output.write(file_input)
         file_output.close()
 
+    os.chdir(cur)
+
 
 ############################################################################
 # Pre-commands. Skim the options, and pick out commands the MUST be
@@ -364,12 +396,12 @@ def create_pydocs():
 # No matter what order the command are specified in, the build-stamp must be extracted first.
 for option in optlist:
     if option[0] == "--build-stamp":
-        buildStamp = option[1]   # Override build stamp with user-supplied version
+        build_stamp = option[1]   # Override build stamp with user-supplied version
 
 # However, a springpython.properties entry can override the command-line
 if "build.stamp" in p:
-    buildStamp = p["build.stamp"]
-completeVersion = p["version"] + "-" + buildStamp
+    build_stamp = p["build.stamp"]
+complete_version = p["version"] + "." + build_stamp
 
 # Check for help requests, which cause all other options to be ignored. Help can offer version info, which is
 # why it comes as the second check
@@ -395,7 +427,7 @@ for option in optlist:
         test_coverage(p["testDir"])
 
     if option[0] in ("--package"):
-        package(p["packageDir"], completeVersion)
+        package(p["packageDir"], complete_version)
 	
     if option[0] in ("--publish"):
         print "Looking for local key file..."
@@ -414,25 +446,25 @@ for option in optlist:
         else:
             AWS_SECRET_ACCESS_KEY = raw_input("Please enter AWC_SECRET_ACCESS_KEY: ")
 
-        [publish(filename, BUCKET_NAME, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) for filename in glob("target/artifacts/*.tar.gz")]
+        [publish(filename, BUCKET_NAME, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, complete_version) for filename in glob("target/artifacts/*.tar.gz")]
 
     if option[0] in ("--register"):
         register()
 
     if option[0] in ("--site"):
-        site(completeVersion)
+        site(complete_version)
 
     if option[0] in ("--docs-all"):
-        docs_all(completeVersion)
+        docs_all(complete_version)
                 
     if option[0] in ("--docs-html-multi"):
-        docs_multi(completeVersion)
+        docs_multi(complete_version)
 
     if option[0] in ("--docs-html-single"):
-        docs_single(completeVersion)
+        docs_single(complete_version)
 
     if option[0] in ("--docs-pdf"):
-        docs_pdf(completeVersion)
+        docs_pdf(complete_version)
 
     if option[0] in ("--pydoc"):
         create_pydocs()
