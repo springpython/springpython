@@ -267,11 +267,6 @@ svn co https://src.springframework.org/svn/se-springpython-py/trunk/springpython
         in functionality to put warnings into certain sections of code, so that if you import a
         deprecated module, you will be properly warned. With each major release (1.0, 2.0, 3.0, etc.),
         the Spring Python team has the option to remove any and all deprecated code.</para>
-
-        <para>As an additional note, before making release 1.0, it is quite possible we will make
-        sweeping changes without using the warning mechanism. The goal is to release a stable API at 1.0.
-        However, we will always strive to notify users of up-and-coming changes through the online
-        forum and the mailing, which is why we encourage you to sign up and monitor things online.</para>
   	</section>
 
 </chapter>
