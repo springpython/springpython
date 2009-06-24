@@ -58,12 +58,6 @@ Downloads
 
   {{{http://www.springsource.com/download/community?project=Spring%20Extensions}Official releases}}
 
-What's Coming?
-
-  We are working on creating a fluent DSL for configuring the IoC container. With a refactored core container
-  that already supports four formats, it shouldn't be hard to extend things and offer a useful, succinct
-  alternative. The import thing is that with Spring Python, you don't HAVE to get bogged down with XML.
-
 Spring Python News
 
   Visit {{{http://blog.springpython.webfactional.com}Spring Python's blog site}} for news, postings, and
