@@ -126,8 +126,7 @@ def test(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
     
-    import nose
-    nose.run(argv=["", "--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s" % dir, "checkin"])
+    _run_nose(argv=["", "--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s" % dir, "checkin"])
     
 def test_coverage(dir):
     """
@@ -140,8 +139,18 @@ def test_coverage(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
+    _nose_run(argv=["", "--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s" % dir, "--with-coverage", "--cover-package=springpython", "checkin"])
+
+def _run_nose(argv):
+    # Running nose causes the stdout/stderr to get changed, and also it changes directories as well.
+    _stdout, _stderr, _curdir = sys.stdout, sys.stderr, os.getcwd()
+
     import nose
-    nose.run(argv=["", "--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s" % dir, "--with-coverage", "--cover-package=springpython", "checkin"])
+    nose.run(argv=argv)
+
+    # Restored these streams
+    sys.stdout, sys.stderr = _stdout, _stderr
+    os.chdir(_curdir)
 
 def _substitute(input_file, output_file, patterns_to_replace):
     """Scan the input file, and do a pattern substitution, writing all results to output file."""
