@@ -139,7 +139,7 @@ def test_coverage(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
-    _nose_run(argv=["", "--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s" % dir, "--with-coverage", "--cover-package=springpython", "checkin"])
+    _run_nose(argv=["", "--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s" % dir, "--with-coverage", "--cover-package=springpython", "checkin"])
 
 def _run_nose(argv):
     # Running nose causes the stdout/stderr to get changed, and also it changes directories as well.
