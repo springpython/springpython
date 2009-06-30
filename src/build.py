@@ -48,7 +48,7 @@ setup(name='springpython',
                 'springpython.security.userdetails'
                 ],
       package_data={'springpython': ["README", "COPYRIGHT", "LICENSE.txt"]},
-      download_url="http://www.springsource.com/download/community?project=Spring%20Extensions",
+      download_url="${download_url}",
       classifiers=["License :: OSI Approved :: Apache Software License",
                    "Intended Audience :: Developers",
                    "Development Status :: 5 - Production/Stable",
