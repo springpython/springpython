@@ -161,18 +161,26 @@ def _substitute(input_file, output_file, patterns_to_replace):
     output.write(input)
     output.close()
 
-def build(dir, version):
-    _substitute(dir + "/build.py", dir + "/setup.py", [("version", version)])
+def build(dir, version, s3bucket, filepath):
+    filename = filepath.split("/")[-1]
+    s3key = "/".join([ p['release.type'],
+                       p['project.key'],
+                       p['natural.name'],
+                       filename ])
+
+    patterns_to_replace = [("version", version), ("download_url", "http://s3.amazonaws.com/%s/%s-%s.tar.gz" % (s3bucket, s3key, version))]
+
+    _substitute(dir + "/build.py", dir + "/setup.py", patterns_to_replace)
     os.system("cd %s ; python setup.py sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % dir)
 
-def package(dir, version):
+def package(dir, version, s3bucket, src_filename, sample_filename):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
     _substitute("src/plugins/coily-template", "src/plugins/coily", [("version", version)])
     os.system("chmod 755 src/plugins/coily")
-    build("src", version)
-    build("samples", version)
+    build("src", version, s3bucket, src_filename)
+    build("samples", version, s3bucket, sample_filename)
     os.remove("src/plugins/coily")
     os.system("mv *.tar.gz %s" % dir)
 
@@ -436,7 +444,7 @@ for option in optlist:
         test_coverage(p["testDir"])
 
     if option[0] in ("--package"):
-        package(p["packageDir"], complete_version)
+        package(p["packageDir"], complete_version, p['s3.bucket'], "springpython", "springpython-samples")
 	
     if option[0] in ("--publish"):
         print "Looking for local key file..."
