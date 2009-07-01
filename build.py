@@ -165,7 +165,6 @@ def build(dir, version, s3bucket, filepath):
     filename = filepath.split("/")[-1]
     s3key = "/".join([ p['release.type'],
                        p['project.key'],
-                       p['natural.name'],
                        filename ])
 
     patterns_to_replace = [("version", version), ("download_url", "http://s3.amazonaws.com/%s/%s-%s.tar.gz" % (s3bucket, s3key, version))]
