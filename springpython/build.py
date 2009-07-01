@@ -229,7 +229,7 @@ def publish(filepath, s3bucket, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, versio
             S3.S3Object(filedata),
             { 'Content-Type': content_type,
               'x-amz-acl': 'public-read', 
-              'x-amz-meta-project.name': 'Spring Extensions',
+              'x-amz-meta-project.name': 'Spring Python',
               'x-amz-meta-release.type': p['release.type'],
               'x-amz-meta-bundle.version': version,
               'x-amz-meta-package.file.name': filename } ).message
