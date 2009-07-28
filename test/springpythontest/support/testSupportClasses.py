@@ -35,21 +35,21 @@ from springpython.database.transaction import TransactionProxyFactoryObject
 from springpython.database.transaction import transactional
 
 class Person(object):
-    def __init__(self, name, phone):
+    def __init__(self, name=None, phone=None):
         self.name = name
         self.phone = phone
         
 class Animal(object):
-    def __init__(self, name, category):
+    def __init__(self, name=None, category=None):
         self.name = name
         self.category = category
         
 class SampleRowMapper(RowMapper):
-    def map_row(self, row):
+    def map_row(self, row, metadata=None):
         return Person(name = row[0], phone = row[1])
 
 class AnimalRowMapper(RowMapper):
-    def map_row(self, row):
+    def map_row(self, row, metadata=None):
         return Animal(name = row[0], category = row[1])
 
 class InvalidCallbackHandler(object):
@@ -60,7 +60,7 @@ class ImproperCallbackHandler(object):
         raise Exception("You should not have made it this far.")
 
 class ValidHandler(object):
-    def map_row(self, row):
+    def map_row(self, row, metadata=None):
         return {row[0]:row[1]}
 
 class MovieLister(object):
@@ -198,7 +198,7 @@ class ImpFileProps(object):
         self.oid = oid
 
 class ImpFilePropsRowMapper(RowMapper):
-    def map_row(self, row):
+    def map_row(self, row, metadata=None):
         return ImpFileProps(row[0], row[1], row[2], row[3])
 
 class BankException(Exception):

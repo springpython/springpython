@@ -25,6 +25,8 @@ from springpython.database import ArgumentMustBeNamed
 from springpython.database import DataAccessException
 from springpython.database import InvalidArgumentType
 from springpython.database.core import DatabaseTemplate
+from springpython.database.core import DictionaryRowMapper
+from springpython.database.core import SimpleRowMapper
 from springpython.database import factory
 from springpythontest.support import testSupportClasses
 
@@ -191,7 +193,7 @@ class DatabaseTemplateMockTestCase(MockTestCase):
 
         databaseTemplate = DatabaseTemplate(connection_factory = mockConnectionFactory)
         results = databaseTemplate.query("select * from foobar", rowhandler=testSupportClasses.SampleRowMapper())
-        
+
     def testProgrammaticStaticQuery(self):
         self.assertRaises(ArgumentMustBeNamed, self.databaseTemplate.query, "select * from animal", testSupportClasses.AnimalRowMapper())
 
@@ -203,7 +205,7 @@ class DatabaseTemplateMockTestCase(MockTestCase):
         self.assertEquals(animals[0].category, "reptile")
         self.assertEquals(animals[1].name, "racoon")
         self.assertEquals(animals[1].category, "mammal")
-        
+
     def testProgrammaticQueryWithBoundArguments(self):
         self.mock.expects(once()).method("execute").id("#1")
         self.mock.expects(once()).method("fetchall").will(return_value([('snake', 'reptile', 1)])).id("#2").after("#1")
@@ -415,6 +417,20 @@ class AbstractDatabaseTemplateTestCase(unittest.TestCase):
         self.assertEquals(animals[0].category, "reptile")
         self.assertEquals(animals[1].name, "racoon")
         self.assertEquals(animals[1].category, "mammal")
+
+    def testProgrammaticStaticQueryWithSimpleRowMapper(self):
+        animals = self.databaseTemplate.query("select name, category from animal", rowhandler=SimpleRowMapper(testSupportClasses.Animal))
+        self.assertEquals(animals[0].name, "snake")
+        self.assertEquals(animals[0].category, "reptile")
+        self.assertEquals(animals[1].name, "racoon")
+        self.assertEquals(animals[1].category, "mammal")
+
+    def testProgrammaticStaticQueryWithDictionaryRowMapper(self):
+        animals = self.databaseTemplate.query("select name, category from animal", rowhandler=DictionaryRowMapper())
+        self.assertEquals(animals[0]["name"], "snake")
+        self.assertEquals(animals[0]["category"], "reptile")
+        self.assertEquals(animals[1]["name"], "racoon")
+        self.assertEquals(animals[1]["category"], "mammal")
         
     def testProgrammaticQueryWithBoundArguments(self):
         animals = self.databaseTemplate.query("select name, category from animal where name = %s", ("snake",), testSupportClasses.AnimalRowMapper())
@@ -425,6 +441,24 @@ class AbstractDatabaseTemplateTestCase(unittest.TestCase):
         self.assertEquals(animals[0].name, "snake")
         self.assertEquals(animals[0].category, "reptile")
         
+    def testProgrammaticQueryWithBoundArgumentsWithSimpleRowMapper(self):
+        animals = self.databaseTemplate.query("select name, category from animal where name = %s", ("snake",), SimpleRowMapper(testSupportClasses.Animal))
+        self.assertEquals(animals[0].name, "snake")
+        self.assertEquals(animals[0].category, "reptile")
+
+        animals = self.databaseTemplate.query("select name, category from animal where name = ?", ("snake",), SimpleRowMapper(testSupportClasses.Animal))
+        self.assertEquals(animals[0].name, "snake")
+        self.assertEquals(animals[0].category, "reptile")
+
+    def testProgrammaticQueryWithBoundArgumentsWithDictionaryRowMapper(self):
+        animals = self.databaseTemplate.query("select name, category from animal where name = %s", ("snake",), DictionaryRowMapper())
+        self.assertEquals(animals[0]["name"], "snake")
+        self.assertEquals(animals[0]["category"], "reptile")
+
+        animals = self.databaseTemplate.query("select name, category from animal where name = ?", ("snake",), DictionaryRowMapper())
+        self.assertEquals(animals[0]["name"], "snake")
+        self.assertEquals(animals[0]["category"], "reptile")
+
     def testProgrammaticStaticQueryForList(self):
         animals = self.databaseTemplate.query_for_list("select name, category from animal")
         self.assertEquals(animals[0][0], "snake")
@@ -502,7 +536,7 @@ class AbstractDatabaseTemplateTestCase(unittest.TestCase):
 
     def testProgrammaticStaticInsert(self):
         self.databaseTemplate.execute("DELETE FROM animal")
-        rows = self.databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES ('black mamba', 'kill_bill_viper', 1)")
+        rows = self.databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES ('black mamba', 'kill_bill_viper', 1)")
         self.assertEquals(rows, 1)
 
         name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'kill_bill_viper'", required_type=types.StringType)
@@ -510,7 +544,7 @@ class AbstractDatabaseTemplateTestCase(unittest.TestCase):
         
     def testProgrammaticInsertWithBoundVariables(self):
         self.databaseTemplate.execute("DELETE FROM animal")
-        rows = self.databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES (?, ?, ?)", ('black mamba', 'kill_bill_viper', 1))
+        rows = self.databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES (?, ?, ?)", ('black mamba', 'kill_bill_viper', 1))
         self.assertEquals(rows, 1)
 
         name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'kill_bill_viper'", required_type=types.StringType)
@@ -566,7 +600,21 @@ class MySQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
         
         databaseTemplate = DatabaseTemplate(factory)
         results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
+
+    def testIoCGeneralQueryWithSimpleRowMapper(self):
+        appContext = ApplicationContext(XMLConfig("support/databaseTestMySQLApplicationContext.xml"))
+        factory = appContext.get_object("connection_factory")
         
+        databaseTemplate = DatabaseTemplate(factory)
+        results = databaseTemplate.query("select * from animal", rowhandler=SimpleRowMapper(testSupportClasses.Person))
+
+    def testIoCGeneralQueryWithDictionaryRowMapper(self):
+        appContext = ApplicationContext(XMLConfig("support/databaseTestMySQLApplicationContext.xml"))
+        factory = appContext.get_object("connection_factory")
+
+        databaseTemplate = DatabaseTemplate(factory)
+        results = databaseTemplate.query("select * from animal", rowhandler=DictionaryRowMapper())
+
 class PostGreSQLDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
     def __init__(self, methodName='runTest'):
         AbstractDatabaseTemplateTestCase.__init__(self, methodName)
@@ -677,4 +725,61 @@ class SqliteDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
         self.assertEquals(len(databaseTemplate.query_for_list("SELECT * FROM animal")), 4)
         
         results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
+
+    def testIoCGeneralQueryWithSimpleRowMapper(self):
+        appContext = ApplicationContext(XMLConfig("support/databaseTestSqliteApplicationContext.xml"))
+        factory = appContext.get_object("connection_factory")
+
+        databaseTemplate = DatabaseTemplate(factory)
+
+        databaseTemplate.execute("DROP TABLE IF EXISTS animal")
+        databaseTemplate.execute("""
+            CREATE TABLE animal (
+              id serial PRIMARY KEY,
+              name VARCHAR(11),
+              category VARCHAR(20),
+              population integer
+            )
+        """)
+        factory.commit()
+        databaseTemplate.execute("DELETE FROM animal")
+        factory.commit()
+        self.assertEquals(len(databaseTemplate.query_for_list("SELECT * FROM animal")), 0)
+        databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES ('snake', 'reptile', 1)")
+        databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES ('racoon', 'mammal', 0)")
+        databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES ('black mamba', 'kill_bill_viper', 1)")
+        databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES ('cottonmouth', 'kill_bill_viper', 1)")
+        factory.commit()
+        self.assertEquals(len(databaseTemplate.query_for_list("SELECT * FROM animal")), 4)
+
+        results = databaseTemplate.query("select * from animal", rowhandler=SimpleRowMapper(testSupportClasses.Person))
+
+    def testIoCGeneralQueryWithDictionaryRowMapper(self):
+        appContext = ApplicationContext(XMLConfig("support/databaseTestSqliteApplicationContext.xml"))
+        factory = appContext.get_object("connection_factory")
+
+        databaseTemplate = DatabaseTemplate(factory)
+
+        databaseTemplate.execute("DROP TABLE IF EXISTS animal")
+        databaseTemplate.execute("""
+            CREATE TABLE animal (
+              id serial PRIMARY KEY,
+              name VARCHAR(11),
+              category VARCHAR(20),
+              population integer
+            )
+        """)
+        factory.commit()
+        databaseTemplate.execute("DELETE FROM animal")
+        factory.commit()
+        self.assertEquals(len(databaseTemplate.query_for_list("SELECT * FROM animal")), 0)
+        databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES ('snake', 'reptile', 1)")
+        databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES ('racoon', 'mammal', 0)")
+        databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES ('black mamba', 'kill_bill_viper', 1)")
+        databaseTemplate.execute ("INSERT INTO animal (name, category, population) VALUES ('cottonmouth', 'kill_bill_viper', 1)")
+        factory.commit()
+        self.assertEquals(len(databaseTemplate.query_for_list("SELECT * FROM animal")), 4)
+
+        results = databaseTemplate.query("select * from animal", rowhandler=DictionaryRowMapper())
+
 
