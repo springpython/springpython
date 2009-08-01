@@ -112,10 +112,11 @@ def clean(dir):
     print "Removing '%s' directory" % dir
     if os.path.exists(dir):
         shutil.rmtree(dir, True)
-    # TODO: Make this OS-independent
-    os.system("find . -name '*.pyc' -exec rm -f {} \;")
-    os.system("find . -name '*.class' -exec rm -f {} \;")
-
+    for root, dirs, files in os.walk(".", topdown=False):
+        for name in files:
+            if name.endswith(".pyc") or name.endswith(".class"):
+                os.remove(os.path.join(root, name))
+                
 def test(dir):
     """
     Run nose programmatically, so that it uses the same python version as this script uses
@@ -170,18 +171,34 @@ def build(dir, version, s3bucket, filepath):
     patterns_to_replace = [("version", version), ("download_url", "http://s3.amazonaws.com/%s/%s-%s.tar.gz" % (s3bucket, s3key, version))]
 
     _substitute(dir + "/build.py", dir + "/setup.py", patterns_to_replace)
-    os.system("cd %s ; python setup.py sdist ; mv dist/* .. ; \\rm -rf dist ; \\rm -f MANIFEST" % dir)
-
+    
+    os.chdir(dir)
+    os.system("%s %s sdist" % (sys.executable, os.path.join(".", "setup.py")))
+    os.chdir("..")
+    
+    dist_dir = os.path.join(os.getcwd(), dir, "dist")
+    
+    for name in os.listdir(dist_dir):
+        old_location = os.path.join(dist_dir,name)
+        new_location = "."
+        shutil.move(old_location, new_location)
+        
+    os.rmdir(dist_dir)
+    os.remove(os.path.join(dir, "MANIFEST"))
+    
 def package(dir, version, s3bucket, src_filename, sample_filename):
     if not os.path.exists(dir):
         os.makedirs(dir)
 
     _substitute("src/plugins/coily-template", "src/plugins/coily", [("version", version)])
-    os.system("chmod 755 src/plugins/coily")
+    os.chmod("src/plugins/coily", 0755)
     build("src", version, s3bucket, src_filename)
     build("samples", version, s3bucket, sample_filename)
     os.remove("src/plugins/coily")
-    os.system("mv *.tar.gz %s" % dir)
+    
+    for name in glob("*.tar.gz"):
+        old_location = os.path.join(".", name)
+        shutil.move(old_location, dir)
 
     curdir = os.getcwd()
     os.chdir("src/plugins")
@@ -243,8 +260,8 @@ def publish(filepath, s3bucket, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, versio
         print "Error code %s: Unable to publish" % check.status
 
 def register():
-    os.system("cd src     ; python setup.py register")
-    os.system("cd samples ; python setup.py register")
+    os.system("cd src     ; %s setup.py register" % sys.executable)
+    os.system("cd samples ; %s setup.py register" % sys.executable)
 
 def copy(src, dest, patterns):
     if not os.path.exists(dest):
