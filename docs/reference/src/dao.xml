@@ -249,5 +249,91 @@ results = dt.query("select title, air_date, episode_number, writer from tv_shows
 			like in JdbcTemplate.</para>
 		</section>
 		
+		<section id="dao-databasetemplate-sqlserver">
+			<title>Notes on using SQLServerConnectionFactory</title>
+            
+            <para>
+                <classname>SQLServerConnectionFactory</classname> uses ODBC for connecting
+                to SQL Server instances and it expects you to pass the ODBC parameters
+                when creating connection factories or when injecting factory
+                settings through IoC. The ODBC parameters you provide are directly
+                translated into an ODBC connection string.
+            </para>
+            <para>
+                That means that you use the exact ODBC parameters your ODBC provider
+                understands and not the standard <emphasis>username</emphasis>,
+                <emphasis>password</emphasis>, <emphasis>hostname</emphasis> 
+                and <emphasis>db</emphasis> parameters as with other connection
+                factories.
+            </para>
+            <para>
+                A simple example will demonstrate this. Here's how you would create
+                a <classname>DatabaseTemplate</classname> on Windows
+                for running queries against an SQL Server instance.
+            </para>
+
+<programlisting><![CDATA[
+from springpython.database.core import DatabaseTemplate
+from springpython.database.factory import SQLServerConnectionFactory
+
+driver = "{SQL Server}"
+server = "localhost"
+database = "springpython"
+uid = "springpython"
+pwd = "cdZS*RQRBdc9a"
+
+factory = SQLServerConnectionFactory(DRIVER=driver, SERVER=server, DATABASE=database, UID=uid, PWD=pwd)
+dt = DatabaseTemplate(factory)
+]]></programlisting>
+
+            <note>
+                <title><classname>SQLServerConnectionFactory</classname> is dictionary driven</title>
+                
+                <para>Due to <classname>SQLServerConnectionFactory</classname>'s pass-through nature, it is coded to accept a dictionary. 
+                For pure python, this means you MUST name the arguments and NOT rely on argument position.</para>
+                
+                <para>For an XML-based application context, you must populate the argument <methodname>odbc_info</methodname>
+                with a dictionary. See the following example.</para>
+            </note>
+            
+<programlisting><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+
+	<object id="connection_factory" class="springpython.database.factory.SQLServerConnectionFactory">
+        <property name="odbc_info">
+            <dict>
+                <entry>
+                    <key><value>DRIVER</value></key>
+                    <value>{SQL Server}</value>
+                </entry>
+                <entry>
+                    <key><value>SERVER</value></key>
+                    <value>localhost</value>
+                </entry>
+                <entry>
+                    <key><value>DATABASE</value></key>
+                    <value>springpython</value>
+                </entry>
+                <entry>
+                    <key><value>UID</value></key>
+                    <value>springpython</value>
+                </entry>
+                <entry>
+                    <key><value>PWD</value></key>
+                    <value>cdZS*RQRBdc9a</value>
+                </entry>
+            </dict>
+        </property>
+    </object>
+	
+</objects>
+]]></programlisting>
+                     
+        </section>
+		
 	</section>
 </chapter>

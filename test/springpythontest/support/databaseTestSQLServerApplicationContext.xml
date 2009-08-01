@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+
+	<object id="connection_factory" class="springpython.database.factory.SQLServerConnectionFactory">
+        <property name="odbc_info">
+            <dict>
+                <entry>
+                    <key><value>DRIVER</value></key>
+                    <value>{SQL Server}</value>
+                </entry>
+                <entry>
+                    <key><value>SERVER</value></key>
+                    <value>localhost</value>
+                </entry>
+                <entry>
+                    <key><value>DATABASE</value></key>
+                    <value>springpython</value>
+                </entry>
+                <entry>
+                    <key><value>UID</value></key>
+                    <value>springpython</value>
+                </entry>
+                <entry>
+                    <key><value>PWD</value></key>
+                    <value>cdZS*RQRBdc9a</value>
+                </entry>
+            </dict>
+        </property>
+    </object>
+	
+</objects>

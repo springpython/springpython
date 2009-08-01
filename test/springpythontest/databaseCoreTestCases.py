@@ -783,3 +783,66 @@ class SqliteDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
         results = databaseTemplate.query("select * from animal", rowhandler=DictionaryRowMapper())
 
 
+class SQLServerDatabaseTemplateTestCase(AbstractDatabaseTemplateTestCase):
+    def __init__(self, methodName='runTest'):
+        AbstractDatabaseTemplateTestCase.__init__(self, methodName)
+
+    def createTables(self):
+        self.createdTables = True
+        try:
+            self.factory = factory.SQLServerConnectionFactory(DRIVER="{SQL Server}", 
+                SERVER="localhost", DATABASE="springpython", UID="springpython", PWD="cdZS*RQRBdc9a")
+            dt = DatabaseTemplate(self.factory)
+            dt.execute("""IF EXISTS(SELECT 1 FROM sys.tables WHERE name='animal') 
+                              DROP TABLE animal""")
+            
+            dt.execute("""
+                CREATE TABLE animal (
+                    id INTEGER IDENTITY(1,1) PRIMARY KEY,
+                    name VARCHAR(11),
+                    category VARCHAR(20),
+                    population INTEGER
+                )
+            """)
+            
+            self.factory.commit()
+
+        except Exception, e:
+            print("""
+                !!! Can't run SQLServerDatabaseTemplateTestCase !!!
+
+                This assumes you have installed pyodbc (http://code.google.com/p/pyodbc/).
+
+                And then created an SQL Server database for the 'springpython' 
+                login and user.
+                
+                USE master;
+                
+                IF EXISTS(SELECT 1 FROM sys.databases WHERE name='springpython')
+                    DROP DATABASE springpython;
+                
+                IF EXISTS(SELECT 1 FROM sys.syslogins WHERE name='springpython')
+                    DROP LOGIN springpython;
+                
+                IF EXISTS(SELECT 1 FROM sys.sysusers WHERE name='springpython')
+                    DROP USER springpython;
+                
+                CREATE DATABASE springpython;
+                CREATE LOGIN springpython WITH PASSWORD='cdZS*RQRBdc9a',  DEFAULT_DATABASE=springpython;
+                
+                USE springpython;
+                
+                CREATE USER springpython FOR LOGIN springpython;
+                EXEC sp_addrolemember 'db_owner', 'springpython';
+
+                From here on, you should be able to connect into SQL Server and run SQL scripts.
+            """)
+            raise e
+
+    def testIoCGeneralQuery(self):
+        appContext = ApplicationContext(XMLConfig("support/databaseTestSQLServerApplicationContext.xml"))
+        factory = appContext.get_object("connection_factory")
+        
+        databaseTemplate = DatabaseTemplate(factory)
+        results = databaseTemplate.query("select * from animal", rowhandler=testSupportClasses.SampleRowMapper())
+        
