@@ -527,4 +527,71 @@ class SqliteTransactionTestCase(AbstractTransactionTestCase):
             """)
             raise e
 
+class SQLServerTransactionTestCase(AbstractTransactionTestCase):
 
+    def __init__(self, methodName='runTest'):
+        AbstractTransactionTestCase.__init__(self, methodName)
+
+    def createTables(self):
+        self.createdTables = True
+        try:
+            self.factory = factory.SQLServerConnectionFactory(DRIVER="{SQL Server}", 
+                SERVER="localhost", DATABASE="springpython", UID="springpython", PWD="cdZS*RQRBdc9a")
+            dt = DatabaseTemplate(self.factory)
+            
+            dt.execute("""IF EXISTS(SELECT 1 FROM sys.tables WHERE name='animal') 
+                              DROP TABLE animal""")
+            
+            dt.execute("""
+                CREATE TABLE animal (
+                    id INTEGER IDENTITY(1,1) PRIMARY KEY,
+                    name VARCHAR(11),
+                    category VARCHAR(20),
+                    population INTEGER
+                )
+            """)
+            
+            dt.execute("""IF EXISTS(SELECT 1 FROM sys.tables WHERE name='account') 
+                              DROP TABLE account""")
+            
+            dt.execute("""
+                CREATE TABLE account (
+                  id INTEGER IDENTITY(1,1) PRIMARY KEY,
+                  account_num VARCHAR(11),
+                  balance FLOAT(10)
+                )
+            """)
+            
+            self.factory.commit()
+
+        except Exception, e:
+            print("""
+                !!! Can't run SQLServerDatabaseTemplateTestCase !!!
+
+                This assumes you have installed pyodbc (http://code.google.com/p/pyodbc/).
+
+                And then created an SQL Server database for the 'springpython' 
+                login and user.
+                
+                USE master;
+                
+                IF EXISTS(SELECT 1 FROM sys.databases WHERE name='springpython')
+                    DROP DATABASE springpython;
+                
+                IF EXISTS(SELECT 1 FROM sys.syslogins WHERE name='springpython')
+                    DROP LOGIN springpython;
+                
+                IF EXISTS(SELECT 1 FROM sys.sysusers WHERE name='springpython')
+                    DROP USER springpython;
+                
+                CREATE DATABASE springpython;
+                CREATE LOGIN springpython WITH PASSWORD='cdZS*RQRBdc9a',  DEFAULT_DATABASE=springpython;
+                
+                USE springpython;
+                
+                CREATE USER springpython FOR LOGIN springpython;
+                EXEC sp_addrolemember 'db_owner', 'springpython';
+
+                From here on, you should be able to connect into SQL Server and run SQL scripts.
+            """)
+            raise e

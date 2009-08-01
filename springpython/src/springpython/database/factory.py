@@ -133,3 +133,24 @@ class cxoraConnectionFactory(ConnectionFactory):
         """The import statement is delayed so the library is loaded ONLY if this factory is really used."""
         import cx_Oracle
         return cx_Oracle.connect(self.username, self.password, self.db)
+        
+class SQLServerConnectionFactory(ConnectionFactory):
+    def __init__(self, **odbc_info):
+        ConnectionFactory.__init__(self, [types.TupleType])
+        self.odbc_info = odbc_info
+
+    def connect(self):
+        """The import statement is delayed so the library is loaded ONLY if this factory is really used."""
+        import pyodbc
+        odbc_info = ";".join(["%s=%s" % (key, value) for key, value in self.odbc_info.items()])
+        return pyodbc.connect(odbc_info)
+        
+    def in_transaction(self):
+        return True
+        
+    def count_type(self):
+        return types.IntType
+        
+    def convert_sql_binding(self, sql_query):
+        """SQL Server expects parameters to be passed as question marks."""
+        return re.sub(pattern="%s", repl="?", string=sql_query)
