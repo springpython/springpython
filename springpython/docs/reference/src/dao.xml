@@ -59,8 +59,9 @@ return results
 
 <programlisting><![CDATA[
 """ The following part only has to be done once."""
-from springpython.database import *
-connectionFactory = MySQLConnectionFactory(username="me", password"secret", hostname="localhost", db="springpython")
+from springpython.database.core import *
+from springpython.database.factory import *
+connectionFactory = MySQLConnectionFactory(username="me", password="secret", hostname="localhost", db="springpython")
 dt = DatabaseTemplate(connectionFactory)
 
 class TvShowMapper(RowMapper):
