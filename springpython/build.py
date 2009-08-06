@@ -110,6 +110,12 @@ build_stamp = "BUILD-%s" % datetime.now().strftime("%Y%m%d%H%M%S")
 
 def clean(dir):
     print "Removing '%s' directory" % dir
+    if os.path.exists("pom.xml"):
+       os.remove("pom.xml")
+    if os.path.exists(".coverage"):
+       os.remove(".coverage")
+    if os.path.exists("docs/reference/src/mangled.xml"):
+        os.remove("docs/reference/src/mangled.xml")
     if os.path.exists(dir):
         shutil.rmtree(dir, True)
     for root, dirs, files in os.walk(".", topdown=False):
