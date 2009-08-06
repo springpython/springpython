@@ -42,7 +42,7 @@ setup(name='springpython-samples',
       classifiers=["License :: OSI Approved :: GNU General Public License (GPL)",
                    "License :: OSI Approved :: Apache Software License",
                    "Intended Audience :: Developers",
-                   "Development Status :: 5 - Production/Stable",
+                   "Development Status :: 4 - Beta",
                    "Topic :: Software Development :: Libraries :: Python Modules",
                    "Programming Language :: Python",
                    "Operating System :: OS Independent"
