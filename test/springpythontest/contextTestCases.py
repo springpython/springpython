@@ -19,6 +19,7 @@ from springpython.context import ObjectPostProcessor
 from springpython.config import PyContainerConfig
 from springpython.config import SpringJavaConfig
 from springpython.config import XMLConfig
+from springpython.config import YamlConfig
 from springpython.security.userdetails import InMemoryUserDetailsService
 from springpythontest.support import testSupportClasses
 
@@ -289,7 +290,7 @@ class SpringJavaConfigTestCase(unittest.TestCase):
         self.assertNotEquals(lister.finder, lister2.finder)
         self.assertEquals(lister.finder, lister3.finder)
 
-    def testInnerBeans(self):
+    def testInnerObjects(self):
         movieAppContainer = ApplicationContext(SpringJavaConfig("support/contextSpringJavaAppContext.xml"))
 
         lister = movieAppContainer.get_object("MovieLister2")
@@ -304,7 +305,7 @@ class SpringJavaConfigTestCase(unittest.TestCase):
         
         self.assertNotEqual(lister, lister2)
 
-    def testPrefetchingBeans(self):
+    def testPrefetchingObjects(self):
         movieAppContainer = ApplicationContext(SpringJavaConfig("support/contextSpringJavaAppContext.xml"))
 
         self.assertEqual(len(movieAppContainer.object_defs), 10)
@@ -427,7 +428,7 @@ class XMLConfigTestCase(unittest.TestCase):
         self.assertNotEquals(lister.finder, lister2.finder)
         self.assertEquals(lister.finder, lister3.finder)
 
-    def testInnerBeans(self):
+    def testInnerObjects(self):
         movieAppContainer = ApplicationContext(XMLConfig("support/contextSpringPythonAppContext.xml"))
 
         lister = movieAppContainer.get_object("MovieLister2")
@@ -442,7 +443,7 @@ class XMLConfigTestCase(unittest.TestCase):
         
         self.assertNotEqual(lister, lister2)
 
-    def testPrefetchingBeans(self):
+    def testPrefetchingObjects(self):
         movieAppContainer = ApplicationContext(XMLConfig("support/contextSpringPythonAppContext.xml"))
 
         self.assertEqual(len(movieAppContainer.object_defs), 12)
@@ -603,6 +604,138 @@ class XMLConfigTestCase(unittest.TestCase):
         self.assertTrue("a" in service2.user_dict[4])
         self.assertTrue("b" in service2.user_dict[4])
         self.assertTrue("c" not in service2.user_dict[4])
+
+class YamlConfigTestCase(unittest.TestCase):
+    def testPullingYamlConfig(self):
+        movieAppContainer = ApplicationContext(YamlConfig("support/contextSpringPythonAppContext.yaml"))
+        self.assertTrue(isinstance(movieAppContainer, ApplicationContext))
+        lister = movieAppContainer.get_object("MovieLister")
+        movieList = lister.finder.findAll()
+        self.assertEquals(movieList[0], "The Count of Monte Cristo")
+        self.assertEquals(lister.description.str, "There should only be one copy of this string")
+
+        # Create a separate container, which has its own instances of singletons
+        movieAppContainer2 = ApplicationContext(YamlConfig("support/contextSpringPythonAppContext.yaml"))
+        
+        self.assertTrue(isinstance(movieAppContainer2, ApplicationContext))
+        lister2 = movieAppContainer2.get_object("MovieLister")
+        movieList2 = lister2.finder.findAll()
+        self.assertEquals(movieList2[0], "The Count of Monte Cristo")
+        self.assertEquals(lister2.description.str, "There should only be one copy of this string")
+
+        # Create another MovieLister based on the first app context
+        lister3 = movieAppContainer.get_object("MovieLister")
+
+        # Identity test. Verify objects were created in separate app contexts, and that
+        # singletons exist only once, while prototypes are different on a per instance
+        # basis.
+        
+        # The MovieLister's are prototypes, and different within and between containers.
+        self.assertNotEquals(lister, lister2)
+        self.assertNotEquals(lister, lister3)
+        self.assertNotEquals(lister2, lister3)
+
+        # While the strings hold the same value...
+        self.assertEquals(lister.description.str, lister2.description.str)
+        self.assertEquals(lister2.description.str, lister3.description.str)
+        
+        # ...they are not necessarily the same object
+        self.assertEquals(lister.description, lister3.description)
+        self.assertNotEquals(lister.description, lister2.description)
+        
+        # The finder is also a singleton, only varying between containers
+        self.assertNotEquals(lister.finder, lister2.finder)
+        self.assertEquals(lister.finder, lister3.finder)
+
+    def testInnerObjects(self):
+        movieAppContainer = ApplicationContext(YamlConfig("support/contextSpringPythonAppContext.yaml"))
+
+        lister = movieAppContainer.get_object("MovieLister2")
+        movieList = lister.finder.findAll()
+        self.assertEquals(movieList[0], "The Count of Monte Cristo")
+        self.assertEquals(lister.description.str, "There should only be one copy of this string")
+        
+        lister2 = movieAppContainer.get_object("MovieLister3")
+        movieList2 = lister2.finder.findAll()
+        self.assertEquals(movieList2[0], "The Count of Monte Cristo")
+        self.assertEquals(lister2.description.str, "There should only be one copy of this string")
+        
+        self.assertNotEqual(lister, lister2)
+
+    def testPrefetchingObjects(self):
+        movieAppContainer = ApplicationContext(YamlConfig("support/contextSpringPythonAppContext.yaml"))
+
+        self.assertEqual(len(movieAppContainer.object_defs), 12)
+        self.assertTrue("MovieLister" in movieAppContainer.object_defs)
+        self.assertTrue("MovieFinder" in movieAppContainer.object_defs)
+        self.assertTrue("SingletonString" in movieAppContainer.object_defs)
+        self.assertTrue("MovieLister2" in movieAppContainer.object_defs)
+        self.assertTrue("MovieLister3" in movieAppContainer.object_defs)
+        self.assertTrue("MovieLister2.finder.<anonymous>" in movieAppContainer.object_defs)
+        self.assertTrue("MovieLister3.finder.named" in movieAppContainer.object_defs)
+        self.assertTrue("ValueHolder" in movieAppContainer.object_defs)
+        self.assertTrue("AnotherSingletonString" in movieAppContainer.object_defs)
+        self.assertTrue("AThirdSingletonString" in movieAppContainer.object_defs)
+        self.assertTrue("MultiValueHolder" in movieAppContainer.object_defs)
+        self.assertTrue("MultiValueHolder2" in movieAppContainer.object_defs)
+
+    def testCollections(self):
+        ctx = ApplicationContext(YamlConfig("support/contextSpringPythonAppContext.yaml"))
+        self.assertTrue(isinstance(ctx, ApplicationContext))
+        value_holder = ctx.get_object("ValueHolder")
+        
+        self.assertTrue(isinstance(value_holder.some_dict, dict))
+        self.assertEquals(4, len(value_holder.some_dict))
+        
+        self.assertEquals("Python", value_holder.some_dict["Spring"])
+        self.assertEquals("World", value_holder.some_dict["Hello"])
+        self.assertTrue(isinstance(value_holder.some_dict["holder"], testSupportClasses.StringHolder))
+        self.assertEquals("There should only be one copy of this string", value_holder.some_dict["holder"].str)
+        self.assertEquals("There should only be one copy of this string", value_holder.some_dict["another copy"].str)
+        
+        # Verify they are both referencing the same StringHolder class
+        self.assertEquals(value_holder.some_dict["holder"], value_holder.some_dict["another copy"])
+        
+        self.assertTrue(isinstance(value_holder.some_list, list))
+        self.assertEquals(3, len(value_holder.some_list))
+        self.assertEquals("Hello, world!", value_holder.some_list[0])
+        self.assertTrue(isinstance(value_holder.some_list[1], testSupportClasses.StringHolder))
+        self.assertEquals("There should only be one copy of this string", value_holder.some_list[1].str)
+        self.assertEquals("Spring Python", value_holder.some_list[2])
+
+        # Verify this is also using the same singleton object
+        self.assertEquals(value_holder.some_dict["holder"], value_holder.some_list[1])
+
+        self.assertTrue(isinstance(value_holder.some_props, dict))
+        self.assertEquals(3, len(value_holder.some_props))
+        self.assertEquals("administrator@example.org", value_holder.some_props["administrator"])
+        self.assertEquals("support@example.org", value_holder.some_props["support"])
+        self.assertEquals("development@example.org", value_holder.some_props["development"])
+        
+        self.assertTrue(isinstance(value_holder.some_set, set))
+        self.assertEquals(3, len(value_holder.some_set))
+        self.assertTrue("Hello, world!" in value_holder.some_set)
+        self.assertTrue("Spring Python" in value_holder.some_set)
+
+        self.assertTrue(isinstance(value_holder.some_frozen_set, frozenset))
+        self.assertEquals(3, len(value_holder.some_frozen_set))
+        self.assertTrue("Hello, world!" in value_holder.some_frozen_set)
+        self.assertTrue("Spring Python" in value_holder.some_frozen_set)
+        
+        self.assertTrue(isinstance(value_holder.some_tuple, tuple))
+        self.assertEquals(3, len(value_holder.some_tuple))
+        self.assertEquals("Hello, world!", value_holder.some_tuple[0])
+        self.assertTrue(isinstance(value_holder.some_tuple[1], testSupportClasses.StringHolder))
+        self.assertEquals("There should only be one copy of this string", value_holder.some_tuple[1].str)
+        self.assertEquals("Spring Python", value_holder.some_tuple[2])
+        
+        foundStringHolder = False
+        for item in value_holder.some_set:
+            if isinstance(item, testSupportClasses.StringHolder):
+                self.assertEquals("There should only be one copy of this string", item.str)
+                self.assertEquals(item, value_holder.some_list[1])
+                foundStringHolder = True
+        self.assertTrue(foundStringHolder)
 
 class XMLConfigTestCase2(unittest.TestCase):
     def testAnotherComplexContainer(self):
