@@ -737,6 +737,39 @@ class YamlConfigTestCase(unittest.TestCase):
                 foundStringHolder = True
         self.assertTrue(foundStringHolder)
 
+    def testConstructors(self):
+        ctx = ApplicationContext(YamlConfig("support/contextSpringPythonAppContext.yaml"))
+        self.assertTrue(isinstance(ctx, ApplicationContext))
+        
+        another_str = ctx.get_object("AnotherSingletonString")
+        a_third_str = ctx.get_object("AThirdSingletonString")
+        
+        self.assertEquals("attributed value", another_str.str)
+        self.assertEquals("elemental value", a_third_str.str)
+        
+        value_holder = ctx.get_object("ValueHolder")
+        self.assertTrue(isinstance(value_holder.string_holder, testSupportClasses.StringHolder))
+        self.assertEquals("There should only be one copy of this string", value_holder.string_holder.str)
+        
+        single_str = ctx.get_object("SingletonString")
+        
+        self.assertEquals(single_str.str, value_holder.string_holder.str)
+        self.assertEquals(single_str, value_holder.string_holder)
+
+    def testNamedConstructorArguments(self):
+        ctx = ApplicationContext(YamlConfig("support/contextSpringPythonAppContext.yaml"))
+        self.assertTrue(isinstance(ctx, ApplicationContext))
+
+        m = ctx.get_object("MultiValueHolder")
+        self.assertEquals("alt a", m.a)
+        self.assertEquals("alt b", m.b)
+        self.assertEquals("c", m.c)
+
+        m2 = ctx.get_object("MultiValueHolder2")
+        self.assertEquals("a", m2.a)
+        self.assertEquals("alt b", m2.b)
+        self.assertEquals("alt c", m2.c)
+
 class XMLConfigTestCase2(unittest.TestCase):
     def testAnotherComplexContainer(self):
         ctx = ApplicationContext(XMLConfig("support/contextComplexXMLConfig2.xml"))

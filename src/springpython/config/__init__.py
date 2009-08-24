@@ -634,11 +634,11 @@ class YamlConfig(Config):
         
         if "scope" in object:
             c.scope = scope.convert(object["scope"])
-        #if hasattr(object, "constructor_arg"):
-        #    c.pos_constr = [self._convert_prop_def(object, constr, object.id + ".constr") for constr in object.constructor_arg
-        #                    if not hasattr(constr, "name")]
-        #    c.named_constr = dict([(str(constr.name), self._convert_prop_def(object, constr, object.id + ".constr")) for constr in object.constructor_arg
-        #                           if hasattr(constr, "name")])
+        if "constructor-args" in object:
+             if isinstance(object["constructor-args"], list):
+                 c.pos_constr = [self._convert_prop_def(object, constr, object["object"]) for constr in object["constructor-args"]]
+             if isinstance(object["constructor-args"], dict):
+                 c.named_constr = dict([(name, self._convert_prop_def(object, constr, object["object"])) for (name, constr) in object["constructor-args"].items()])
         if "properties" in object:
             c.props = [self._convert_prop_def(object, p, name) for (name, p) in object["properties"].items()]
             
