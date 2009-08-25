@@ -1,3 +1,3 @@
-from springpythontest.contextTestCases import YamlConfigTestCase
+from springpythontest.contextTestCases import ObjectPostProcessorsTestCase
 
 

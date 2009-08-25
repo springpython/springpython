@@ -770,9 +770,9 @@ class YamlConfigTestCase(unittest.TestCase):
         self.assertEquals("alt b", m2.b)
         self.assertEquals("alt c", m2.c)
 
-class XMLConfigTestCase2(unittest.TestCase):
+class YamlConfigTestCase2(unittest.TestCase):
     def testAnotherComplexContainer(self):
-        ctx = ApplicationContext(XMLConfig("support/contextComplexXMLConfig2.xml"))
+        ctx = ApplicationContext(YamlConfig("support/contextComplexYamlConfig2.yaml"))
         service3 = ctx.get_object("user_details_service3")
         self.assertTrue(isinstance(service3.user_dict, list))
         self.assertEquals(7, len(service3.user_dict))
@@ -812,9 +812,65 @@ class XMLConfigTestCase2(unittest.TestCase):
         self.assertEquals(1, len(service3.user_dict[6]))
         self.assertTrue("Test9" in [item.user_dict for item in service3.user_dict[6]])
 
+    def testNamedConstructorArguments(self):
+        ctx = ApplicationContext(XMLConfig("support/contextSpringPythonAppContext.xml"))
+        self.assertTrue(isinstance(ctx, ApplicationContext))
+
+        m = ctx.get_object("MultiValueHolder")
+        self.assertEquals("alt a", m.a)
+        self.assertEquals("alt b", m.b)
+        self.assertEquals("c", m.c)
+
+        m2 = ctx.get_object("MultiValueHolder2")
+        self.assertEquals("a", m2.a)
+        self.assertEquals("alt b", m2.b)
+        self.assertEquals("alt c", m2.c)
+
 class XMLConfigTestCase3(unittest.TestCase):
     def testAThirdComplexContainer(self):
         ctx = ApplicationContext(XMLConfig("support/contextComplexXMLConfig3.xml"))
+        service4 = ctx.get_object("user_details_service4")
+        self.assertTrue(isinstance(service4.user_dict, tuple))
+        self.assertEquals(7, len(service4.user_dict))
+
+        self.assertTrue(isinstance(service4.user_dict[0], list))
+        self.assertEquals(2, len(service4.user_dict[0]))
+
+        self.assertTrue(isinstance(service4.user_dict[0][0], InMemoryUserDetailsService))
+        self.assertEquals("Test1", service4.user_dict[0][0].user_dict)
+        self.assertEquals("Test2", service4.user_dict[0][1].user_dict)
+
+        self.assertTrue(isinstance(service4.user_dict[1], tuple))
+        self.assertEquals(2, len(service4.user_dict[1]))
+
+        self.assertTrue(isinstance(service4.user_dict[1][0], InMemoryUserDetailsService))
+        self.assertEquals("Test1", service4.user_dict[1][0].user_dict)
+        self.assertEquals("Test2", service4.user_dict[1][1].user_dict)
+
+        self.assertTrue(isinstance(service4.user_dict[2], InMemoryUserDetailsService))
+        self.assertEquals("Test3", service4.user_dict[2].user_dict)
+
+        self.assertTrue(isinstance(service4.user_dict[3], set))
+        self.assertEquals(2, len(service4.user_dict[3]))
+        self.assertTrue("Test4" in [item.user_dict for item in service4.user_dict[3]])
+        self.assertTrue("Test5" in [item.user_dict for item in service4.user_dict[3]])
+
+        self.assertTrue(isinstance(service4.user_dict[4], frozenset))
+        self.assertEquals(2, len(service4.user_dict[4]))
+        self.assertTrue("Test6" in [item.user_dict for item in service4.user_dict[4]])
+        self.assertTrue("Test7" in [item.user_dict for item in service4.user_dict[4]])
+
+        self.assertTrue(isinstance(service4.user_dict[5], set))
+        self.assertEquals(1, len(service4.user_dict[5]))
+        self.assertTrue("Test8" in [item.user_dict for item in service4.user_dict[5]])
+
+        self.assertTrue(isinstance(service4.user_dict[6], frozenset))
+        self.assertEquals(1, len(service4.user_dict[6]))
+        self.assertTrue("Test9" in [item.user_dict for item in service4.user_dict[6]])
+
+class YamlConfigTestCase3(unittest.TestCase):
+    def testAThirdComplexContainer(self):
+        ctx = ApplicationContext(YamlConfig("support/contextComplexYamlConfig3.yaml"))
         service4 = ctx.get_object("user_details_service4")
         self.assertTrue(isinstance(service4.user_dict, tuple))
         self.assertEquals(7, len(service4.user_dict))
@@ -880,9 +936,61 @@ class XMLConfigTestCase4(unittest.TestCase):
             else:
                 self.fail("Cannot handle %s" % type(item))
 
+class YamlConfigTestCase4(unittest.TestCase):
+    def testAThirdComplexContainer(self):
+        ctx = ApplicationContext(YamlConfig("support/contextComplexYamlConfig4.yaml"))
+        service5 = ctx.get_object("user_details_service5")
+        self.assertTrue(isinstance(service5.user_dict, set))
+        self.assertEquals(4, len(service5.user_dict))
+
+        for item in service5.user_dict:
+            if isinstance(item, tuple):
+                self.assertEquals(2, len(item))
+                self.assertEquals("Test1", item[0].user_dict)
+                self.assertEquals("Test2", item[1].user_dict)
+            elif isinstance(item, InMemoryUserDetailsService):
+                self.assertEquals("Test3", item.user_dict)
+            elif isinstance(item, frozenset):
+                if len(item) == 1:
+                    self.assertTrue("Test9" in [i.user_dict for i in item])
+                elif len(item) == 2:
+                    values = [i.user_dict for i in item]
+                    for test_value in ["Test6", "Test7"]:
+                        self.assertTrue(test_value in values)
+                else:
+                    self.fail("Did NOT expect a frozenset of length %s" % len(item))
+            else:
+                self.fail("Cannot handle %s" % type(item))
+
 class XMLConfigTestCase5(unittest.TestCase):
     def testAFourthComplexContainer(self):
         ctx = ApplicationContext(XMLConfig("support/contextComplexXMLConfig5.xml"))
+        service6 = ctx.get_object("user_details_service6")
+        self.assertTrue(isinstance(service6.user_dict, frozenset))
+        self.assertEquals(4, len(service6.user_dict))
+
+        for item in service6.user_dict:
+            if isinstance(item, tuple):
+                self.assertEquals(2, len(item))
+                self.assertEquals("Test1", item[0].user_dict)
+                self.assertEquals("Test2", item[1].user_dict)
+            elif isinstance(item, InMemoryUserDetailsService):
+                self.assertEquals("Test3", item.user_dict)
+            elif isinstance(item, frozenset):
+                if len(item) == 1:
+                    self.assertTrue("Test9" in [i.user_dict for i in item])
+                elif len(item) == 2:
+                    values = [i.user_dict for i in item]
+                    for test_value in ["Test6", "Test7"]:
+                        self.assertTrue(test_value in values)
+                else:
+                    self.fail("Did NOT expect a frozenset of length %s" % len(item))
+            else:
+                self.fail("Cannot handle %s" % type(item))
+
+class YamlConfigTestCase5(unittest.TestCase):
+    def testAFourthComplexContainer(self):
+        ctx = ApplicationContext(YamlConfig("support/contextComplexYamlConfig5.yaml"))
         service6 = ctx.get_object("user_details_service6")
         self.assertTrue(isinstance(service6.user_dict, frozenset))
         self.assertEquals(4, len(service6.user_dict))
@@ -986,10 +1094,46 @@ class XMLConfigConstructorBasedTestCase(unittest.TestCase):
         for executor in controller.executors:
             self.assertTrue(isinstance(executor, testSupportClasses.Executor))
 
+class YamlConfigConstructorBasedTestCase(unittest.TestCase):
+    """This test case exercises the constructors for XMLConfig"""
+
+    def testUsingConstructorWithObjectReference(self):
+        ctx = ApplicationContext(YamlConfig("support/contextYamlConfigWithConstructorArgs.yaml"))
+
+        controller = ctx.get_object("controller-list")
+        self.assertTrue(isinstance(controller.executors, list))
+        self.assertEquals(2, len(controller.executors))
+        for executor in controller.executors:
+            self.assertTrue(isinstance(executor, testSupportClasses.Executor))
+
+        controller = ctx.get_object("controller-set")
+        self.assertTrue(isinstance(controller.executors, set))
+        self.assertEquals(2, len(controller.executors))
+        for executor in controller.executors:
+            self.assertTrue(isinstance(executor, testSupportClasses.Executor))
+
+        controller = ctx.get_object("controller-dict")
+        self.assertTrue(isinstance(controller.executors, dict))
+        self.assertEquals(2, len(controller.executors))
+        for key in controller.executors:
+            self.assertTrue(isinstance(controller.executors[key], testSupportClasses.Executor))
+
+        controller = ctx.get_object("controller-frozenset")
+        self.assertTrue(isinstance(controller.executors, frozenset))
+        self.assertEquals(2, len(controller.executors))
+        for executor in controller.executors:
+            self.assertTrue(isinstance(executor, testSupportClasses.Executor))
+
+        controller = ctx.get_object("controller-tuple")
+        self.assertTrue(isinstance(controller.executors, tuple))
+        self.assertEquals(2, len(controller.executors))
+        for executor in controller.executors:
+            self.assertTrue(isinstance(executor, testSupportClasses.Executor))
+
 class ObjectPostProcessorsTestCase(unittest.TestCase):
     """This test case exercises object post processors"""
 
-    def testSimpleObjectPostProcessor(self):
+    def testSimpleObjectPostProcessorXml(self):
          ctx = ApplicationContext(XMLConfig("support/contextObjectPostProcessing.xml"))
          processor = ctx.get_object("postProcessor")
          self.assertTrue(isinstance(processor, ObjectPostProcessor))
@@ -998,4 +1142,15 @@ class ObjectPostProcessorsTestCase(unittest.TestCase):
          obj = ctx.get_object("value")
          self.assertTrue(hasattr(obj, "processedBefore"))
          self.assertTrue(hasattr(obj, "processedAfter"))
+
+    def testSimpleObjectPostProcessorYaml(self):
+         ctx = ApplicationContext(YamlConfig("support/contextObjectPostProcessing.yaml"))
+         processor = ctx.get_object("postProcessor")
+         self.assertTrue(isinstance(processor, ObjectPostProcessor))
+         self.assertFalse(hasattr(processor, "processedBefore"))
+         self.assertFalse(hasattr(processor, "processedAfter"))
+         obj = ctx.get_object("value")
+         self.assertTrue(hasattr(obj, "processedBefore"))
+         self.assertTrue(hasattr(obj, "processedAfter"))
+
 
