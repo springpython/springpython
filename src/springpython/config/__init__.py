@@ -598,7 +598,7 @@ class YamlConfig(Config):
                 self._print_obj(object)
             self.objects.extend([self._convert_object(object) for object in doc["objects"]])
         self.logger.debug("==============================================================")
-        self.logger.info("objects = %s" % self.objects)
+        self.logger.debug("objects = %s" % self.objects)
         return self.objects
 
     def _print_obj(self, obj, level=0):
@@ -645,7 +645,7 @@ class YamlConfig(Config):
         return c
 
     def _convert_ref(self, ref_node, name):
-        self.logger.info("ref: Parsing %s, %s" % (ref_node, name))
+        self.logger.debug("ref: Parsing %s, %s" % (ref_node, name))
         if "object" in ref_node:
             return ReferenceDef(name, ref_node["object"])
         else:
@@ -656,22 +656,22 @@ class YamlConfig(Config):
 
         if isinstance(value, dict):
             if "tuple" in value:
-                self.logger.info("value: Converting tuple")
+                self.logger.debug("value: Converting tuple")
                 return self._convert_tuple(value["tuple"], id, name)
             elif "list" in value:
-                self.logger.info("value: Converting list")
+                self.logger.debug("value: Converting list")
                 return self._convert_list(value["list"], id, name)
             elif "dict" in value:
-                self.logger.info("value: Converting dict")
+                self.logger.debug("value: Converting dict")
                 return self._convert_dict(value["dict"], id, name)
             elif "set" in value:
-                self.logger.info("value: Converting set")
+                self.logger.debug("value: Converting set")
                 return self._convert_set(value["set"], id, name)
             elif "frozenset" in value:
-                self.logger.info("value: Converting frozenset")
+                self.logger.debug("value: Converting frozenset")
                 return self._convert_frozen_set(value["frozenset"], id, name)
         else:
-            self.logger.info("value: Plain ole value = %s" % value)
+            self.logger.debug("value: Plain ole value = %s" % value)
             return value
 
         return results
@@ -708,18 +708,18 @@ class YamlConfig(Config):
         d = {}
         for (k, v) in dict_node.items():
             if isinstance(v, dict):
-                self.logger.info("dict: You have a special type stored at %s" % k)
+                self.logger.debug("dict: You have a special type stored at %s" % k)
                 if "ref" in v:
-                    self.logger.info("dict/ref: k,v = %s,%s" % (k, v))
+                    self.logger.debug("dict/ref: k,v = %s,%s" % (k, v))
                     d[k] = self._convert_ref(v["ref"], "%s.dict['%s']" % (name, k))
-                    self.logger.info("dict: Stored %s => %s" % (k, d[k]))
+                    self.logger.debug("dict: Stored %s => %s" % (k, d[k]))
                 elif "tuple" in v:
-                    self.logger.info("dict: Converting a tuple...")
+                    self.logger.debug("dict: Converting a tuple...")
                     d[k] = self._convert_tuple(v["tuple"], "%s.dict['%s']" % ( name, k))
                 else:
-                    self.logger.info("dict: Don't know how to handle type %s" % v)
+                    self.logger.debug("dict: Don't know how to handle type %s" % v)
             else:
-                self.logger.info("dict: %s is NOT a dict, so going to convert as a value." % v)
+                self.logger.debug("dict: %s is NOT a dict, so going to convert as a value." % v)
                 d[k] = self._convert_value(v, id, "%s.dict['%s']" % (name, k))
             #key = None
             #for element in entry.xml_children:
@@ -749,7 +749,7 @@ class YamlConfig(Config):
     def _convert_list(self, list_node, id, name):
         list = []
         for item in list_node:
-            self.logger.info("list: Adding %s to list..." % item)
+            self.logger.debug("list: Adding %s to list..." % item)
             if isinstance(item, dict):
                 if "ref" in item:
                     list.append(self._convert_ref(item["ref"], "%s.list[%s]" % (name, len(list))))
@@ -758,14 +758,14 @@ class YamlConfig(Config):
                 elif len(set(["dict", "tuple", "set", "frozenset", "list"]) & set(item)) > 0:
                     list.append(self._convert_value(item, id, "%s.list[%s]" % (name, len(list))))
                 else:
-                    self.logger.info("list: Don't know how to handle %s" % item.keys())
+                    self.logger.debug("list: Don't know how to handle %s" % item.keys())
             else:
                 list.append(item)
         return ListDef(name, list)
 
     def _convert_tuple(self, tuple_node, id, name):
         list = []
-        self.logger.info("tuple: tuple_node = %s, id = %s, name = %s" % (tuple_node, id, name))
+        self.logger.debug("tuple: tuple_node = %s, id = %s, name = %s" % (tuple_node, id, name))
         for item in tuple_node:
             if isinstance(item, dict):
                 if "ref" in item:
@@ -775,14 +775,14 @@ class YamlConfig(Config):
                 elif len(set(["dict", "tuple", "set", "frozenset", "list"]) & set(item)) > 0:
                     list.append(self._convert_value(item, id, "%s.tuple[%s]" % (name, len(list))))
                 else:
-                    self.logger.info("tuple: Don't know how to handle %s" % item)
+                    self.logger.debug("tuple: Don't know how to handle %s" % item)
             else:
                 list.append(item)
         return TupleDef(name, tuple(list))
 
     def _convert_set(self, set_node, id, name):
         s = set()
-        self.logger.info("set: set_node = %s, id = %s, name = %s" % (set_node, id, name))
+        self.logger.debug("set: set_node = %s, id = %s, name = %s" % (set_node, id, name))
         for item in set_node:
             if isinstance(item, dict):
                 if "ref" in item:
@@ -792,7 +792,7 @@ class YamlConfig(Config):
                 elif len(set(["dict", "tuple", "set", "frozenset", "list"]) & set(item)) > 0:
                     s.add(self._convert_value(item, id, "%s.set[%s]" % (name, len(s))))
                 else:
-                    self.logger.info("set: Don't know how to handle %s" % item)
+                    self.logger.debug("set: Don't know how to handle %s" % item)
             else:
                 s.add(item)
         return SetDef(name, s)
@@ -802,29 +802,29 @@ class YamlConfig(Config):
         return FrozenSetDef(name, frozenset(item.value))
 
     def _convert_inner_object(self, object_node, id, name):
-        self.logger.info("inner object: Converting %s" % object_node)
+        self.logger.debug("inner object: Converting %s" % object_node)
         inner_object_def = self._convert_object(object_node, prefix="%s.%s" % (id, name))
         self.objects.append(inner_object_def)
         return InnerObjectDef(name, inner_object_def)
 
     def _convert_prop_def(self, comp, p, name):
         "This function translates object properties into useful collections of information for the container."
-        self.logger.info("prop_def: Trying to read property %s -> %s" % (name, p))
+        self.logger.debug("prop_def: Trying to read property %s -> %s" % (name, p))
         if isinstance(p, dict):
             if "ref" in p:
-                self.logger.info("prop_def: >>>>>>>>>>>>Call _convert_ref(%s, %s)" % (p["ref"], name))
+                self.logger.debug("prop_def: >>>>>>>>>>>>Call _convert_ref(%s, %s)" % (p["ref"], name))
                 return self._convert_ref(p["ref"], name)
             elif "tuple" in p:
-                self.logger.info("prop_def: Call _convert_tuple(%s,%s,%s)" % (p["tuple"], comp["object"], name))
+                self.logger.debug("prop_def: Call _convert_tuple(%s,%s,%s)" % (p["tuple"], comp["object"], name))
                 return self._convert_tuple(p["tuple"], comp["object"], name)
             elif "set" in p:
-                self.logger.info("prop_def: Call _convert_set(%s,%s,%s)" % (p["set"], comp["object"], name))
+                self.logger.debug("prop_def: Call _convert_set(%s,%s,%s)" % (p["set"], comp["object"], name))
                 return self._convert_set(p["set"], comp["object"], name)
             elif "frozenset" in p:
-                self.logger.info("prop_def: Call _convert_frozen_set(%s,%s,%s)" % (p["frozenset"], comp["object"], name))
+                self.logger.debug("prop_def: Call _convert_frozen_set(%s,%s,%s)" % (p["frozenset"], comp["object"], name))
                 return self._convert_frozen_set(p["frozenset"], comp["object"], name)
             elif "object" in p:
-                self.logger.info("prop_def: Call _convert_inner_object(%s,%s,%s)" % (p, comp["object"], name))
+                self.logger.debug("prop_def: Call _convert_inner_object(%s,%s,%s)" % (p, comp["object"], name))
                 return self._convert_inner_object(p, comp["object"], name)
             else:
                 #self.logger.debug("prop_def: Don't know how to handle %s" % p)
