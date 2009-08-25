@@ -653,10 +653,25 @@ class YamlConfig(Config):
  
     def _convert_value(self, value, id, name):
         results = []
+
         if isinstance(value, dict):
-            self.logger.info("value: %s is a dict, don't know how to handle yet!" % value)
+            if "tuple" in value:
+                self.logger.info("value: Converting tuple")
+                return self._convert_tuple(value["tuple"], id, name)
+            elif "list" in value:
+                self.logger.info("value: Converting list")
+                return self._convert_list(value["list"], id, name)
+            elif "dict" in value:
+                self.logger.info("value: Converting dict")
+                return self._convert_dict(value["dict"], id, name)
+            elif "set" in value:
+                self.logger.info("value: Converting set")
+                return self._convert_set(value["set"], id, name)
+            elif "frozenset" in value:
+                self.logger.info("value: Converting frozenset")
+                return self._convert_frozen_set(value["frozenset"], id, name)
         else:
-            self.logger.info("value: value = %s" % value)
+            self.logger.info("value: Plain ole value = %s" % value)
             return value
 
         return results
@@ -738,25 +753,14 @@ class YamlConfig(Config):
             if isinstance(item, dict):
                 if "ref" in item:
                     list.append(self._convert_ref(item["ref"], "%s.list[%s]" % (name, len(list))))
+                elif "object" in item:
+                    list.append(self._convert_inner_object(item, id, "%s.list[%s]" % (name, len(list))))
+                elif len(set(["dict", "tuple", "set", "frozenset", "list"]) & set(item)) > 0:
+                    list.append(self._convert_value(item, id, "%s.list[%s]" % (name, len(list))))
                 else:
                     self.logger.info("list: Don't know how to handle %s" % item.keys())
             else:
                 list.append(item)
-        #for element in list_node.xml_children:
-        #    if isinstance(element, amara.bindery.element_base):
-        #        if element.localName == "value":
-        #            list.append(str(element))
-        #        elif element.localName == "ref":
-        #            list.append(self._convert_ref(element, "%s.list[%s]" % (name, len(list))))
-        #        elif element.localName == "object":
-        #            self.logger.debug("Parsing an inner object definition...")
-        #            list.append(self._convert_inner_object(element, id, "%s.list[%s]" % (name, len(list))))
-        #        elif element.localName in ["dict", "tuple", "set", "frozenset", "list"]:
-        #            self.logger.debug("This list has child elements of type %s." % element.localName)
-        #            list.append(self._convert_value(element, id, "%s.list[%s]" % (name, len(list))))
-        #            self.logger.debug("List is now %s" % list)
-        #        else:
-        #            self.logger.debug("list: Don't know how to handle %s" % element.localName)
         return ListDef(name, list)
 
     def _convert_tuple(self, tuple_node, id, name):
@@ -766,25 +770,14 @@ class YamlConfig(Config):
             if isinstance(item, dict):
                 if "ref" in item:
                     list.append(self._convert_ref(item["ref"], name + ".tuple"))
+                elif "object" in item:
+                    list.append(self._convert_inner_object(item, id, "%s.tuple[%s]" % (name, len(list))))
+                elif len(set(["dict", "tuple", "set", "frozenset", "list"]) & set(item)) > 0:
+                    list.append(self._convert_value(item, id, "%s.tuple[%s]" % (name, len(list))))
                 else:
                     self.logger.info("tuple: Don't know how to handle %s" % item)
             else:
                 list.append(item)
-
-        #for element in tuple_node.xml_children:
-        #    if isinstance(element, amara.bindery.element_base):
-        #        if element.localName == "value":
-        #            list.append(str(element))
-        #        elif element.localName == "ref":
-        #            list.append(self._convert_ref(element, "%s.tuple(%s}" % (name, len(list))))
-        #        elif element.localName == "object":
-        #            self.logger.debug("Parsing an inner object definition...")
-        #            list.append(self._convert_inner_object(element, id, "%s.tuple(%s)" % (name, len(list))))
-        #        elif element.localName in ["dict", "tuple", "set", "frozenset", "list"]:
-        #            self.logger.debug("This tuple has child elements of type %s." % element.localName)
-        #            list.append(self._convert_value(element, id, "%s.tuple(%s)" % (name, len(list))))
-        #        else:
-        #            self.logger.debug("tuple: Don't know how to handle %s" % element.localName)
         return TupleDef(name, tuple(list))
 
     def _convert_set(self, set_node, id, name):
@@ -794,25 +787,14 @@ class YamlConfig(Config):
             if isinstance(item, dict):
                 if "ref" in item:
                     s.add(self._convert_ref(item["ref"], name + ".set"))
+                elif "object" in item:
+                    s.add(self._convert_inner_object(item, id, "%s.set[%s]" % (name, len(s))))
+                elif len(set(["dict", "tuple", "set", "frozenset", "list"]) & set(item)) > 0:
+                    s.add(self._convert_value(item, id, "%s.set[%s]" % (name, len(s))))
                 else:
                     self.logger.info("set: Don't know how to handle %s" % item)
             else:
                 s.add(item)
-
-        #for element in set_node.xml_children:
-        #    if isinstance(element, amara.bindery.element_base):
-        #        if element.localName == "value":
-        #            s.add(str(element))
-        #        elif element.localName == "ref":
-        #            s.add(self._convert_ref(element, name + ".set"))
-        #        elif element.localName == "object":
-        #            self.logger.debug("Parsing an inner object definition...")
-        #            s.add(self._convert_inner_object(element, id, "%s.set(%s)" % (name, len(s))))
-        #        elif element.localName in ["dict", "tuple", "set", "frozenset", "list"]:
-        #            self.logger.debug("This set has child elements of type %s." % element.localName)
-        #            s.add(self._convert_value(element, id, "%s.set(%s)" % (name,len(s)))) 
-        #        else:
-        #            self.logger.debug("set: Don't know how to handle %s" % element.localName)
         return SetDef(name, s)
 
     def _convert_frozen_set(self, frozen_set_node, id, name):
@@ -820,6 +802,7 @@ class YamlConfig(Config):
         return FrozenSetDef(name, frozenset(item.value))
 
     def _convert_inner_object(self, object_node, id, name):
+        self.logger.info("inner object: Converting %s" % object_node)
         inner_object_def = self._convert_object(object_node, prefix="%s.%s" % (id, name))
         self.objects.append(inner_object_def)
         return InnerObjectDef(name, inner_object_def)
