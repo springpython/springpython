@@ -99,7 +99,7 @@
 			<para>The name of the container is <classname>ObjectContainer</classname>. Its job is to pull
 			in object meta-data from various sources, and then call on related object factories to create
 			the objects. In fact, this container is capable of receiving object definitions from multiple
-			sources, each of differing types such as XML, python code, and other future formats.</para> 
+			sources, each of differing types such as XML, YAML, python code, and other future formats.</para> 
 			
 			<para>The following block of code shows an example of creating an object container, and then
 			pulling an object out of the container.</para>
@@ -111,7 +111,7 @@ from springpython.config import XMLConfig
 container = ApplicationContext(XMLConfig("app-context.xml"))
 service = container.get_object("sampleService")
 ]]></programlisting>
-	
+
 			<para>The first thing you may notice is the fact that <classname>ApplicationContext</classname> was
 			used instead of <classname>ObjectContainer</classname>. <classname>ApplicationContext</classname>
 			is a subclass of <classname>ObjectContainer</classname>, and is typically used because it
@@ -154,7 +154,8 @@ service = container.get_object("sampleService")
 		url="http://springpython.webfactional.com/schema/context/spring-python-pycontainer-context-1.0.xsd">
 		captured into an XSD spec</ulink>. This format is primarily to support legacy apps that have
 		already been built with Spring Python from its inception. There is no current priority to extend this
-		format any further. Any new schema developments will be happening with <classname>XMLConfig</classname></para>
+		format any further. Any new schema developments will be happening with <classname>XMLConfig</classname>
+		and <classname>YamlConfig</classname>.</para>
 		
 		<para>In the spirit of <ulink url="http://www.springframework.org/javaconfig">Spring JavaConfig</ulink>
 		and <ulink url="http://blog.springsource.com/2006/11/28/a-java-configuration-option-for-spring/">a blog
@@ -170,7 +171,9 @@ service = container.get_object("sampleService")
 		than PyContainer could handle, <link linkend="objects-config-xmlconfig-inner">inner
 		objects</link> as well, various <link linkend="objects-config-xmlconfig-collections">collections</link>
 		(lists, sets, frozen sets, tuples, dictionaries, and java-style props), and values.</para>
-		
+
+		<para>Spring Python also has a YAML-based parser called <classname>YamlConfig</classname>.</para>
+
 		<para>Spring Python is ultimately about choice, which is why developers may extend the
 		<classname>Config</classname> class to define their own object definition scanner. By plugging
 		an instance of their scanner into <classname>ApplicationContext</classname>, definitions can
@@ -181,15 +184,15 @@ service = container.get_object("sampleService")
 		
 		<itemizedlist>
 			<listitem>			
-				<para>New projects are encouraged to pick either <classname>XMLConfig</classname> or
-				<classname>PythonConfig</classname> based on your preference for XML vs. pure python
-				coding.</para>
+				<para>New projects are encouraged to pick either <classname>PythonConfig</classname>,
+				<classname>XMLConfig</classname>, or <classname>YamlConfig</classname>, based on your
+				preference for pure python code, XML, or YAML.</para>
 			</listitem>
 
 			<listitem>			
 				<para>Projects migrating from Spring Java can use <classname>SpringJavaConfig</classname>
 				to ease transition, with a long term goal of migrating to <classname>XMLConfig</classname>,
-				and perhaps finally	<classname>PythonConfig</classname>.</para>
+				and perhaps finally <classname>PythonConfig</classname>.</para>
 			</listitem>
 		
 			<listitem>
@@ -198,10 +201,14 @@ service = container.get_object("sampleService")
 			</listitem>
 
 			<listitem>			
-				<para>Projects currently  using <classname>XMLConfig</classname> should be pretty easy to
+				<para>Projects currently using <classname>XMLConfig</classname> should be pretty easy to
 				migrate to <classname>PythonConfig</classname>, since it is basically a one-to-one
 				translation. The pure python configuration may turn out much more compact, especially if
 				you are using <link linkend="objects-config-xmlconfig-collections">lists, sets, dictionaries, and props</link>.</para>
+
+                                <para>It should also be relatively easy to migrate an <classname>XMLConfig</classname>-based
+				configuration to <classname>YamlConfig</classname>. YAML tends to be more compact than XML,
+				and some prefer not having to deal with the angle-bracket tax.</para>
 			</listitem>
 		</itemizedlist>
 		
@@ -301,7 +308,7 @@ service = container.get_object("MovieLister")
 				<title>Inner Objects</title>
 				
 				<para>Inner objects are objects defined inside another structure, and not at the root level
-				of the XML. The following shows an alternative configuration of a <classname>MovieLister</classname>
+				of the XML document. The following shows an alternative configuration of a <classname>MovieLister</classname>
 				where the <methodname>finder</methodname> uses a <emphasis>named inner object</emphasis>.</para>
 				
 <programlisting><![CDATA[
@@ -657,6 +664,286 @@ service = container.get_object("MovieLister")
 			
 		</section>
 
+		<section id="objects-config-yamlconfig">
+			<title><classname>YamlConfig</classname> - Spring Python's YAML format</title>
+
+			<para><classname>YamlConfig</classname> is a class that scans object
+			definitions stored in a <ulink url="http://www.yaml.org">YAML 1.1 format</ulink> using the 
+			<ulink url="http://pyyaml.org">PyYAML project</ulink>.</para>
+			
+			<para>The following is a simple definition of objects. Later sections will show
+			other options you have for wiring things together.</para>
+			
+<programlisting><![CDATA[
+objects:
+    - object: MovieLister
+      class: springpythontest.support.testSupportClasses.MovieLister
+      scope: prototype
+      properties:
+          finder: {ref: MovieFinder}
+          description: {ref: SingletonString}
+
+    - object: MovieFinder
+      class: springpythontest.support.testSupportClasses.ColonMovieFinder
+      scope: singleton
+      properties:
+          filename: support/movies1.txt
+
+    - object: SingletonString
+      class: springpythontest.support.testSupportClasses.StringHolder
+      properties:
+          str: There should only be one copy of this string
+]]></programlisting>
+
+			<para>The definitions stored in this file are fed to an <classname>YamlConfig</classname> instance
+			which scans it, and then sends the meta-data to the <classname>ApplicationContext</classname>.
+			Then, when the application code requests an object named <emphasis>MovieLister</emphasis> from the
+			container, the container utilizes an object factory to create the object and return it.</para>
+
+				
+<programlisting><![CDATA[
+from springpython.context import ApplicationContext
+from springpython.config import YamlConfig
+
+container = ApplicationContext(YamlConfig("app-context.xml"))
+service = container.get_object("MovieLister")
+]]></programlisting>
+				
+			<section id="objects-config-yamlconfig-referenced">
+				<title>Referenced Objects</title>
+				
+				<para>A referenced object is where an object is needed, but instead of providing the
+				definition right there, there is, instead, a name, referring to another object definition.</para>
+				
+				<para>Object definitions can refer to other objects in many places including: properties,
+				constructor arguments, and objects embedded inside various
+				<link linkend="objects-config-yamlconfig-collections">collections</link>. This is the
+				way to break things down into smaller pieces. It also allows you more efficiently use memory and
+				guarantee different objects are linked to the same backend object.</para>
+				
+				<para> The following fragment, pulled from the earlier example, shows two different properties
+				referencing other objects. It demonstrates the two ways to refer to another object.</para>
+
+				
+<programlisting><![CDATA[
+object: MovieLister
+class: springpythontest.support.testSupportClasses.MovieLister
+scope: prototype
+properties:
+    finder: {ref: MovieFinder}
+    description: {ref: SingletonString}
+]]></programlisting>
+
+				<para>This means that instead of defining the object meant to be injected into the
+				<methodname>description</methodname> property right there, the container must look elsewhere
+				amongst its collection of object definitions for an object named <emphasis>SingletonString</emphasis>.</para>
+				
+				<note>
+					<title>Referenced objects don't have to be in same configuration</title>
+					
+					<para>When a referenced object is encountered, finding its definition is referred back to the
+					container. This means ANY of the input sources provided to the container can hold this definition,
+					REGARDLESS of format.</para>
+
+				</note>
+
+				<note>
+					<title>Spring Python ONLY supports global references</title>
+					
+					<para>While Spring Java has different levels of reference like <emphasis>parent</emphasis>,
+					<emphasis>local</emphasis>, and <emphasis>global</emphasis>, Spring Python only supports
+					<emphasis>global</emphasis> at this time.</para>
+
+				</note>
+
+				<para>In the following subsections, other types of object definitions are given. Each will also
+				include information about embedding reference objects.</para>
+
+			</section>
+			
+			<section id="objects-config-yamlconfig-inner">
+				<title>Inner Objects</title>
+				
+				<para>Inner objects are objects defined inside another structure, and not at the root level
+				of the YAML document. The following shows an alternative configuration of a <classname>MovieLister</classname>
+
+				where the <methodname>finder</methodname> uses a <emphasis>named inner object</emphasis>.</para>
+				
+<programlisting><![CDATA[
+object: MovieLister3
+class: springpythontest.support.testSupportClasses.MovieLister
+properties:
+    finder:
+        object: named
+        class: springpythontest.support.testSupportClasses.ColonMovieFinder
+        properties:
+            filename: support/movies1.txt
+    description: {ref: SingletonString} 
+]]></programlisting>
+
+				<para>The <classname>ColonMovieFinder</classname> is indeed an inner object because it was defined
+				inside the <emphasis>MovieLister3</emphasis> object. Objects defined at the top level have a
+				container-level name that matches their <methodname>id</methodname> value. In this case, asking the
+				container for a copy of <emphasis>MovieLister3</emphasis> will yield the top level object. However,
+				named objects develop a path-like name based on where they are located. In this case, the inner
+				<classname>ColonMovieFinder</classname> object will have a container-level name of
+				<emphasis>MovieLister3.finder.named</emphasis>.</para>
+
+				
+				<para>Typically, neither your code nor other object definitions will have any need to reference
+				<emphasis>MovieLister3.finder.named</emphasis>, but there may be cases where you need this. The
+				value of the <methodname>object</methodname> key of <classname>ColonMovieFinder</classname> can
+				be left out (it is optional for inner objects) like this:</para>
+
+<programlisting><![CDATA[
+object: MovieLister2
+class: springpythontest.support.testSupportClasses.MovieLister
+properties:
+    finder:
+        object:
+        class: springpythontest.support.testSupportClasses.ColonMovieFinder
+        properties:
+            filename: support/movies1.txt
+    description: {ref: SingletonString}
+]]></programlisting>
+				
+				<para>That is slightly more compact, and usually alright because you usually wouldn't access this object
+				from anywhere. However, if you must, the name in this case is <emphasis>MovieLister2.finder.&lt;anonymous&gt;</emphasis>
+				indicating an anonymous object.</para>
+				
+				<para>It is important to realize that inner objects have all the same privileges as top-level objects,
+				meaning that they can also utilize <link linkend="objects-config-yamlconfig-referenced">reference objects</link>,
+				<link linkend="objects-config-yamlconfig-collections">collections</link>, and inner objects themselves.</para>
+
+			</section>
+			
+			<section id="objects-config-yamlconfig-collections">
+				<title>Collections</title>
+
+				
+				<para>Spring Java supports many types of collections, including lists, sets, frozen sets, maps, tuples,
+				and java-style properties. Spring Python supports these as well. The following configuration shows usage of
+				<methodname>dict</methodname>, <methodname>list</methodname>, 
+				<methodname>set</methodname>, <methodname>frozenset</methodname>, and <methodname>tuple</methodname>.</para>
+				
+<programlisting><![CDATA[
+      object: ValueHolder
+      class: springpythontest.support.testSupportClasses.ValueHolder
+      constructor-args:
+          - {ref: SingletonString}
+      properties:
+          some_dict:
+                Hello: World
+                Spring: Python
+                holder: {ref: SingletonString}
+                another copy: {ref: SingletonString}
+          some_list:
+              - Hello, world!
+              - ref: SingletonString
+              - Spring Python
+          some_props:
+              administrator: administrator@example.org
+              support: support@example.org
+              development: development@example.org
+          some_set:
+              set:
+                  - Hello, world!
+                  - ref: SingletonString
+                  - Spring Python
+          some_frozen_set:
+              frozenset:
+                  - Hello, world!
+                  - ref: SingletonString
+                  - Spring Python
+          some_tuple:
+              tuple:
+                  - Hello, world!
+                  - ref: SingletonString
+                  - Spring Python
+]]></programlisting>
+
+				<itemizedlist>
+					<listitem>
+						<para><methodname>some_dict</methodname> is a python dictionary with four entries.</para>
+					</listitem>
+					<listitem>
+						<para><methodname>some_list</methodname> is a python list with three entries.</para>
+
+					</listitem>
+					<listitem>
+						<para><methodname>some_props</methodname> is also a python dictionary, containing three values.</para>
+					</listitem>
+					<listitem>
+						<para><methodname>some_set</methodname> is an instance of python's
+						<ulink url="http://www.python.org/doc/2.5.2/lib/types-set.html">mutable set</ulink>.</para>	
+					</listitem>
+
+					<listitem>
+						<para><methodname>some_frozen_set</methodname> is an instance of python's
+						<ulink url="http://www.python.org/doc/2.5.2/lib/types-set.html">frozen set</ulink>.</para>	
+					</listitem>
+					<listitem>
+						<para><methodname>some_tuple</methodname> is a python tuple with three values.</para>
+
+					</listitem>
+				</itemizedlist>
+
+				<note>
+					<title>Java uses maps, Python uses dictionaries</title>
+					
+					<para>While java calls key-based structures <emphasis>maps</emphasis>, python calls them
+					<emphasis>dictionaries</emphasis>. For this reason, the code fragment shows a "dict" entry, which
+					is one-to-one with Spring Java's "map" definition.</para>
+
+					
+					<para>Java also has a <classname>Property</classname> class. Since YAML already supports a key/value
+					structure as-is, <classname>YamlConfig</classname> does not have a separate structural definition.</para>
+				</note>
+
+			</section>
+			
+			<section id="objects-config-yamlconfig-constructors">
+				<title>Constructors</title>
+
+				
+				<para>Python functions can have both positional and named arguments. Positional arguments get assembled
+				into a tuple, and named arguments are assembled into a dictionary, before being passed to a function
+				call. Spring Python takes advantage of that option when it comes to constructor calls. The following
+				block of configuration data shows defining positional constructors.</para>
+				
+<programlisting><![CDATA[
+object: AnotherSingletonString
+class: springpythontest.support.testSupportClasses.StringHolder
+constructor-args:
+    - position 1's constructor value
+]]></programlisting>
+
+				<para>Spring Python will read these and then feed them to the class constructor in the same order
+				as shown here.</para>
+				
+				<para>The following code configuration shows named constructor arguments. Spring Python
+				converts these into keyword arguments, meaning it doesn't matter what order they are defined.</para> 
+
+<programlisting><![CDATA[
+object: MultiValueHolder
+class: springpythontest.support.testSupportClasses.MultiValueHolder
+constructor-args:
+    a: alt a
+    b: alt b
+]]></programlisting>
+
+				<para>This was copied from the code's test suite, where a test case is used to prove that order doesn't matter.
+				It is important to note that positional constructor arguments are fed before named constructors,
+				and that overriding a the same constructor parameter both by position and by name is not allowed by Python,
+				and will in turn, generate a run-time error.</para>
+
+				
+				<para>It is also valuable to know that you can mix this up and use both.</para>
+
+			</section>
+
+		</section>
+
 		<section id="objects-config-object">
 			<title><classname>PythonConfig</classname> and <methodname>@Object</methodname> -
 			decorator-driven configuration</title>
@@ -726,9 +1013,10 @@ service = container.get_object("MovieLister")
 				<title>PyContainer's format is deprecated</title>
 				
 				<para>PyContainer's format and the original parser was useful for getting this project started.
-				However, it	has shown its age by not being easy to revise nor extend. So this format is being
+				However, it has shown its age by not being easy to revise nor extend. So this format is being
 				retired. This parser is solely provided to help sustain existing Spring Python apps until
-				they can migrate to the new <link linkend="objects-config-xmlconfig">XMLConfig</link> format.</para>
+				they can migrate to either the <link linkend="objects-config-xmlconfig">XMLConfig</link> or 
+				the <link linkend="objects-config-yamlconfig">YamlConfig</link> format.</para>
 			</note>
 			
 <programlisting><![CDATA[
