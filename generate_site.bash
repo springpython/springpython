@@ -28,5 +28,5 @@ export PATH=$M2:$JAVA_HOME/bin:$PATH
 
 cd ~/springpython-1.1.x
 svn update
-./build.py --clean --site
+./build.py --clean --docs-all --pydoc
 
