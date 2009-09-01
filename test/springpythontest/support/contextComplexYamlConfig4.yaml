@@ -1,0 +1,34 @@
+objects:
+    - object: user_details_service5
+      class: springpython.security.userdetails.InMemoryUserDetailsService
+      properties:
+          user_dict:
+              set:
+                  - tuple:
+                      - object:
+                        class: springpython.security.userdetails.InMemoryUserDetailsService
+                        properties:
+                            user_dict: Test1
+                      - object:
+                        class: springpython.security.userdetails.InMemoryUserDetailsService
+                        properties:
+                            user_dict: Test2
+                  - object:
+                    class: springpython.security.userdetails.InMemoryUserDetailsService
+                    properties:
+                        user_dict: Test3
+                  - frozenset:
+                      - object:
+                        class: springpython.security.userdetails.InMemoryUserDetailsService
+                        properties:
+                            user_dict: Test6
+                      - object:
+                        class: springpython.security.userdetails.InMemoryUserDetailsService
+                        properties:
+                            user_dict: Test7
+                  - frozenset:
+                      - object:
+                        class: springpython.security.userdetails.InMemoryUserDetailsService
+                        properties:
+                            user_dict: Test9
+

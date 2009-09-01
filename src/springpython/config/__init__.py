@@ -373,7 +373,7 @@ class SpringJavaConfig(Config):
 
 class XMLConfig(Config):
     """
-    SpringPythonConfig supports current Spring Python format of XML object definitions.
+    XMLConfig supports current Spring Python format of XML object definitions.
     """
     def __init__(self, config_location):
         if isinstance(config_location, list):
@@ -548,6 +548,246 @@ class XMLConfig(Config):
 
     def _convert_prop_def(self, comp, p, name):
         "This function translates object properties into useful collections of information for the container."
+        if hasattr(p, "ref"):
+            return self._convert_ref(p.ref, name)
+        elif hasattr(p, "value"):
+            return ValueDef(name, str(p.value))
+        elif hasattr(p, "dict"):
+            return self._convert_dict(p.dict, comp.id, name)
+        elif hasattr(p, "props"):
+            return self._convert_props(p.props, name)
+        elif hasattr(p, "list"):
+            return self._convert_list(p.list, comp.id, name)
+        elif hasattr(p, "tuple"):
+            return self._convert_tuple(p.tuple, comp.id, name)
+        elif hasattr(p, "set"):
+            return self._convert_set(p.set, comp.id, name)
+        elif hasattr(p, "frozenset"):
+            self.logger.debug("Converting frozenset")
+            return self._convert_frozen_set(p.frozenset, comp.id, name)
+        elif hasattr(p, "object"):
+            return self._convert_inner_object(p.object, comp.id, name)
+
+class YamlConfig(Config):
+    """
+    YamlConfig provides an alternative YAML-based version of objects.
+    """
+    def __init__(self, config_location):
+        if isinstance(config_location, list):
+            self.config_location = config_location
+        else:
+            self.config_location = [config_location]
+        self.logger = logging.getLogger("springpython.config.YamlConfig")
+        
+        # By making this an instance-based property (instead of function local), inner object
+        # definitions can add themselves to the list in the midst of parsing an input.
+        self.objects = []
+
+    def read_object_defs(self):
+        import yaml
+
+        self.logger.debug("==============================================================")
+        # Reset, in case the file is re-read
+        self.objects = []
+        for config in self.config_location:
+            self.logger.debug("* Parsing %s" % config)
+            stream = file(config)
+            doc = yaml.load(stream)
+            self.logger.debug(doc)
+            for object in doc["objects"]:
+                self._print_obj(object)
+            self.objects.extend([self._convert_object(object) for object in doc["objects"]])
+        self.logger.debug("==============================================================")
+        self.logger.debug("objects = %s" % self.objects)
+        return self.objects
+
+    def _print_obj(self, obj, level=0):
+        self.logger.debug("%sobject id = %s" % ("\t"*level, obj["object"]))
+        self.logger.debug("%sclass = %s" % ("\t"*(level+1), obj["class"]))
+
+        if "scope" in obj:
+            self.logger.debug("%sscope = %s" % ("\t"*(level+1), obj["scope"]))
+        else:
+            self.logger.debug("%sscope = singleton (default)" % ("\t"*(level+1)))
+
+        if "properties" in obj:
+            self.logger.debug("%sproperties:" % ("\t"*(level+1)))
+            for prop in obj["properties"].keys():
+                if "object" in obj["properties"][prop]:
+                    self.logger.debug("%s%s = ..." % ("\t"*(level+2), prop))
+                    self._print_obj(obj["properties"][prop], level+3)
+                else:
+                    self.logger.debug("%s%s = %s" % ("\t"*(level+2), prop, obj["properties"][prop]))
+        self.logger.debug("")
+
+    def _convert_object(self, object, prefix=""):
+        "This function generates a object definition, then converts scope and property elements."
+        if prefix != "":
+            if "object" in object and object["object"] is not None:
+                object["object"] = prefix + "." + object["object"]
+            else:
+                object["object"] = prefix + ".<anonymous>"
+                
+        c = ObjectDef(object["object"], factory=ReflectiveObjectFactory(object["class"]))
+        
+        if "scope" in object:
+            c.scope = scope.convert(object["scope"])
+        if "constructor-args" in object:
+             if isinstance(object["constructor-args"], list):
+                 c.pos_constr = [self._convert_prop_def(object, constr, object["object"]) for constr in object["constructor-args"]]
+             if isinstance(object["constructor-args"], dict):
+                 c.named_constr = dict([(name, self._convert_prop_def(object, constr, object["object"])) for (name, constr) in object["constructor-args"].items()])
+        if "properties" in object:
+            c.props = [self._convert_prop_def(object, p, name) for (name, p) in object["properties"].items()]
+            
+        return c
+
+    def _convert_ref(self, ref_node, name):
+        self.logger.debug("ref: Parsing %s, %s" % (ref_node, name))
+        if "object" in ref_node:
+            return ReferenceDef(name, ref_node["object"])
+        else:
+            return ReferenceDef(name, ref_node)
+ 
+    def _convert_value(self, value, id, name):
+        results = []
+
+        if isinstance(value, dict):
+            if "tuple" in value:
+                self.logger.debug("value: Converting tuple")
+                return self._convert_tuple(value["tuple"], id, name)
+            elif "list" in value:
+                self.logger.debug("value: Converting list")
+                return self._convert_list(value["list"], id, name)
+            elif "dict" in value:
+                self.logger.debug("value: Converting dict")
+                return self._convert_dict(value["dict"], id, name)
+            elif "set" in value:
+                self.logger.debug("value: Converting set")
+                return self._convert_set(value["set"], id, name)
+            elif "frozenset" in value:
+                self.logger.debug("value: Converting frozenset")
+                return self._convert_frozen_set(value["frozenset"], id, name)
+        else:
+            self.logger.debug("value: Plain ole value = %s" % value)
+            return value
+
+        return results
+    
+    def _convert_dict(self, dict_node, id, name):
+        d = {}
+        for (k, v) in dict_node.items():
+            if isinstance(v, dict):
+                self.logger.debug("dict: You have a special type stored at %s" % k)
+                if "ref" in v:
+                    self.logger.debug("dict/ref: k,v = %s,%s" % (k, v))
+                    d[k] = self._convert_ref(v["ref"], "%s.dict['%s']" % (name, k))
+                    self.logger.debug("dict: Stored %s => %s" % (k, d[k]))
+                elif "tuple" in v:
+                    self.logger.debug("dict: Converting a tuple...")
+                    d[k] = self._convert_tuple(v["tuple"], "%s.dict['%s']" % ( name, k))
+                else:
+                    self.logger.debug("dict: Don't know how to handle type %s" % v)
+            else:
+                self.logger.debug("dict: %s is NOT a dict, so going to convert as a value." % v)
+                d[k] = self._convert_value(v, id, "%s.dict['%s']" % (name, k))
+        return DictDef(name, d)
+
+    def _convert_props(self, props_node, name):
+        dict = {}
+        for prop in props_node.prop:
+            dict[prop.key] = str(prop)
+        return DictDef(name, dict)
+
+    def _convert_list(self, list_node, id, name):
+        list = []
+        for item in list_node:
+            self.logger.debug("list: Adding %s to list..." % item)
+            if isinstance(item, dict):
+                if "ref" in item:
+                    list.append(self._convert_ref(item["ref"], "%s.list[%s]" % (name, len(list))))
+                elif "object" in item:
+                    list.append(self._convert_inner_object(item, id, "%s.list[%s]" % (name, len(list))))
+                elif len(set(["dict", "tuple", "set", "frozenset", "list"]) & set(item)) > 0:
+                    list.append(self._convert_value(item, id, "%s.list[%s]" % (name, len(list))))
+                else:
+                    self.logger.debug("list: Don't know how to handle %s" % item.keys())
+            else:
+                list.append(item)
+        return ListDef(name, list)
+
+    def _convert_tuple(self, tuple_node, id, name):
+        list = []
+        self.logger.debug("tuple: tuple_node = %s, id = %s, name = %s" % (tuple_node, id, name))
+        for item in tuple_node:
+            if isinstance(item, dict):
+                if "ref" in item:
+                    list.append(self._convert_ref(item["ref"], name + ".tuple"))
+                elif "object" in item:
+                    list.append(self._convert_inner_object(item, id, "%s.tuple[%s]" % (name, len(list))))
+                elif len(set(["dict", "tuple", "set", "frozenset", "list"]) & set(item)) > 0:
+                    list.append(self._convert_value(item, id, "%s.tuple[%s]" % (name, len(list))))
+                else:
+                    self.logger.debug("tuple: Don't know how to handle %s" % item)
+            else:
+                list.append(item)
+        return TupleDef(name, tuple(list))
+
+    def _convert_set(self, set_node, id, name):
+        s = set()
+        self.logger.debug("set: set_node = %s, id = %s, name = %s" % (set_node, id, name))
+        for item in set_node:
+            if isinstance(item, dict):
+                if "ref" in item:
+                    s.add(self._convert_ref(item["ref"], name + ".set"))
+                elif "object" in item:
+                    s.add(self._convert_inner_object(item, id, "%s.set[%s]" % (name, len(s))))
+                elif len(set(["dict", "tuple", "set", "frozenset", "list"]) & set(item)) > 0:
+                    s.add(self._convert_value(item, id, "%s.set[%s]" % (name, len(s))))
+                else:
+                    self.logger.debug("set: Don't know how to handle %s" % item)
+            else:
+                s.add(item)
+        return SetDef(name, s)
+
+    def _convert_frozen_set(self, frozen_set_node, id, name):
+        item = self._convert_set(frozen_set_node, id, name)
+        return FrozenSetDef(name, frozenset(item.value))
+
+    def _convert_inner_object(self, object_node, id, name):
+        self.logger.debug("inner object: Converting %s" % object_node)
+        inner_object_def = self._convert_object(object_node, prefix="%s.%s" % (id, name))
+        self.objects.append(inner_object_def)
+        return InnerObjectDef(name, inner_object_def)
+
+    def _convert_prop_def(self, comp, p, name):
+        "This function translates object properties into useful collections of information for the container."
+        self.logger.debug("prop_def: Trying to read property %s -> %s" % (name, p))
+        if isinstance(p, dict):
+            if "ref" in p:
+                self.logger.debug("prop_def: >>>>>>>>>>>>Call _convert_ref(%s, %s)" % (p["ref"], name))
+                return self._convert_ref(p["ref"], name)
+            elif "tuple" in p:
+                self.logger.debug("prop_def: Call _convert_tuple(%s,%s,%s)" % (p["tuple"], comp["object"], name))
+                return self._convert_tuple(p["tuple"], comp["object"], name)
+            elif "set" in p:
+                self.logger.debug("prop_def: Call _convert_set(%s,%s,%s)" % (p["set"], comp["object"], name))
+                return self._convert_set(p["set"], comp["object"], name)
+            elif "frozenset" in p:
+                self.logger.debug("prop_def: Call _convert_frozen_set(%s,%s,%s)" % (p["frozenset"], comp["object"], name))
+                return self._convert_frozen_set(p["frozenset"], comp["object"], name)
+            elif "object" in p:
+                self.logger.debug("prop_def: Call _convert_inner_object(%s,%s,%s)" % (p, comp["object"], name))
+                return self._convert_inner_object(p, comp["object"], name)
+            else:
+                #self.logger.debug("prop_def: Don't know how to handle %s" % p)
+                return self._convert_dict(p, comp["object"], name)
+        elif isinstance(p, list):
+            return self._convert_list(p, comp["object"], name)
+        else:
+            return ValueDef(name, str(p))
+        return None
+
         if hasattr(p, "ref"):
             return self._convert_ref(p.ref, name)
         elif hasattr(p, "value"):
