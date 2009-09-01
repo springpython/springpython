@@ -17,3 +17,13 @@ from springpythontest.securityUserDetailsTestCases import *
 from springpythontest.securityVoteTestCases import *
 from springpythontest.securityWebTestCases import *
 
+logger = logging.getLogger("springpython")
+loggingLevel = logging.DEBUG
+logger.setLevel(loggingLevel)
+ch = logging.StreamHandler()
+ch.setLevel(loggingLevel)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
+
