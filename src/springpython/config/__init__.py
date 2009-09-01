@@ -602,9 +602,7 @@ class YamlConfig(Config):
         return self.objects
 
     def _print_obj(self, obj, level=0):
-        #print "Checking out %s" % obj
         self.logger.debug("%sobject id = %s" % ("\t"*level, obj["object"]))
-
         self.logger.debug("%sclass = %s" % ("\t"*(level+1), obj["class"]))
 
         if "scope" in obj:
@@ -675,34 +673,6 @@ class YamlConfig(Config):
             return value
 
         return results
-        ### Rest of this method is reference-only.
-
-        for element in value.xml_children:
-            if isinstance(element, amara.bindery.element_base):
-                results.append(self._convert_value(element, id, name))
-            else:
-                if value.localName == "value":
-                    return str(element)
-
-        if value.localName == "tuple":
-            self.logger.debug("Converting a tuple")
-            results = self._convert_tuple(value, id, name).value
-        elif value.localName == "list":
-            self.logger.debug("Converting a list")
-            results = self._convert_list(value, id, name).value
-        elif value.localName == "dict":
-            self.logger.debug("Converting a dict")
-            results = self._convert_dict(value, id, name).value
-        elif value.localName == "set":
-            self.logger.debug("Converting a set")
-            results = self._convert_set(value, id, name).value
-        elif value.localName == "frozenset":
-            self.logger.debug("Converting a frozenset")
-            results = self._convert_frozen_set(value, id, name).value
-        elif len(results) == 1:
-            results = results[0]
-
-        return results
     
     def _convert_dict(self, dict_node, id, name):
         d = {}
@@ -721,23 +691,6 @@ class YamlConfig(Config):
             else:
                 self.logger.debug("dict: %s is NOT a dict, so going to convert as a value." % v)
                 d[k] = self._convert_value(v, id, "%s.dict['%s']" % (name, k))
-            #key = None
-            #for element in entry.xml_children:
-            #    if isinstance(element, amara.bindery.element_base):
-            #        if element.localName == "key":
-            #            pass # key is required, and known to already be at entry.key, so no need to re-parse it here
-            #        elif element.localName == "value":
-            #            dict[str(entry.key.value)] = self._convert_value(element, id, "%s.dict['%s']" % (name, entry.key.value))
-            #        elif element.localName == "ref":
-            #            dict[str(entry.key.value)] = self._convert_ref(element, "%s.dict['%s']" % (name, entry.key.value))
-            #        elif element.localName == "object":
-            #            self.logger.debug("Parsing an inner object definition...")
-            #            dict[str(entry.key.value)] = self._convert_inner_object(element, id, "%s.dict['%s']" % (name, entry.key.value))
-            #        elif element.localName in ["list", "tuple", "set", "frozenset"]:
-            #            self.logger.debug("This dictionary entry has child elements of type %s." % element.localName)
-            #            dict[str(entry.key.value)] = self._convert_value(element, id, "%s.dict['%s']" % (name, entry.key.value))
-            #        else:
-            #            self.logger.debug("dict: Don't know how to handle %s" % element.localName)
         return DictDef(name, d)
 
     def _convert_props(self, props_node, name):
