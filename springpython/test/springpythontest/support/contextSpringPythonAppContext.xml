@@ -4,20 +4,20 @@
        xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
        		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
        		
-	<object id="MovieLister" class="springpythontest.support.testSupportClasses.MovieLister" scope="prototype">
+	<object id="MovieLister" class="springpythontest.support.testSupportClasses.MovieLister" scope="prototype" lazy_init="True">
 		<property name="finder" ref="MovieFinder"/>
 		<property name="description"><ref object="SingletonString"/></property> 
 	</object>
 	
-	<object id="MovieFinder" class="springpythontest.support.testSupportClasses.ColonMovieFinder" scope="singleton">
+	<object id="MovieFinder" class="springpythontest.support.testSupportClasses.ColonMovieFinder" scope="singleton" lazy_init="True">
 		<property name="filename"><value>support/movies1.txt</value></property>
 	</object>
 	
-	<object id="SingletonString" class="springpythontest.support.testSupportClasses.StringHolder">
+	<object id="SingletonString" class="springpythontest.support.testSupportClasses.StringHolder" lazy_init="True">
 		<property name="str" value="There should only be one copy of this string"></property>
 	</object>
 	
-	<object id="MovieLister2" class="springpythontest.support.testSupportClasses.MovieLister">
+	<object id="MovieLister2" class="springpythontest.support.testSupportClasses.MovieLister" lazy_init="True">
 		<property name="finder">
 			<object class="springpythontest.support.testSupportClasses.ColonMovieFinder">
 				<property name="filename"><value>support/movies1.txt</value></property>
@@ -26,16 +26,16 @@
 		<property name="description"><ref object="SingletonString"/></property>
 	</object>
 
-	<object id="MovieLister3" class="springpythontest.support.testSupportClasses.MovieLister">
+	<object id="MovieLister3" class="springpythontest.support.testSupportClasses.MovieLister" lazy_init="True">
 		<property name="finder">
-			<object id="named" class="springpythontest.support.testSupportClasses.ColonMovieFinder">
+			<object id="named" class="springpythontest.support.testSupportClasses.ColonMovieFinder" lazy_init="True">
 				<property name="filename"><value>support/movies1.txt</value></property>
 			</object>
 		</property>
 		<property name="description"><ref object="SingletonString"/></property>
 	</object>
 	
-	<object id="ValueHolder" class="springpythontest.support.testSupportClasses.ValueHolder">
+	<object id="ValueHolder" class="springpythontest.support.testSupportClasses.ValueHolder" lazy_init="True">
 		<constructor-arg><ref object="SingletonString"/></constructor-arg>
 		<property name="some_dict">
 			<dict>
@@ -82,20 +82,20 @@
         </property>        
 	</object>
 
-	<object id="AnotherSingletonString" class="springpythontest.support.testSupportClasses.StringHolder">
+	<object id="AnotherSingletonString" class="springpythontest.support.testSupportClasses.StringHolder" lazy_init="True">
 		<constructor-arg value="attributed value"/>
 	</object>
 
-	<object id="AThirdSingletonString" class="springpythontest.support.testSupportClasses.StringHolder">
+	<object id="AThirdSingletonString" class="springpythontest.support.testSupportClasses.StringHolder" lazy_init="True">
 		<constructor-arg><value>elemental value</value></constructor-arg>
 	</object>
 
-	<object id="MultiValueHolder" class="springpythontest.support.testSupportClasses.MultiValueHolder">
+	<object id="MultiValueHolder" class="springpythontest.support.testSupportClasses.MultiValueHolder" lazy_init="True">
 		<constructor-arg name="a"><value>alt a</value></constructor-arg>
 		<constructor-arg name="b" value="alt b"/>
 	</object>
 	
-	<object id="MultiValueHolder2" class="springpythontest.support.testSupportClasses.MultiValueHolder">
+	<object id="MultiValueHolder2" class="springpythontest.support.testSupportClasses.MultiValueHolder" lazy_init="True">
 		<constructor-arg name="c"><value>alt c</value></constructor-arg>
 		<constructor-arg name="b" value="alt b"/>
 	</object>

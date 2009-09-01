@@ -1,0 +1,3 @@
+from springpythontest.contextTestCases import ObjectPostProcessorsTestCase
+
+
