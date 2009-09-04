@@ -35,33 +35,6 @@ logger = logging.getLogger("springpythontest.databaseCoreTestCases")
 class ConnectionFactoryTestCase(MockTestCase):
     """Testing the connection factories requires mocking the libraries they are meant to utilize."""
 
-    def testConnectingToMySqlUsingDeprecatedConnectionFactory(self):
-        sys.modules["MySQLdb"] = self.mock()
-        sys.modules["MySQLdb"].expects(once()).method("connect")
-        
-        connection_factory = mysql.MySQLConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
-        connection = connection_factory.connect()
-
-        del(sys.modules["MySQLdb"])
-
-    def testConnectingToPostgresQLUsingDeprecatedConnectionFactory(self):
-        sys.modules["pgdb"] = self.mock()
-        sys.modules["pgdb"].expects(once()).method("connect")
-        
-        connection_factory = postgresql.PgdbConnectionFactory(user="foo", password="bar", host="localhost", database="mock")
-        connection = connection_factory.connect()
-
-        del(sys.modules["pgdb"])
-        
-    def testConnectingToSqliteUsingDeprecatedConnectionFactory(self):
-        sys.modules["sqlite"] = self.mock()
-        sys.modules["sqlite"].expects(once()).method("connect")
-        
-        connection_factory = Sqlite.SqliteConnectionFactory(db="/tmp/foobar")
-        connection = connection_factory.connect()
-
-        del(sys.modules["sqlite"])
-
     def testConnectingToMySql(self):
         sys.modules["MySQLdb"] = self.mock()
         sys.modules["MySQLdb"].expects(once()).method("connect")
@@ -81,13 +54,13 @@ class ConnectionFactoryTestCase(MockTestCase):
         del(sys.modules["pgdb"])
         
     def testConnectingToSqlite(self):
-        sys.modules["sqlite"] = self.mock()
-        sys.modules["sqlite"].expects(once()).method("connect")
+        sys.modules["sqlite3"] = self.mock()
+        sys.modules["sqlite3"].expects(once()).method("connect")
         
         connection_factory = factory.Sqlite3ConnectionFactory(db="/tmp/foobar")
         connection = connection_factory.connect()
 
-        del(sys.modules["sqlite"])
+        del(sys.modules["sqlite3"])
 
 
     def testConnectingToOracle(self):

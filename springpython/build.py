@@ -72,7 +72,7 @@ def usage():
     print "\t--help\t\t\tprint this help message"
     print "\t--clean\t\t\tclean out this build by deleting the %s directory" % p["targetDir"]
     print "\t--test\t\t\trun the test suite, leaving all artifacts in %s" % p["testDir"]
-    print "\t--test-suite [suite]\trun a specific test suite, leaving all artifacts in %s" % p["testDir"]
+    print "\t--suite [suite]\t\trun a specific test suite, leaving all artifacts in %s" % p["testDir"]
     print "\t--coverage\t\trun the test suite with coverage analysis, leaving all artifacts in %s" % p["testDir"]
     print "\t--debug-level [info|debug]\n\t\t\t\tthreshold of logging message when running tests or coverage analysis"
     print "\t--package\t\tpackage everything up into a tarball for release to sourceforge in %s" % p["packageDir"]
@@ -91,7 +91,7 @@ def usage():
 try:
     optlist, args = getopt.getopt(sys.argv[1:],
                                   "hct",
-                                  ["help", "clean", "test", "test-suite=", "debug-level=", "coverage", "package", "build-stamp=", \
+                                  ["help", "clean", "test", "suite=", "debug-level=", "coverage", "package", "build-stamp=", \
                                    "publish", "register", \
                                    "site", "docs-html-multi", "docs-html-single", "docs-pdf", "docs-all", "pydoc"])
 except getopt.GetoptError:
@@ -483,9 +483,11 @@ for option in optlist:
         clean(p["targetDir"])
 
     if option[0] in ("--test"):
+        print "Running checkin tests..."
         test(p["testDir"], "checkin", debug_level)
 
-    if option[0] in ("--test-suite"):
+    if option[0] in ("--suite"):
+        print "Running test suite..."
         test(p["testDir"], option[1], debug_level)
 
     if option[0] in ("--coverage"):
