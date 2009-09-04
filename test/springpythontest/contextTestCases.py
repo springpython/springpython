@@ -938,12 +938,19 @@ class XMLConfigTestCase4(unittest.TestCase):
 
 class YamlConfigTestCase4(unittest.TestCase):
     def testAThirdComplexContainer(self):
+        import logging
+        logger = logging.getLogger("springpython.yamltest")
+
         ctx = ApplicationContext(YamlConfig("support/contextComplexYamlConfig4.yaml"))
         service5 = ctx.get_object("user_details_service5")
         self.assertTrue(isinstance(service5.user_dict, set))
         self.assertEquals(4, len(service5.user_dict))
 
+        logger.debug("About to parse dict %s" % service5.user_dict)
+
         for item in service5.user_dict:
+            logger.debug("Looking at item %s inside user_dict" % str(item))
+            logger.debug("It is a %s type object." % type(item))
             if isinstance(item, tuple):
                 self.assertEquals(2, len(item))
                 self.assertEquals("Test1", item[0].user_dict)
