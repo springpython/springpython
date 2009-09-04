@@ -752,6 +752,8 @@ class YamlConfig(Config):
 
     def _convert_frozen_set(self, frozen_set_node, id, name):
         item = self._convert_set(frozen_set_node, id, name)
+        self.logger.debug("frozenset: Just got back converted set %s" % item)
+        self.logger.debug("frozenset: value is %s, which will be turned into %s" % (item.value, frozenset(item.value)))
         return FrozenSetDef(name, frozenset(item.value))
 
     def _convert_inner_object(self, object_node, id, name):
