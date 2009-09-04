@@ -196,6 +196,7 @@ class SetDef(ValueDef):
     """Handles behavior for a set-based value."""
     def __init__(self, name, value):
         super(SetDef, self).__init__(name, value)
+        self.logger = logging.getLogger("springpython.config.SetDef")
 
     def _replace_refs_with_actuals(self, obj, container):
         for item in self.value:
@@ -210,21 +211,42 @@ class FrozenSetDef(ValueDef):
     """Handles behavior for a frozen-set-based value."""
     def __init__(self, name, value):
         super(FrozenSetDef, self).__init__(name, value)
+        self.logger = logging.getLogger("springpython.config.FrozenSetDef")
 
     def _replace_refs_with_actuals(self, obj, container):
+        self.logger.debug("Replacing refs with actuals...")
         new_set = set(self.value)
+        self.logger.debug("Just created new set %s using value %s" % (new_set, self.value))
         for item in new_set:
             if hasattr(item, "ref"):
+                self.logger.debug("Item <<<%s>>> is a ref, trying to replace with actual object <<<%s>>>" % (item, item.ref))
                 new_set.remove(item)
-                new_set.add(container.get_object(item.ref))
+                #debug begin
+                newly_fetched_value = container.get_object(item.ref)
+                new_set.add(newly_fetched_value)
+                self.logger.debug("Item <<<%s>>> was removed, and newly fetched value <<<%s>>> was added." % (item, newly_fetched_value))
+                #debug end
+                #new_set.add(container.get_object(item.ref))
             else:
+                self.logger.debug("Item <<<%s>>> is NOT a ref, trying to replace with scanned value" % item)
                 new_set.remove(item)
-                new_set.add(self.scan_value(container, item))
+                #debug begin
+                newly_scanned_value = self.scan_value(container, item)
+                new_set.add(newly_scanned_value)
+                self.logger.debug("Item <<<%s>>> was removed, and newly scanned value <<<%s>>> was added." % (item, newly_scanned_value))
+                #debug end
+                #new_set.add(self.scan_value(container, item))
+        self.logger.debug("Newly built set = %s" % new_set)
+        frozen_set = frozenset(new_set)
+        self.logger.debug("Newly frozen set = %s" % frozen_set)
         try:
-            setattr(obj, self.name, frozenset(new_set))
-        except AttributeError:
+            self.logger.debug("Trying to overwrite %s's %s with %s" % (obj, self.name, frozen_set))
+            setattr(obj, self.name, frozen_set)
+        except AttributeError, e:
+            self.logger.debug("AttributeError: %s" % e)
             pass
-        return frozenset(new_set)
+        self.logger.debug("Returning frozenset %s" % frozen_set)
+        return frozen_set
  
 class Config(object):
     """
