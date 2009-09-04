@@ -71,6 +71,7 @@ def usage():
     print "\t--help\t\t\tprint this help message"
     print "\t--clean\t\t\tclean out this build by deleting the %s directory" % p["targetDir"]
     print "\t--test\t\t\trun the test suite, leaving all artifacts in %s" % p["testDir"]
+    print "\t--test-suite [suite]\t\t\trun a specific test suite, leaving all artifacts in %s" % p["testDir"]
     print "\t--coverage\t\trun the test suite with coverage analysis, leaving all artifacts in %s" % p["testDir"]
     print "\t--package\t\tpackage everything up into a tarball for release to sourceforge in %s" % p["packageDir"]
     print "\t--build-stamp [tag]\tfor --package, this specifies a special tag, generating version tag '%s.<tag>. springpython.properties can override with build.stamp'" % p["version"]
@@ -88,7 +89,7 @@ def usage():
 try:
     optlist, args = getopt.getopt(sys.argv[1:],
                                   "hct",
-                                  ["help", "clean", "test", "coverage", "package", "build-stamp=", \
+                                  ["help", "clean", "test", "test-suite=", "coverage", "package", "build-stamp=", \
                                    "publish", "register", \
                                    "site", "docs-html-multi", "docs-html-single", "docs-pdf", "docs-all", "pydoc"])
 except getopt.GetoptError:
@@ -123,7 +124,7 @@ def clean(dir):
             if name.endswith(".pyc") or name.endswith(".class"):
                 os.remove(os.path.join(root, name))
                 
-def test(dir):
+def test(dir, test_suite="checkin"):
     """
     Run nose programmatically, so that it uses the same python version as this script uses
     
@@ -133,7 +134,7 @@ def test(dir):
     if not os.path.exists(dir):
         os.makedirs(dir)
     
-    _run_nose(argv=["", "--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s" % dir, "checkin"])
+    _run_nose(argv=["", "--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s" % dir, test_suite])
     
 def test_coverage(dir):
     """
@@ -460,7 +461,12 @@ for option in optlist:
         clean(p["targetDir"])
 
     if option[0] in ("--test"):
+        print option
         test(p["testDir"])
+
+    if option[0] in ("--test-suite"):
+        print option
+        test(p["testDir"], option[1])
 
     if option[0] in ("--coverage"):
         test_coverage(p["testDir"])
