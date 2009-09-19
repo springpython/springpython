@@ -13,9 +13,13 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
+import atexit
 import logging
+from springpython.util import get_last_traceback
+from springpython.factory import DisposableObject
 from springpython.container import ObjectContainer
 from springpython.remoting.pyro import PyroProxyFactory
+
 
 class ApplicationContext(ObjectContainer):
     """
@@ -24,6 +28,9 @@ class ApplicationContext(ObjectContainer):
     """
     def __init__(self, config = None):
         super(ApplicationContext, self).__init__(config)
+        
+        atexit.register(self.shutdown_hook)
+        
         self.logger = logging.getLogger("springpython.context.ApplicationContext")
         self.types_to_avoid = [PyroProxyFactory]
         
@@ -62,7 +69,38 @@ class ApplicationContext(ObjectContainer):
             #    obj.post_process_after_initialization(self)
             if hasattr(obj, "set_app_context"):
                 obj.set_app_context(self)
-            
+                
+    def shutdown_hook(self):
+        self.logger.debug("Invoking the destroy_method on registered objects")
+        
+        for obj_name, obj in self.objects.iteritems():
+            if isinstance(obj, DisposableObject):
+                try:
+                    if hasattr(obj, "destroy_method"):
+                        destroy_method_name = getattr(obj, "destroy_method")
+                    else:
+                        destroy_method_name = "destroy"
+                        
+                    destroy_method = getattr(obj, destroy_method_name)
+                    
+                except Exception, e:
+                    self.logger.error("Could not destroy object '%s', exception '%s'" % (obj_name, get_last_traceback(e)))
+                    
+                else:
+                    if callable(destroy_method):
+                        try:
+                            self.logger.debug("About to destroy object '%s'" % obj_name)
+                            destroy_method()
+                            self.logger.debug("Successfully destroyed object '%s'" % obj_name)
+                        except Exception, e:
+                            self.logger.error("Could not destroy object '%s', exception '%s'" % (obj_name, get_last_traceback(e)))
+                    else:
+                        self.logger.error("Could not destroy object '%s', " \
+                            "the 'destroy_method' attribute it defines is not callable, " \
+                            "its type is '%r', value is '%r'" % (obj_name, type(destroy_method), destroy_method))
+                        
+        self.logger.debug("Successfully invoked the destroy_method on registered objects")
+                        
 
 class ObjectPostProcessor(object):
     def post_process_before_initialization(self, obj, obj_name):
