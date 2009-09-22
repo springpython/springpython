@@ -13,8 +13,21 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
-
 import logging
+import traceback
 
 TRACE1 = 6
 logging.addLevelName(TRACE1, "TRACE1")
+
+try:
+    from cStringIO import StringIO
+except ImportError, e:
+    from StringIO import StringIO
+
+def get_last_traceback(exception):
+    """ A utility function for better displaying exceptions.
+    """
+    buff = StringIO()
+    traceback.print_exc(file=buff)
+    
+    return buff.getvalue()

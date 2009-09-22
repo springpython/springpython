@@ -124,6 +124,23 @@ service = container.get_object("sampleService")
 			<methodname>post_process_after_initialization</methodname>, the <interfacename>ApplicationContext</interfacename>
 			will run that method against every instance of that object.</para>
 			
+            <para>
+                If your singleton objects hold references to some external resources, e.g. connections
+                to a resource manager of some sort, you may also want to subclass <interfacename>springpython.context.DisposableObject</interfacename>
+                to have a means for the resources to get released.
+                Any singleton subclassing <interfacename>springpython.context.DisposableObject</interfacename> may define
+                a <methodname>destroy</methodname> method which is guaranteed to be executed on 
+                <classname>ApplicationContext</classname> shutdown. An alternative to creating a 
+                <methodname>destroy</methodname> method is to define the <methodname>destroy_method</methodname> 
+                attribute of an object which should be a name of the custom method to be 
+                invoked on <classname>ApplicationContext</classname> shutdown. If an
+                object defines both <methodname>destroy</methodname> and <methodname>destroy_method</methodname>
+                then the former will take precedence. 
+                It is an error to extend <interfacename>springpython.context.DisposableObject</interfacename>
+                without providing either <methodname>destory</methodname> or <methodname>destroy_method</methodname>.
+                If this occurs, an error will be written to Spring Python logs when the container shuts down. 
+            </para>
+
 		</section>
 
 		<section id="objects-container-scope">

@@ -13,11 +13,20 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
+
+# pmock
+from pmock import *
+
+import sys
+import atexit
 import unittest
+from springpython.context import DisposableObject
 from springpython.context import ApplicationContext
 from springpython.context import ObjectPostProcessor
+from springpython.config import PythonConfig
 from springpython.config import PyContainerConfig
 from springpython.config import SpringJavaConfig
+from springpython.config import Object
 from springpython.config import XMLConfig
 from springpython.config import YamlConfig
 from springpython.security.userdetails import InMemoryUserDetailsService
@@ -1160,4 +1169,108 @@ class ObjectPostProcessorsTestCase(unittest.TestCase):
          self.assertTrue(hasattr(obj, "processedBefore"))
          self.assertTrue(hasattr(obj, "processedAfter"))
 
+class DisposableObjectTestCase(MockTestCase):
+    """This test case exercises the DisposableObject behaviour."""
+    
+    def _get_sample_config(self, disposable_object):
+        
+        class SampleConfig(PythonConfig):
+            def __init__(self):
+                super(SampleConfig, self).__init__()
+                
+            @Object
+            def my_disposable_object(self):
+                return disposable_object
+                
+        return SampleConfig()
+                
+    
+    def testDefaultDestroyMethod(self):
+        
+        class DisposableObjectWithDefaultDestroyMethod(Mock, DisposableObject):
+            """ A DisposableObject with a default destroy method. Note the 
+            AttributeError in __getattribute__, it's needed because pmock would 
+            otherwise happily return a mock 'destroy_method' regardless of 
+            whether one had been actually defined.
+            """
+            
+            def destroy(self):
+                self.destroy_called = True
+            
+            def __getattr__(self, attr_name):
+                return object.__getattribute__(self, attr_name)
+            
+            def __getattribute__(self, attr_name):
+                
+                if attr_name == "destroy_method":
+                    raise AttributeError()
+                    
+                return object.__getattribute__(self, attr_name)
+        
+        disposable_object = DisposableObjectWithDefaultDestroyMethod()
+        
+        disposable_object.stubs().after_properties_set()
+        disposable_object.stubs().method("set_app_context")
+        
+        ctx = ApplicationContext(self._get_sample_config(disposable_object))
+        my_disposable_object = ctx.get_object("my_disposable_object")
+        
+        ctx.shutdown_hook()
 
+        # Will raise AttributeError if 'destroy' hasn't been called.
+        self.assertTrue(my_disposable_object.destroy_called)
+        
+    
+    def testCustomDestroyMethod(self):
+        
+        class DisposableObjectWithCustomDestroyMethod(Mock, DisposableObject):
+            """ A DisposableObject with a custom destroy method, its name is 
+            returned by __getattribute__, again, to prevent pmock from 
+            returning a mock object.
+            """
+            
+            def custom_destroy(self):
+                self.custom_destroy_called = True
+                
+            def __getattr__(self, attr_name):
+                return object.__getattribute__(self, attr_name)
+            
+            def __getattribute__(self, attr_name):
+                
+                if attr_name == "destroy_method":
+                    return "custom_destroy"
+                    
+                return object.__getattribute__(self, attr_name)
+        
+        disposable_object = DisposableObjectWithCustomDestroyMethod()
+        
+        disposable_object.stubs().after_properties_set()
+        disposable_object.stubs().method("set_app_context")
+
+        ctx = ApplicationContext(self._get_sample_config(disposable_object))
+        my_disposable_object = ctx.get_object("my_disposable_object")
+        
+        ctx.shutdown_hook()
+
+        # Will raise AttributeError if 'custom_destroy' hasn't been called.
+        self.assertTrue(my_disposable_object.custom_destroy_called)
+        
+    def testShutdownHookRegisterdWithAtExit(self):
+        
+        class Dummy(DisposableObject):
+            def destroy(self):
+                pass
+        
+        ctx = ApplicationContext(self._get_sample_config(Dummy()))
+        
+        seen_shutdown_hook = False
+        
+        # We need to iterate through all registered atexit handlers, our handler
+        # will be will among the other handlers registered in previous tests.
+        # Note: we're using a private atexit API here.
+        for handler_info in atexit._exithandlers:
+            func = handler_info[0]
+            if func == ctx.shutdown_hook:
+                seen_shutdown_hook = True
+        
+        self.assertTrue(seen_shutdown_hook)
