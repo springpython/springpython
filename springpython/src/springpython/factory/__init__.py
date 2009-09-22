@@ -65,10 +65,3 @@ class InitializingObject(object):
     """This allows definition of a method which is invoked by the container after an object has had all properties set."""
     def after_properties_set(self):
         pass
-    
-class DisposableObject(object):
-    """ This allows definition of a method which is invoked when the 
-    container's shutting down to release the resources held by an object.
-    """
-    def destroy(self):
-        raise NotImplementedError("Should be overriden by subclasses")

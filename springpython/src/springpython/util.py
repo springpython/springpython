@@ -13,8 +13,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
-
+import logging
 import traceback
+
+TRACE1 = 6
+logging.addLevelName(TRACE1, "TRACE1")
 
 try:
     from cStringIO import StringIO

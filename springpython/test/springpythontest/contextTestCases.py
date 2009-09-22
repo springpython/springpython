@@ -20,7 +20,7 @@ from pmock import *
 import sys
 import atexit
 import unittest
-from springpython.factory import DisposableObject
+from springpython.context import DisposableObject
 from springpython.context import ApplicationContext
 from springpython.context import ObjectPostProcessor
 from springpython.config import PythonConfig

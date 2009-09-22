@@ -18,7 +18,6 @@ import atexit
 import logging
 
 from springpython.util import get_last_traceback
-from springpython.factory import DisposableObject
 from springpython.container import ObjectContainer
 from springpython.remoting.pyro import PyroProxyFactory
 
@@ -127,3 +126,9 @@ class ObjectNameAutoProxyCreator(ApplicationContextAware, ObjectPostProcessor):
         self.objectNames = objectNames
         self.interceptorNames = interceptorNames
 
+class DisposableObject(object):
+    """ This allows definition of a method which is invoked when the 
+    container's shutting down to release the resources held by an object.
+    """
+    def destroy(self):
+        raise NotImplementedError("Should be overridden by subclasses")
