@@ -54,7 +54,7 @@ from springpython.jms import WebSphereMQJMSException, NoMessageAvailableExceptio
 
 
 # Don't pollute the caller's namespace
-# Tests
+# TODO: Tests
 __all__ = ["WebSphereMQConnectionFactory"]
 
 
@@ -377,6 +377,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
         
         return text_message
         
+    # TODO: Change its name, removes the "queue://" prefix as well
     def _strip_qm_name_from_destination(self, destination):
         if destination.startswith("queue:///"):
             return destination.replace("queue:///", "", 1)
