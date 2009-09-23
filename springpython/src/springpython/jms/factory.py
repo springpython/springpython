@@ -195,6 +195,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
         else:
             connect_options = self.CMQC.MQCNO_HANDLE_SHARE_NONE
         
+        # TODO: Tests
         try:
             self.mgr.connectWithOptions(self.queue_manager, cd=cd, opts=connect_options)
         except self.mq.MQMIError, e:
@@ -232,6 +233,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
         return queue
         
     def get_queue_for_receiving(self, destination):
+        # TODO: Tests
         if self.cache_open_receive_queues:
             queue = self._get_queue_from_cache(destination, self._open_receive_queues_cache)
         else:
@@ -267,6 +269,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
             
             return self._build_text_message(md, message)
             
+        # TODO: Tests            
         except self.mq.MQMIError, e:
             if e.reason == self.CMQC.MQRC_NO_MSG_AVAILABLE:
                 text = "No message available for destination [%s], " \
@@ -305,17 +308,18 @@ class WebSphereMQConnectionFactory(DisposableObject):
         
         # .. set its JMS properties ..
         if jms_folder and hasattr(jms_folder, "Dst"):
-            text_message.jms_destination = str(jms_folder.Dst).strip()
+            text_message.jms_destination = str(jms_folder.Dst).strip() # TODO: Tests
             
         if md.Persistence == self.CMQC.MQPER_NOT_PERSISTENT:
             text_message.jms_delivery_mode = DELIVERY_MODE_NON_PERSISTENT
-        elif md.Persistence in(self.CMQC.MQPER_PERSISTENT, self.CMQC.MQPER_PERSISTENCE_AS_Q_DEF):
+        elif md.Persistence in(self.CMQC.MQPER_PERSISTENT, self.CMQC.MQPER_PERSISTENCE_AS_Q_DEF): # TODO: Testss
             text_message.jms_delivery_mode = DELIVERY_MODE_PERSISTENT
         else:
             text = "Don't know how to handle md.Persistence mode [%s]" % (md.Persistence)
             self.logger.error(text)
             raise WebSphereMQJMSException(text)
             
+        # TODO: Tests
         if jms_folder and hasattr(jms_folder, "Exp"):
             text_message.jms_expiration = long(str(jms_folder.Exp))
         else:
@@ -348,6 +352,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
             self.CMQC.MQRO_DISCARD_MSG: "Discard_Msg",
         }
         
+        # TODO: Tests
         for report_name, jms_header_name in md_report_to_jms.iteritems():
             report_value = md.Report & report_name
             if report_value:
@@ -410,6 +415,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
         now = long(time() * 1000)
         mqrfh2jms = MQRFH2JMS().build_header(message, destination, self.CMQC, now)
         
+        # TODO: Tests (code coverage)
         buff.write(mqrfh2jms)
         if message.text != None:
             buff.write(message.text.encode("utf-8"))
@@ -541,6 +547,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
         if message.jms_priority:
             md.Priority = message.jms_priority
             
+        # TODO: Tests
         if message.jms_reply_to:
             md.ReplyToQ = message.jms_reply_to
             
@@ -566,6 +573,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
                 md.GroupId = jmsxgroupid.ljust(24)[:24]
             md.MsgFlags |= self.CMQC.MQMF_MSG_IN_GROUP
             
+        # TODO: Tests (code coverage)
         for report_name in("Exception", "Expiration", "COA", "COD", "PAN", 
             "NAN", "Pass_Msg_ID", "Pass_Correl_ID", "Discard_Msg"):
         
