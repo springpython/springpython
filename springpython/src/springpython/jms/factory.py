@@ -52,7 +52,6 @@ from springpython.jms import WebSphereMQJMSException, NoMessageAvailableExceptio
 
 
 # Don't pollute the caller's namespace
-# TODO: Tests
 __all__ = ["WebSphereMQConnectionFactory"]
 
 
@@ -195,14 +194,15 @@ class WebSphereMQConnectionFactory(DisposableObject):
         else:
             connect_options = self.CMQC.MQCNO_HANDLE_SHARE_NONE
         
-        # TODO: Tests
         try:
             self.mgr.connectWithOptions(self.queue_manager, cd=cd, opts=connect_options)
         except self.mq.MQMIError, e:
-            raise WebSphereMQJMSException(e)
+            exc = WebSphereMQJMSException(e, e.comp, e.reason)
+            raise exc
         except Exception, e:
             self.logger.error("Could not connect to queue manager, e=[%s]" % e)
-            raise WebSphereMQJMSException(e)
+            exc = WebSphereMQJMSException(e, None, None)
+            raise exc
         else:
             self._is_connected = True
             self.logger.info("Successfully connected to queue manager [%s]" \
@@ -233,7 +233,6 @@ class WebSphereMQConnectionFactory(DisposableObject):
         return queue
         
     def get_queue_for_receiving(self, destination):
-        # TODO: Tests
         if self.cache_open_receive_queues:
             queue = self._get_queue_from_cache(destination, self._open_receive_queues_cache)
         else:
@@ -269,7 +268,6 @@ class WebSphereMQConnectionFactory(DisposableObject):
             
             return self._build_text_message(md, message)
             
-        # TODO: Tests            
         except self.mq.MQMIError, e:
             if e.reason == self.CMQC.MQRC_NO_MSG_AVAILABLE:
                 text = "No message available for destination [%s], " \
@@ -277,7 +275,8 @@ class WebSphereMQConnectionFactory(DisposableObject):
                 raise NoMessageAvailableException(text)
             else:
                 self.logger.log(TRACE1, "Exception caught in get, e.comp=[%s], e.reason=[%s]" % (e.comp, e.reason))
-                raise WebSphereMQJMSException(e)
+                exc = WebSphereMQJMSException(e, e.comp, e.reason)
+                raise exc
             
     def _get_jms_timestamp_from_md(self, put_date, put_time):
         pattern = "%Y%m%d%H%M%S"
@@ -308,16 +307,17 @@ class WebSphereMQConnectionFactory(DisposableObject):
         
         # .. set its JMS properties ..
         if jms_folder and hasattr(jms_folder, "Dst"):
-            text_message.jms_destination = str(jms_folder.Dst).strip() # TODO: Tests
+            text_message.jms_destination = str(jms_folder.Dst).strip()
             
         if md.Persistence == self.CMQC.MQPER_NOT_PERSISTENT:
             text_message.jms_delivery_mode = DELIVERY_MODE_NON_PERSISTENT
-        elif md.Persistence in(self.CMQC.MQPER_PERSISTENT, self.CMQC.MQPER_PERSISTENCE_AS_Q_DEF): # TODO: Testss
+        elif md.Persistence in(self.CMQC.MQPER_PERSISTENT, self.CMQC.MQPER_PERSISTENCE_AS_Q_DEF):
             text_message.jms_delivery_mode = DELIVERY_MODE_PERSISTENT
         else:
             text = "Don't know how to handle md.Persistence mode [%s]" % (md.Persistence)
             self.logger.error(text)
-            raise WebSphereMQJMSException(text)
+            exc = WebSphereMQJMSException()
+            raise exc
             
         # TODO: Tests
         if jms_folder and hasattr(jms_folder, "Exp"):
@@ -380,8 +380,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
         
         return text_message
         
-    # TODO: Change its name, removes the "queue://" prefix as well
-    def _strip_qm_name_from_destination(self, destination):
+    def _strip_prefixes_from_destination(self, destination):
         if destination.startswith("queue:///"):
             return destination.replace("queue:///", "", 1)
         elif destination.startswith("queue://"):
@@ -403,7 +402,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
             self._connect()
             self.logger.log(TRACE1, "send -> _is_connected2 %s" % self._is_connected)
             
-        destination = self._strip_qm_name_from_destination(destination)
+        destination = self._strip_prefixes_from_destination(destination)
         
         # Will consist of an MQRFH2 header and the actual business payload.
         buff = StringIO()
@@ -430,7 +429,8 @@ class WebSphereMQConnectionFactory(DisposableObject):
         except self.mq.MQMIError, e:
             self.logger.error("MQMIError in queue.put, e.comp [%s], e.reason [%s] " % (
                 e.comp, e.reason))
-            raise WebSphereMQJMSException(e)
+            exc = WebSphereMQJMSException(e, e.comp, e.reason)
+            raise exc
         
         if not self.cache_open_send_queues:
             queue.close()            
@@ -540,7 +540,8 @@ class WebSphereMQConnectionFactory(DisposableObject):
             else:
                 info = "jms_delivery_mode should be equal to DELIVERY_MODE_NON_PERSISTENT or DELIVERY_MODE_PERSISTENT, not [%s]" % message.jms_delivery_mode
                 self.logger.error(info)
-                raise WebSphereMQJMSException(info)
+                exc = WebSphereMQJMSException()
+                raise exc
                 
             md.Persistence = persistence
 

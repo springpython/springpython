@@ -735,6 +735,7 @@ class WebSphereMQTestCase(MockTestCase):
         mgr = self.mock()
         cd = self.mock()
         md = get_default_md()
+        gmo = self.mock()
         opts = CMQC.MQCNO_HANDLE_SHARE_BLOCK
 
         
@@ -742,11 +743,13 @@ class WebSphereMQTestCase(MockTestCase):
         sys.modules["pymqi"].expects(at_least_once()).QueueManager(eq(None)).will(return_value(mgr))
         sys.modules["pymqi"].expects(at_least_once()).cd().will(return_value(cd))
         sys.modules["pymqi"].expects(at_least_once()).md().will(return_value(md))
+        sys.modules["pymqi"].expects(at_least_once()).gmo().will(return_value(gmo))
         sys.modules["pymqi"].expects(at_least_once()).Queue(same(mgr), eq(DESTINATION)).will(return_value(queue))
         
         mgr.expects(at_least_once()).connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
         queue.expects(at_least_once()).put(functor(condition_ignored), functor(condition_ignored))
         queue.expects(at_least_once()).close()
+        queue.set_default_stub(return_value(raw_message_for_get))
         
         factory = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT,
             cache_open_send_queues=False)
@@ -772,7 +775,25 @@ class WebSphereMQTestCase(MockTestCase):
         for x in range(10):
             jms_template2.send(message, DESTINATION)
             self.assertTrue(DESTINATION in factory2._open_send_queues_cache)
-            self.assertTrue(len(factory2._open_send_queues_cache), 1)
+            self.assertEquals(1, len(factory2._open_send_queues_cache))
+            
+
+        # Now make sure open queues are not stored in caches.
+        factory3 = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
+        factory3.cache_open_send_queues = False
+        factory3.cache_open_receive_queues = False
+        
+        jms_template3 = JmsTemplate(factory3)
+
+        for x in range(10):
+            jms_template3.send(message, DESTINATION)
+            jms_template3.receive(DESTINATION)
+            
+            self.assertTrue(DESTINATION not in factory3._open_send_queues_cache)
+            self.assertEquals(0, len(factory3._open_send_queues_cache))
+            
+            self.assertTrue(DESTINATION not in factory3._open_receive_queues_cache)
+            self.assertEquals(0, len(factory3._open_receive_queues_cache))
         
         del(sys.modules["pymqi"])
         
@@ -905,7 +926,7 @@ class WebSphereMQTestCase(MockTestCase):
 ################################################################################
 
         
-    def testMessageConverterForIncomingMessages(self):
+    def testReceivingMessages(self):
         
         queue = self.mock()
         mgr = self.mock()
@@ -937,15 +958,26 @@ class WebSphereMQTestCase(MockTestCase):
         
         factory = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
         
-        jms_template = JmsTemplate(factory)
+        jms_template1 = JmsTemplate(factory)
         
         # No message converter set yet.
-        self.assertRaises(JMSException, jms_template.receive_and_convert, DESTINATION, 300)
+        self.assertRaises(JMSException, jms_template1.receive_and_convert, DESTINATION, 300)
         
-        jms_template.message_converter = InvoiceConverter()
+        jms_template1.message_converter = InvoiceConverter()
         
         # No JMSException at this point.
-        jms_template.receive_and_convert(DESTINATION, 300)
+        jms_template1.receive_and_convert(DESTINATION, 300)
+        
+        jms_template2 = JmsTemplate(factory)
+        self.assertEquals("b0f32f11-b531-4bbf-b985-77e795d77024", jms_template2.receive(DESTINATION).text)
+        
+        jms_template3 = JmsTemplate(factory)
+        jms_template3.default_destination = DESTINATION
+        self.assertEquals("b0f32f11-b531-4bbf-b985-77e795d77024", jms_template3.receive().text)
+        
+        # No destination set.
+        jms_template4 = JmsTemplate(factory)
+        self.assertRaises(JMSException, jms_template4.receive)
 
         del(sys.modules["pymqi"])
         
@@ -1030,7 +1062,7 @@ class WebSphereMQTestCase(MockTestCase):
         except WebSphereMQJMSException, e:
             self.assertEquals(e.completion_code, None)
             self.assertEquals(e.reason_code, None)
-            self.assertEquals(e.message, "")
+            self.assertEquals(e.message, None)
             
         try:
             raise WebSphereMQJMSException(message)
@@ -1039,14 +1071,13 @@ class WebSphereMQTestCase(MockTestCase):
             self.assertEquals(e.reason_code, None)
             self.assertEquals(e.message, message)
             
-        sys.modules["pymqi"].MQMIError = mq.MQMIError
+        #sys.modules["pymqi"].MQMIError = mq.MQMIError
+        
         try:
-            raise WebSphereMQJMSException(mq_exception)
+            raise WebSphereMQJMSException(completion_code=mq_exception.comp, reason_code=mq_exception.reason)
         except WebSphereMQJMSException, e:
             self.assertEquals(e.completion_code, expected_completion_code)
             self.assertEquals(e.reason_code, expected_reason_code)
-            self.assertEquals(e.message, "An exception has occured, completion_code='%s', reason_code='%s'" % (
-                expected_completion_code, expected_reason_code))
 
     def testMessageConverterRaisingNotImplementedError(self):
         
@@ -1142,7 +1173,7 @@ class WebSphereMQTestCase(MockTestCase):
         self.assertEquals(len(factory._open_dynamic_queues_cache), 0)
         
         
-    def testStrippingQueueManagerNameFromDestination(self):
+    def testStrippingPrefixesFromDestination(self):
         factory = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
         
         dest1 = "queue:///TEST2"
@@ -1159,10 +1190,42 @@ class WebSphereMQTestCase(MockTestCase):
         expected_dest5 = "/ABC/"
         expected_dest6 = "//ABC/"
         
-        self.assertEquals(expected_dest1, factory._strip_qm_name_from_destination(dest1))
-        self.assertEquals(expected_dest2, factory._strip_qm_name_from_destination(dest2))
-        self.assertEquals(expected_dest3, factory._strip_qm_name_from_destination(dest3))
-        self.assertEquals(expected_dest4, factory._strip_qm_name_from_destination(dest4))
-        self.assertEquals(expected_dest5, factory._strip_qm_name_from_destination(dest5))
-        self.assertEquals(expected_dest6, factory._strip_qm_name_from_destination(dest6))
+        self.assertEquals(expected_dest1, factory._strip_prefixes_from_destination(dest1))
+        self.assertEquals(expected_dest2, factory._strip_prefixes_from_destination(dest2))
+        self.assertEquals(expected_dest3, factory._strip_prefixes_from_destination(dest3))
+        self.assertEquals(expected_dest4, factory._strip_prefixes_from_destination(dest4))
+        self.assertEquals(expected_dest5, factory._strip_prefixes_from_destination(dest5))
+        self.assertEquals(expected_dest6, factory._strip_prefixes_from_destination(dest6))
+        
+    def testFactoryExportingWebSphereMQConnectionFactoryOnly(self):
+        _globals = {}
+        _locals = {}
+        
+        exec "from springpython.jms.factory import *" in _globals, _locals
+        
+        self.assertEquals(1, len(_locals.keys()))
+        self.assertEquals("WebSphereMQConnectionFactory", _locals.keys()[0])
+        
+        
+    def testFactoryRaisingJMSExceptionOnConnect(self):
+        
+        queue = self.mock()
+        mgr = self.mock()
+        cd = self.mock()
+        gmo = self.mock()
+        md = get_default_md()
+        opts = CMQC.MQCNO_HANDLE_SHARE_BLOCK
 
+        sys.modules["pymqi"] = self.mock()
+        
+        # Setting None here makes sure there will be an AttributeError raised
+        # later on when trying to 'connectWithOptions'.
+        sys.modules["pymqi"].expects(once()).QueueManager(eq(None)).will(return_value(None))
+        
+        sys.modules["pymqi"].expects(once()).cd().will(return_value(cd))
+        mgr.stubs().connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
+        
+        factory = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
+        self.assertRaises(JMSException, factory._connect)
+
+        del(sys.modules["pymqi"])

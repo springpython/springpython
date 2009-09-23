@@ -38,26 +38,8 @@ class NoMessageAvailableException(JMSException):
 class WebSphereMQJMSException(JMSException):
     """ Class for exceptions related to WebSphereMQ only.
     """
-    def __init__(self, exc=None):
-        
-        if exc == None:
-            exc_message = ""
-        else:
-            # TODO: comp/reason tests
-            if not isinstance(exc, basestring):
-                exc_message = "An exception has occured, completion_code='%s', reason_code='%s'" % (
-                        exc.comp, exc.reason)
-            else:
-                exc_message = exc 
-        
-        super(JMSException, self).__init__(exc_message)
-        
-        self.completion_code = None
-        self.reason_code = None
-        
-        if exc:
-            from pymqi import MQMIError
-            
-            if isinstance(exc, MQMIError):
-                self.completion_code = exc.comp
-                self.reason_code = exc.reason
+    def __init__(self, message=None, completion_code=None, reason_code=None):
+        super(WebSphereMQJMSException, self).__init__(message)
+        self.message = message
+        self.completion_code = completion_code
+        self.reason_code = reason_code
