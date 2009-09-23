@@ -24,14 +24,12 @@ except NameError:
 # stdlib
 import sys
 import logging
-import datetime
-import threading
+from threading import RLock
 from cStringIO import StringIO
 from struct import pack, unpack
 from xml.sax.saxutils import escape
 from binascii import hexlify, unhexlify
-from threading import RLock, currentThread
-from time import time, mktime, strptime, altzone, sleep
+from time import time, mktime, strptime, altzone
 
 # amara
 # TODO: change to etree
