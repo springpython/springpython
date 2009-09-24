@@ -101,6 +101,10 @@ class ApplicationContext(ObjectContainer):
                         
         self.logger.debug("Successfully invoked the destroy_method on registered objects")
             
+class InitializingObject(object):
+    """This allows definition of a method which is invoked by the container after an object has had all properties set."""
+    def after_properties_set(self):
+        pass
 
 class ObjectPostProcessor(object):
     def post_process_before_initialization(self, obj, obj_name):
