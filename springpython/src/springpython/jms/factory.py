@@ -31,10 +31,6 @@ from xml.sax.saxutils import escape
 from binascii import hexlify, unhexlify
 from time import time, mktime, strptime, altzone
 
-# amara
-# TODO: change to etree
-import amara
-
 try:
     import cElementTree as etree
 except ImportError:
@@ -82,21 +78,22 @@ _WMQ_ID_PREFIX = "ID:"
 
 # TODO: Process lock?
 
-_doc = amara.create_document()
-
-_mcd = _doc.xml_create_element(u"mcd")
-_mcd.xml_append(_doc.xml_create_element(u"Msd"))
+_mcd = etree.Element("mcd")
+_msd = etree.Element("Msd")
+_mcd.append(_msd)
 
 # For now, it's always a TextMessage
-_mcd.Msd.xml_append(u"jms_text")
+_msd.text = "jms_text"
 
 # Using a dummy namespace as there appears to be no WebSphere MQ NS defined
 # anywhere and one is required.
-_msgbody_attrs = {(u"xsi:nil", u"dummy"): u"true"}
-_mcd.xml_append(_doc.xml_create_element(u"msgbody", attributes=_msgbody_attrs))
+
+_msgbody = etree.Element("msgbody")
+_msgbody.set("xsi:nil", "true")
+_mcd.append(_msgbody)
 
 # Clean up namespace.
-del(_doc, _msgbody_attrs)
+del(_msd, _msgbody)
 
 
 def unhexlify_wmq_id(wmq_id):
@@ -272,6 +269,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
             if e.reason == self.CMQC.MQRC_NO_MSG_AVAILABLE:
                 text = "No message available for destination [%s], " \
                     "wait_interval [%s] ms" % (destination, wait_interval)
+                # TODO: Tests
                 raise NoMessageAvailableException(text)
             else:
                 self.logger.log(TRACE1, "Exception caught in get, e.comp=[%s], e.reason=[%s]" % (e.comp, e.reason))
@@ -302,7 +300,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
         text_message = TextMessage()
         
         if usr_folder:
-            for attr_name, attr_value in usr_folder.xml_child_elements.iteritems():
+            for attr_name, attr_value in usr_folder.items():
                 setattr(text_message, attr_name, str(attr_value))
         
         # .. set its JMS properties ..
@@ -655,12 +653,11 @@ class MQRFH2JMS(object):
             left = left[MQRFH2JMS.FOLDER_SIZE_HEADER_LENGTH  + current_folder_length:]
             
     def build_folder(self, raw_folder):
-        folder = amara.parse(raw_folder)
-        root = folder.xml_children[0]
-        root_name = root.nodeName
+        folder = etree.fromstring(raw_folder)
+        root_name = folder.tag
         
         if root_name in("mcd", "jms", "usr"):
-            self.folders[root_name] = root
+            self.folders[root_name] = folder
         else:
             self.logger.warn("Ignoring unrecognized JMS folder [%s]=[%s]" % (root_name, raw_folder))
             
@@ -670,11 +667,11 @@ class MQRFH2JMS(object):
         self.add_jms(message, queue_name, now)
         self.add_usr(message)
 
-        mcd = self._pad_folder(self.folders["mcd"].xml())
-        jms = self._pad_folder(self.folders["jms"].xml())
+        mcd = self._pad_folder(etree.tostring(self.folders["mcd"]))
+        jms = self._pad_folder(etree.tostring(self.folders["jms"]))
         
         if "usr" in self.folders:
-            usr = self._pad_folder(self.folders["usr"].xml())
+            usr = self._pad_folder(etree.tostring(self.folders["usr"]))
             usr_len = len(usr)
         else:
             usr_len = 0
@@ -716,28 +713,34 @@ class MQRFH2JMS(object):
         return value
         
     def add_jms(self, message, queue_name, now):
-        doc = amara.create_document()
         
-        jms = doc.xml_create_element(u"jms")
-        jms.xml_append(doc.xml_create_element(u"Dst"))
-        jms.xml_append(doc.xml_create_element(u"Tms"))
-        jms.xml_append(doc.xml_create_element(u"Dlv"))
+        jms = etree.Element("jms")
+        dst = etree.Element("Dst")
+        tms = etree.Element("Tms")
+        dlv = etree.Element("Dlv")
         
-        jms.Tms = unicode(now)
-        jms.Dst = u"queue:///" + queue_name
-        jms.Dlv = unicode(message.jms_delivery_mode)
+        jms.append(dst)
+        jms.append(tms)
+        jms.append(dlv)
+        
+        tms.text = unicode(now)
+        dst.text = u"queue:///" + queue_name
+        dlv.text = unicode(message.jms_delivery_mode)
         
         if message.jms_expiration:
-            jms.xml_append(doc.xml_create_element(u"Exp"))
-            jms.Exp = unicode(now + message.jms_expiration)
+            exp = etree.Element("Exp")
+            exp.text = unicode(now + message.jms_expiration)
+            jms.append(exp)
             
         if message.jms_priority:
-            jms.xml_append(doc.xml_create_element(u"Pri"))
-            jms.Pri = unicode(message.jms_priority)
+            pri = etree.Element("Pri")
+            pri.text = unicode(message.jms_priority) 
+            jms.append(pri)
             
         if message.jms_correlation_id:
-            jms.xml_append(doc.xml_create_element(u"Cid"))
-            jms.Cid = unicode(message.jms_correlation_id)
+            cid = etree.Element("Cid")
+            cid.text =unicode(message.jms_correlation_id) 
+            jms.append(cid)
         
         self.folders["jms"] = jms
         
@@ -745,8 +748,7 @@ class MQRFH2JMS(object):
         user_attrs = set(dir(message)) - reserved_attributes
         
         if user_attrs:
-            doc = amara.create_document()
-            usr = doc.xml_create_element(u"usr")
+            usr = etree.Element("usr")
             
             for user_attr in user_attrs:
                 
@@ -756,10 +758,9 @@ class MQRFH2JMS(object):
                 if isinstance(user_attr_value, basestring):
                     user_attr_value = escape(user_attr_value)
             
-                # Create a JMS attribute..
-                usr.xml_append(doc.xml_create_element(unicode(user_attr)))
-                
-                # .. and set its value.
-                getattr(usr, user_attr).xml_append(unicode(user_attr_value))
+                # Create a JMS attribute and set its value.
+                user_attr = etree.Element(unicode(user_attr))
+                user_attr.text = unicode(user_attr_value)
+                usr.append(user_attr)
                 
             self.folders["usr"] = usr

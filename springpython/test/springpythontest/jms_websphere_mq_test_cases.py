@@ -31,6 +31,14 @@ from binascii import hexlify, unhexlify
 from multiprocessing import active_children, Queue
 from xml.sax.saxutils import escape, unescape
 
+try:
+    import cElementTree as etree
+except ImportError:
+    try:
+        import xml.etree.ElementTree as etree
+    except ImportError:
+        from elementtree import ElementTree as etree
+
 # XXX: Tests
 # Python 2.4 compat
 try:
@@ -44,9 +52,6 @@ from pmock import *
 # pymqi
 import pymqi as mq
 from pymqi import CMQC
-
-# amara
-import amara
 
 # Spring Python
 from springpython.config import XMLConfig
@@ -78,7 +83,7 @@ conn_info = "%s(%s)" % (HOST, LISTENER_PORT)
 
 # A bit of gimmick, we can't use .eq, because timestamp will be different.
 timestamp = "1247950158160"
-raw_message = 'RFH \x00\x00\x00\x02\x00\x00\x00\xd8\x00\x00\x01\x11\x00\x00\x04\xb8MQSTR   \x00\x00\x00\x00\x00\x00\x04\xb8\x00\x00\x00L<mcd><Msd>jms_text</Msd><msgbody xmlns:xsi="dummy" xsi:nil="true"/></mcd>   \x00\x00\x00`<jms><Dst>queue:///SPRING.PYTHON.TO.JAVA.REQ.1</Dst><Tms>%s</Tms><Dlv>2</Dlv></jms>  %s' % (timestamp, PAYLOAD)
+raw_message = 'RFH \x00\x00\x00\x02\x00\x00\x00\xc4\x00\x00\x01\x11\x00\x00\x04\xb8MQSTR   \x00\x00\x00\x00\x00\x00\x04\xb8\x00\x00\x008<mcd><Msd>jms_text</Msd><msgbody xsi:nil="true" /></mcd>\x00\x00\x00`<jms><Dst>queue:///SPRING.PYTHON.TO.JAVA.REQ.1</Dst><Tms>%s</Tms><Dlv>2</Dlv></jms>  %s' % (timestamp, PAYLOAD)
 raw_message_before_timestamp = raw_message[:raw_message.find(timestamp)]
 raw_message_after_timestamp = raw_message[raw_message.find(timestamp) + len(timestamp):len(raw_message)]
 
@@ -205,7 +210,7 @@ class WebSphereMQTestCase(MockTestCase):
         message = TextMessage()
 
         # mcd folder is constant
-        mcd = """<mcd><Msd>jms_text</Msd><msgbody xmlns:xsi="dummy" xsi:nil="true"/></mcd>   """
+        mcd = """<mcd><Msd>jms_text</Msd><msgbody xsi:nil="true" /></mcd>"""
         mcd_len = len(mcd)
         mcd_len_wire_format = pack("!l", mcd_len)
         
@@ -256,11 +261,11 @@ class WebSphereMQTestCase(MockTestCase):
         # Don't compare the jms folder here - timestamps will differ, will check it below.
         # self.assertEqual(header_jms, jms)
         
-        doc = amara.parse(header_jms)
+        jms = etree.fromstring(header_jms)
         
-        self.assertEqual(doc.jms.Dst, "queue:///" + destination)
-        self.assertTrue(bool((long(str(doc.jms.Tms)) < long(time() * 1000)) is True))
-        self.assertEqual(int(str(doc.jms.Dlv)), DELIVERY_MODE_PERSISTENT)
+        self.assertEqual(jms.find("Dst").text, "queue:///" + destination)
+        self.assertTrue(bool((long(str(jms.find("Tms").text)) < long(time() * 1000)) is True))
+        self.assertEqual(int(str(jms.find("Dlv").text)), DELIVERY_MODE_PERSISTENT)
         
     def testJMSAndWebSphereMQConstants(self):
         self.assertEqual(_WMQ_MQRFH_VERSION_2, "\x00\x00\x00\x02")
@@ -274,7 +279,7 @@ class WebSphereMQTestCase(MockTestCase):
         self.assertEqual(MQRFH2JMS.FOLDER_LENGTH_MULTIPLE, 4)
         self.assertEqual(_WMQ_MAX_EXPIRY_TIME, 214748364.7)
         self.assertEqual(_WMQ_ID_PREFIX, "ID:")
-        self.assertEqual(_mcd.xml(), """<mcd><Msd>jms_text</Msd><msgbody xmlns:xsi="dummy" xsi:nil="true"/></mcd>""")
+        self.assertEqual(etree.tostring(_mcd), """<mcd><Msd>jms_text</Msd><msgbody xsi:nil="true" /></mcd>""")
         
     def testJMSConstants(self):
         self.assertEqual(DELIVERY_MODE_NON_PERSISTENT, 1)
@@ -415,26 +420,26 @@ class WebSphereMQTestCase(MockTestCase):
             mqrfh2_jmd_end = mqrfh2.find("</jms>") + 6
             
             mqrfh2_jms = str(mqrfh2[mqrfh2_jms_start:mqrfh2_jmd_end])
-            doc = amara.parse(mqrfh2_jms)
+            jms = etree.fromstring(mqrfh2_jms)
             
             now = long(time() * 1000)
             
-            self.assertEqual(str(doc.jms.Pri), str(jms_priority))
+            self.assertEqual(str(jms.find("Pri").text), str(jms_priority))
             
             # The message has been already put onto queue so its timestamp
             # should be equal or earlier than now.
-            jms_tms = long(str(doc.jms.Tms))
+            jms_tms = long(str(jms.find("Tms").text))
             self.assertTrue(jms_tms <= now, "jms.Tms error [%s] [%s]" % (jms_tms, now))
             
             # Same as Webpshere MQ JMS Java API, jms.Dst cannnot be set manually
             # by user, though docs don't mention that.
-            self.assertEqual(str(doc.jms.Dst), "queue:///" + DESTINATION)
+            self.assertEqual(str(jms.find("Dst").text), "queue:///" + DESTINATION)
             
             # MQMD CorrelId is truncated to 24 characters, but MQRFH2's one isn't.
-            self.assertEqual(str(doc.jms.Cid), jms_correlation_id)
+            self.assertEqual(str(jms.find("Cid").text), jms_correlation_id)
             
             # Message has been sent already sent a couple of milliseconds ago.
-            jms_exp = long(str(doc.jms.Exp))
+            jms_exp = long(str(jms.find("Exp").text))
             self.assertTrue(jms_exp - now <= jms_expiration, "jms.Exp error [%s] [%s]" % (jms_exp - now, jms_expiration))
             
             return True
@@ -813,14 +818,14 @@ class WebSphereMQTestCase(MockTestCase):
             
             usr_start = mqrfh2.find("<usr>")
             usr_end = mqrfh2.find("</usr>") + 6
-            usr = str(mqrfh2[usr_start:usr_end])
+            usr_str = str(mqrfh2[usr_start:usr_end])
             
-            doc = amara.parse(usr)
+            usr = etree.fromstring(usr_str)
             
-            self.assertEqual(str(doc.usr.broker_id), broker_id)
-            self.assertEqual(str(doc.usr.SOURCE), expected_source)
-            self.assertEqual(str(doc.usr.PREFERRED_PROVIDER), expected_preferred_provider)
-            self.assertEqual(unicode(doc.usr.foobar), foobar)
+            self.assertEqual(str(usr.find("broker_id").text), broker_id)
+            self.assertEqual(str(usr.find("SOURCE").text), expected_source)
+            self.assertEqual(str(usr.find("PREFERRED_PROVIDER").text), expected_preferred_provider)
+            self.assertEqual(unicode(usr.find("foobar").text), foobar)
             
             return True
         
