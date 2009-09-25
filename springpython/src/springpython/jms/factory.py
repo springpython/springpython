@@ -14,7 +14,6 @@
    limitations under the License.       
 """
 
-# TODO: Test with 2.4
 # Python 2.4 compatibility
 try:
     set

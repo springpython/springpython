@@ -28,7 +28,6 @@ from random import choice
 from string import letters
 from time import time, sleep
 from binascii import hexlify, unhexlify
-from multiprocessing import active_children, Queue
 from xml.sax.saxutils import escape, unescape
 
 try:
@@ -39,7 +38,6 @@ except ImportError:
     except ImportError:
         from elementtree import ElementTree as etree
 
-# TODO: Tests
 # Python 2.4 compat
 try:
     from hashlib import sha1

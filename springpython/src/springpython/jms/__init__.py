@@ -33,13 +33,12 @@ class NoMessageAvailableException(JMSException):
     """ Raised when the jms_template's call to receive returned no message
     in the expected wait interval.
     """
-    pass
 
 class WebSphereMQJMSException(JMSException):
     """ Class for exceptions related to WebSphereMQ only.
     """
     def __init__(self, message=None, completion_code=None, reason_code=None):
-        super(WebSphereMQJMSException, self).__init__(message)
+        JMSException.__init__(self, message)
         self.message = message
         self.completion_code = completion_code
         self.reason_code = reason_code
