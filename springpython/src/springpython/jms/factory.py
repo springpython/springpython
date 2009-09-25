@@ -100,7 +100,6 @@ def unhexlify_wmq_id(wmq_id):
 
 class WebSphereMQConnectionFactory(DisposableObject):
         
-    # TODO: Parsing of boolean options (will probably land in springpytohn.util)
     def __init__(self, queue_manager=None, channel=None, host=None, listener_port=None,
             cache_open_send_queues=True, cache_open_receive_queues=True,
             use_shared_connections=True, local_queue_template="SYSTEM.DEFAULT.LOCAL.QUEUE"):
