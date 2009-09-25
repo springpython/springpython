@@ -190,5 +190,7 @@ class TextMessage(object):
         else:
             buff.write("<None>")
 
-        # TODO: close the buffer
-        return buff.getvalue()
+        value = buff.getvalue()
+        buff.close()
+        
+        return value

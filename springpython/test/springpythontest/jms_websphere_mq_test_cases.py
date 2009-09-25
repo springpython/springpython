@@ -39,7 +39,7 @@ except ImportError:
     except ImportError:
         from elementtree import ElementTree as etree
 
-# XXX: Tests
+# TODO: Tests
 # Python 2.4 compat
 try:
     from hashlib import sha1
@@ -1146,7 +1146,7 @@ class WebSphereMQTestCase(MockTestCase):
         self.assertEquals(message3.max_chars_printed, 1000)
         self.assertEquals(sha1(str(message3)).hexdigest(), expected_message_sha1_sum_no_text)
         
-    def testDestroyingQueueCaches(self):
+    def testDestroyingConnectionFactory(self):
         
         class DummyQueue(object):
             pass
@@ -1177,6 +1177,10 @@ class WebSphereMQTestCase(MockTestCase):
         self.assertEquals(len(factory._open_receive_queues_cache), 0)
         self.assertEquals(len(factory._open_dynamic_queues_cache), 0)
         
+        factory.destroy()
+        
+        self.assertEquals(False, factory._is_connected)
+        self.assertEquals(True, factory._disconnecting)
         
     def testStrippingPrefixesFromDestination(self):
         factory = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
@@ -1232,5 +1236,64 @@ class WebSphereMQTestCase(MockTestCase):
         
         factory = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
         self.assertRaises(JMSException, factory._connect)
+
+        del(sys.modules["pymqi"])
+        
+    def testRaisingWebSphereMQJMSExceptionOnUnknownMDPersistence(self):
+        md = mq.md()
+        md.Persistence = 1000 # There's no such 'Persistence' mode in WMQ
+        
+        factory = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
+        self.assertRaises(JMSException, factory._build_text_message, md, raw_message_for_get)
+        
+    def testRaisingExceptionsOnMQMIErrors(self):
+
+        class NoMessageAvailableExceptionRaisingQueue(object):
+            def get(self, *ignored_args, **ignored_kwargs):
+                e = mq.MQMIError(CMQC.MQCC_FAILED, CMQC.MQRC_NO_MSG_AVAILABLE)
+                raise e
+
+        class OptionNotValidForTypeReturningQueue(object):
+            def get(self, *ignored_args, **ignored_kwargs):
+                e = mq.MQMIError(CMQC.MQCC_FAILED, CMQC.MQRC_OPTION_NOT_VALID_FOR_TYPE)
+                raise e
+
+        class TestQueueManager(object):
+            def connectWithOptions(self, *ignored_args, **ignored_kwargs):
+                pass
+
+        mgr = TestQueueManager()
+        cd = self.mock()
+        gmo = self.mock()
+        md = mq.md()
+
+        sys.modules["pymqi"] = self.mock()
+        sys.modules["pymqi"].MQMIError = mq.MQMIError
+        sys.modules["pymqi"].stubs().QueueManager(eq(None)).will(return_value(mgr))
+        sys.modules["pymqi"].stubs().cd().will(return_value(cd))
+        sys.modules["pymqi"].stubs().md().will(return_value(md))
+        sys.modules["pymqi"].stubs().gmo().will(return_value(gmo))
+        
+        #
+        # MQRC_NO_MSG_AVAILABLE
+        #
+        sys.modules["pymqi"].stubs().Queue(same(mgr), eq(DESTINATION)).will(return_value(NoMessageAvailableExceptionRaisingQueue()))
+        
+        factory = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
+        factory._connected = True
+        jms_template = JmsTemplate(factory)
+        
+        self.assertRaises(NoMessageAvailableException, jms_template.receive, DESTINATION)
+        
+        #
+        # MQRC_OPTION_NOT_VALID_FOR_TYPE
+        #
+        sys.modules["pymqi"].stubs().Queue(same(mgr), eq(DESTINATION)).will(return_value(OptionNotValidForTypeReturningQueue()))
+        
+        factory = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
+        factory._connected = True
+        jms_template = JmsTemplate(factory)
+        
+        self.assertRaises(WebSphereMQJMSException, jms_template.receive, DESTINATION)
 
         del(sys.modules["pymqi"])

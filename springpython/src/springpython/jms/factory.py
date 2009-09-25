@@ -76,17 +76,12 @@ _WMQ_ID_PREFIX = "ID:"
 # In current implementation, an mcd JMS folder is constant for every message
 # sent, so let's build it here.
 
-# TODO: Process lock?
-
 _mcd = etree.Element("mcd")
 _msd = etree.Element("Msd")
 _mcd.append(_msd)
 
 # For now, it's always a TextMessage
 _msd.text = "jms_text"
-
-# Using a dummy namespace as there appears to be no WebSphere MQ NS defined
-# anywhere and one is required.
 
 _msgbody = etree.Element("msgbody")
 _msgbody.set("xsi:nil", "true")
@@ -162,6 +157,9 @@ class WebSphereMQConnectionFactory(DisposableObject):
                         get_last_traceback(e)))
                 except Exception:
                     pass
+                
+            self._is_connected = False
+            
         else:
             self.logger.debug("Not connected, skipping cleaning up the resources")
             
@@ -269,7 +267,6 @@ class WebSphereMQConnectionFactory(DisposableObject):
             if e.reason == self.CMQC.MQRC_NO_MSG_AVAILABLE:
                 text = "No message available for destination [%s], " \
                     "wait_interval [%s] ms" % (destination, wait_interval)
-                # TODO: Tests
                 raise NoMessageAvailableException(text)
             else:
                 self.logger.log(TRACE1, "Exception caught in get, e.comp=[%s], e.reason=[%s]" % (e.comp, e.reason))
@@ -317,7 +314,6 @@ class WebSphereMQConnectionFactory(DisposableObject):
             exc = WebSphereMQJMSException()
             raise exc
             
-        # TODO: Tests
         if jms_folder and hasattr(jms_folder, "Exp"):
             text_message.jms_expiration = long(str(jms_folder.Exp))
         else:
@@ -350,7 +346,6 @@ class WebSphereMQConnectionFactory(DisposableObject):
             self.CMQC.MQRO_DISCARD_MSG: "Discard_Msg",
         }
         
-        # TODO: Tests
         for report_name, jms_header_name in md_report_to_jms.iteritems():
             report_value = md.Report & report_name
             if report_value:
@@ -412,7 +407,6 @@ class WebSphereMQConnectionFactory(DisposableObject):
         now = long(time() * 1000)
         mqrfh2jms = MQRFH2JMS().build_header(message, destination, self.CMQC, now)
         
-        # TODO: Tests (code coverage)
         buff.write(mqrfh2jms)
         if message.text != None:
             buff.write(message.text.encode("utf-8"))
@@ -494,25 +488,26 @@ class WebSphereMQConnectionFactory(DisposableObject):
             self.logger.log(TRACE1, "close_dynamic_queue -> not disconnecting")
         
         if not self._is_connected:
+            # If we're not connected then all dynamic queues had been already closed.
             self.logger.log(TRACE1, "close_dynamic_queue -> _is_connected1 %s" % self._is_connected)
-            self._connect()
+            return 
+        else:
             self.logger.log(TRACE1, "close_dynamic_queue -> _is_connected2 %s" % self._is_connected)
-        
-        lock = RLock()
-        lock.acquire()
-        try:
-            dynamic_queue = self._open_dynamic_queues_cache[dynamic_queue_name]
-            dynamic_queue.close()
-            
-            self._open_dynamic_queues_cache.pop(dynamic_queue_name, None)
-            self._open_send_queues_cache.pop(dynamic_queue_name, None)
-            self._open_receive_queues_cache.pop(dynamic_queue_name, None)
-            
-            self.logger.log(TRACE1, "Successfully closed a dynamic queue [%s]" % (
-                dynamic_queue_name))
-
-        finally:
-            lock.release()
+            lock = RLock()
+            lock.acquire()
+            try:
+                dynamic_queue = self._open_dynamic_queues_cache[dynamic_queue_name]
+                dynamic_queue.close()
+                
+                self._open_dynamic_queues_cache.pop(dynamic_queue_name, None)
+                self._open_send_queues_cache.pop(dynamic_queue_name, None)
+                self._open_receive_queues_cache.pop(dynamic_queue_name, None)
+                
+                self.logger.log(TRACE1, "Successfully closed a dynamic queue [%s]" % (
+                    dynamic_queue_name))
+    
+            finally:
+                lock.release()
         
     def _build_md(self, message):
         md = self.mq.md()
@@ -546,7 +541,6 @@ class WebSphereMQConnectionFactory(DisposableObject):
         if message.jms_priority:
             md.Priority = message.jms_priority
             
-        # TODO: Tests
         if message.jms_reply_to:
             md.ReplyToQ = message.jms_reply_to
             
@@ -572,7 +566,6 @@ class WebSphereMQConnectionFactory(DisposableObject):
                 md.GroupId = jmsxgroupid.ljust(24)[:24]
             md.MsgFlags |= self.CMQC.MQMF_MSG_IN_GROUP
             
-        # TODO: Tests (code coverage)
         for report_name in("Exception", "Expiration", "COA", "COD", "PAN", 
             "NAN", "Pass_Msg_ID", "Pass_Correl_ID", "Discard_Msg"):
         
