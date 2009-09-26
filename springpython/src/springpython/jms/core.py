@@ -39,7 +39,8 @@ reserved_attributes = set(("text", "jms_correlation_id", "jms_delivery_mode",
     "JMS_IBM_Report_COD", "JMS_IBM_Report_PAN", "JMS_IBM_Report_NAN", 
     "JMS_IBM_Report_Pass_Msg_ID", "JMS_IBM_Report_Pass_Correl_ID",
     "JMS_IBM_Report_Discard_Msg", "JMSXGroupID", "JMSXGroupSeq", "JMS_IBM_Feedback",
-    "JMS_IBM_Last_Msg_In_Group",))
+    "JMS_IBM_Last_Msg_In_Group", "JMSXUserID", "JMS_IBM_PutTime", "JMS_IBM_PutDate", 
+    "JMSXAppID"))
 
 # Magic methods are also forbidden.
 reserved_attributes.update(set(dir(object) + ["__weakref__", "__dict__", "__module__"]))

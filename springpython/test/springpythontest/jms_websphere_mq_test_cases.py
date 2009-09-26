@@ -81,7 +81,7 @@ conn_info = "%s(%s)" % (HOST, LISTENER_PORT)
 
 # A bit of gimmick, we can't use .eq, because timestamp will be different.
 timestamp = "1247950158160"
-raw_message = 'RFH \x00\x00\x00\x02\x00\x00\x00\xc4\x00\x00\x01\x11\x00\x00\x04\xb8MQSTR   \x00\x00\x00\x00\x00\x00\x04\xb8\x00\x00\x008<mcd><Msd>jms_text</Msd><msgbody xsi:nil="true" /></mcd>\x00\x00\x00`<jms><Dst>queue:///SPRING.PYTHON.TO.JAVA.REQ.1</Dst><Tms>%s</Tms><Dlv>2</Dlv></jms>  %s' % (timestamp, PAYLOAD)
+raw_message = 'RFH \x00\x00\x00\x02\x00\x00\x00\xd8\x00\x00\x01\x11\x00\x00\x04\xb8MQSTR   \x00\x00\x00\x00\x00\x00\x04\xb8\x00\x00\x00L<mcd><Msd>jms_text</Msd><msgbody xmlns:xsi="dummy" xsi:nil="true" /></mcd>  \x00\x00\x00`<jms><Dst>queue:///SPRING.PYTHON.TO.JAVA.REQ.1</Dst><Tms>%s</Tms><Dlv>2</Dlv></jms>  %s' % (timestamp, PAYLOAD)
 raw_message_before_timestamp = raw_message[:raw_message.find(timestamp)]
 raw_message_after_timestamp = raw_message[raw_message.find(timestamp) + len(timestamp):len(raw_message)]
 
@@ -123,7 +123,8 @@ def get_simple_message_and_jms_template(mock):
     sys.modules["pymqi"].expects(once()).QueueManager(eq(None)).will(return_value(mgr))
     sys.modules["pymqi"].expects(once()).cd().will(return_value(cd))
     sys.modules["pymqi"].expects(at_least_once()).md().will(return_value(md))
-    sys.modules["pymqi"].expects(once()).Queue(same(mgr), eq(DESTINATION)).will(return_value(queue))
+    sys.modules["pymqi"].expects(once()).Queue(same(mgr),
+        eq(DESTINATION), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(queue))
     
     sys.modules["pymqi"].MQMIError = mq.MQMIError
     
@@ -174,7 +175,8 @@ class WebSphereMQTestCase(MockTestCase):
             sys.modules["pymqi"].expects(once()).QueueManager(eq(None)).will(return_value(mgr))
             sys.modules["pymqi"].expects(once()).cd().will(return_value(cd))
             sys.modules["pymqi"].expects(once()).md().will(return_value(md))
-            sys.modules["pymqi"].expects(once()).Queue(same(mgr), eq(DESTINATION)).will(return_value(queue))
+            sys.modules["pymqi"].expects(once()).Queue(same(mgr),
+                eq(DESTINATION), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(queue))
             
             mgr.expects(once()).connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
             
@@ -208,7 +210,7 @@ class WebSphereMQTestCase(MockTestCase):
         message = TextMessage()
 
         # mcd folder is constant
-        mcd = """<mcd><Msd>jms_text</Msd><msgbody xsi:nil="true" /></mcd>"""
+        mcd = """<mcd><Msd>jms_text</Msd><msgbody xmlns:xsi="dummy" xsi:nil="true" /></mcd>  """
         mcd_len = len(mcd)
         mcd_len_wire_format = pack("!l", mcd_len)
         
@@ -277,7 +279,7 @@ class WebSphereMQTestCase(MockTestCase):
         self.assertEqual(MQRFH2JMS.FOLDER_LENGTH_MULTIPLE, 4)
         self.assertEqual(_WMQ_MAX_EXPIRY_TIME, 214748364.7)
         self.assertEqual(_WMQ_ID_PREFIX, "ID:")
-        self.assertEqual(etree.tostring(_mcd), """<mcd><Msd>jms_text</Msd><msgbody xsi:nil="true" /></mcd>""")
+        self.assertEqual(etree.tostring(_mcd), """<mcd><Msd>jms_text</Msd><msgbody xmlns:xsi="dummy" xsi:nil="true" /></mcd>""")
         
     def testJMSConstants(self):
         self.assertEqual(DELIVERY_MODE_NON_PERSISTENT, 1)
@@ -452,7 +454,8 @@ class WebSphereMQTestCase(MockTestCase):
         sys.modules["pymqi"].expects(once()).QueueManager(eq(None)).will(return_value(mgr))
         sys.modules["pymqi"].expects(once()).cd().will(return_value(cd))
         sys.modules["pymqi"].expects(once()).md().will(return_value(md))
-        sys.modules["pymqi"].expects(once()).Queue(same(mgr), eq(DESTINATION)).will(return_value(queue))
+        sys.modules["pymqi"].expects(once()).Queue(same(mgr),
+            eq(DESTINATION), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(queue))
         
         mgr.expects(at_least_once()).connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
         queue.expects(once()).put(functor(_check_mqrfh2), functor(_check_md))
@@ -504,7 +507,8 @@ class WebSphereMQTestCase(MockTestCase):
         sys.modules["pymqi"].expects(once()).QueueManager(eq(None)).will(return_value(mgr))
         sys.modules["pymqi"].expects(once()).cd().will(return_value(cd))
         sys.modules["pymqi"].expects(once()).md().will(return_value(md))
-        sys.modules["pymqi"].expects(once()).Queue(same(mgr), eq(DESTINATION)).will(return_value(queue))
+        sys.modules["pymqi"].expects(once()).Queue(same(mgr),
+            eq(DESTINATION), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(queue))
         
         mgr.expects(once()).connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
         
@@ -544,7 +548,8 @@ class WebSphereMQTestCase(MockTestCase):
         queue.stubs().put(functor(_check_mqrfh2_destination), eq(md))
         
         # Queue name must be equal to default destination, pmock will verify it.
-        sys.modules["pymqi"].expects(once()).Queue(same(mgr), eq(default_destination)).will(return_value(queue))
+        sys.modules["pymqi"].expects(once()).Queue(same(mgr),
+            eq(default_destination), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(queue))
         
         mgr.expects(once()).connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
         
@@ -628,7 +633,8 @@ class WebSphereMQTestCase(MockTestCase):
                 sys.modules["pymqi"].expects(once()).QueueManager(eq(None)).will(return_value(mgr))
                 sys.modules["pymqi"].expects(once()).cd().will(return_value(cd))
                 sys.modules["pymqi"].expects(once()).md().will(return_value(md))
-                sys.modules["pymqi"].expects(once()).Queue(same(mgr), eq(DESTINATION)).will(return_value(queue))
+                sys.modules["pymqi"].expects(once()).Queue(same(mgr),
+                    eq(DESTINATION), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(queue))
                 
                 mgr.expects(once()).connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
                 
@@ -687,7 +693,8 @@ class WebSphereMQTestCase(MockTestCase):
         sys.modules["pymqi"].expects(once()).QueueManager(eq(None)).will(return_value(mgr))
         sys.modules["pymqi"].expects(once()).cd().will(return_value(cd))
         sys.modules["pymqi"].expects(once()).md().will(return_value(md))
-        sys.modules["pymqi"].expects(once()).Queue(same(mgr), eq(DESTINATION)).will(return_value(queue))
+        sys.modules["pymqi"].expects(once()).Queue(same(mgr),
+            eq(DESTINATION), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(queue))
         
         mgr.expects(once()).connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
         
@@ -747,8 +754,13 @@ class WebSphereMQTestCase(MockTestCase):
         sys.modules["pymqi"].expects(at_least_once()).cd().will(return_value(cd))
         sys.modules["pymqi"].expects(at_least_once()).md().will(return_value(md))
         sys.modules["pymqi"].expects(at_least_once()).gmo().will(return_value(gmo))
-        sys.modules["pymqi"].expects(at_least_once()).Queue(same(mgr), eq(DESTINATION)).will(return_value(queue))
         
+        sys.modules["pymqi"].expects(at_least_once()).Queue(same(mgr),
+            eq(DESTINATION), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(queue))
+            
+        sys.modules["pymqi"].expects(at_least_once()).Queue(same(mgr),
+            eq(DESTINATION)).will(return_value(queue))
+            
         mgr.expects(at_least_once()).connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
         queue.expects(at_least_once()).put(functor(condition_ignored), functor(condition_ignored))
         queue.expects(at_least_once()).close()
@@ -840,7 +852,8 @@ class WebSphereMQTestCase(MockTestCase):
         
         queue.stubs().put(functor(_check_user_attributes), eq(md))
         
-        sys.modules["pymqi"].expects(once()).Queue(same(mgr), eq(DESTINATION)).will(return_value(queue))
+        sys.modules["pymqi"].expects(once()).Queue(same(mgr),
+            eq(DESTINATION), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(queue))
         
         mgr.expects(once()).connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
         
@@ -913,7 +926,8 @@ class WebSphereMQTestCase(MockTestCase):
             sys.modules["pymqi"].expects(once()).QueueManager(eq(None)).will(return_value(mgr))
             sys.modules["pymqi"].expects(once()).cd().will(return_value(cd))
             sys.modules["pymqi"].expects(once()).md().will(return_value(md))
-            sys.modules["pymqi"].expects(once()).Queue(same(mgr), eq(DESTINATION)).will(return_value(queue))
+            sys.modules["pymqi"].expects(once()).Queue(same(mgr),
+                eq(DESTINATION), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(queue))
             
             mgr.expects(once()).connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
             queue.expects(at_least_once()).put(functor(_check_payload), functor(condition_ignored))
@@ -955,7 +969,8 @@ class WebSphereMQTestCase(MockTestCase):
         sys.modules["pymqi"].stubs().cd().will(return_value(cd))
         sys.modules["pymqi"].stubs().md().will(return_value(md))
         sys.modules["pymqi"].stubs().gmo().will(return_value(gmo))
-        sys.modules["pymqi"].stubs().Queue(same(mgr), eq(DESTINATION)).will(return_value(queue))
+        sys.modules["pymqi"].expects(once()).Queue(same(mgr),
+            eq(DESTINATION), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(queue))
         mgr.stubs().connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
         queue.set_default_stub(return_value(raw_message_for_get))
         
@@ -1028,10 +1043,11 @@ class WebSphereMQTestCase(MockTestCase):
         sys.modules["pymqi"].expects(once()).md().will(return_value(md))
         mgr.expects(once()).connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
 
-        sys.modules["pymqi"].expects(once()).Queue(same(mgr), eq("SYSTEM.DEFAULT.LOCAL.QUEUE"),
-            eq(CMQC.MQOO_INPUT_AS_Q_DEF)).will(return_value(expected_dyn_queue))
+        sys.modules["pymqi"].expects(once()).Queue(same(mgr), eq("SYSTEM.DEFAULT.MODEL.QUEUE"),
+            eq(CMQC.MQOO_INPUT_SHARED)).will(return_value(expected_dyn_queue))
             
-        sys.modules["pymqi"].expects(once()).Queue(same(mgr), eq(expected_dyn_queue_name)).will(return_value(expected_dyn_queue))
+        sys.modules["pymqi"].expects(once()).Queue(same(mgr), eq(expected_dyn_queue_name),
+            eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(expected_dyn_queue))
         expected_dyn_queue.set_default_stub(return_value(None))
         
         factory = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
@@ -1275,7 +1291,8 @@ class WebSphereMQTestCase(MockTestCase):
         #
         # MQRC_NO_MSG_AVAILABLE
         #
-        sys.modules["pymqi"].stubs().Queue(same(mgr), eq(DESTINATION)).will(return_value(NoMessageAvailableExceptionRaisingQueue()))
+        sys.modules["pymqi"].expects(once()).Queue(same(mgr),
+            eq(DESTINATION), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(NoMessageAvailableExceptionRaisingQueue()))
         
         factory = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
         factory._connected = True
@@ -1286,7 +1303,8 @@ class WebSphereMQTestCase(MockTestCase):
         #
         # MQRC_OPTION_NOT_VALID_FOR_TYPE
         #
-        sys.modules["pymqi"].stubs().Queue(same(mgr), eq(DESTINATION)).will(return_value(OptionNotValidForTypeReturningQueue()))
+        sys.modules["pymqi"].expects(once()).Queue(same(mgr),
+            eq(DESTINATION), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(OptionNotValidForTypeReturningQueue()))
         
         factory = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
         factory._connected = True

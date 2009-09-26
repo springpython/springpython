@@ -83,6 +83,7 @@ _mcd.append(_msd)
 _msd.text = "jms_text"
 
 _msgbody = etree.Element("msgbody")
+_msgbody.set("xmlns:xsi", "dummy") # We're using a dummy namespace
 _msgbody.set("xsi:nil", "true")
 _mcd.append(_msgbody)
 
@@ -101,7 +102,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
         
     def __init__(self, queue_manager=None, channel=None, host=None, listener_port=None,
             cache_open_send_queues=True, cache_open_receive_queues=True,
-            use_shared_connections=True, local_queue_template="SYSTEM.DEFAULT.LOCAL.QUEUE"):
+            use_shared_connections=True, local_queue_template="SYSTEM.DEFAULT.MODEL.QUEUE"):
         self.queue_manager = queue_manager
         self.channel = channel
         self.host = host
@@ -210,7 +211,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
                 return cache[destination]
             else:
                 self.logger.debug("Adding queue [%s] to the cache" % destination)
-                cache[destination] = self.mq.Queue(self.mgr, destination)
+                cache[destination] = self.mq.Queue(self.mgr, destination, self.CMQC.MQOO_INPUT_SHARED | self.CMQC.MQOO_OUTPUT)
                 self.logger.debug("Queue [%s] added to the cache" % destination)
                 self.logger.log(TRACE1, "Cache contents [%s]" % cache)
                 return cache[destination]
@@ -232,6 +233,74 @@ class WebSphereMQConnectionFactory(DisposableObject):
             queue = self.mq.Queue(self.mgr, destination)
             
         return queue
+        
+    
+    def send(self, message, destination):
+        if self._disconnecting:
+            self.logger.info("Connection factory disconnecting, aborting receive")
+            return
+        else:
+            self.logger.log(TRACE1, "send -> not disconnecting")
+        
+        if not self._is_connected:
+            self.logger.log(TRACE1, "send -> _is_connected1 %s" % self._is_connected)
+            self._connect()
+            self.logger.log(TRACE1, "send -> _is_connected2 %s" % self._is_connected)
+            
+        destination = self._strip_prefixes_from_destination(destination)
+        
+        # Will consist of an MQRFH2 header and the actual business payload.
+        buff = StringIO()
+        
+        # Build the message descriptor (MQMD)
+        md = self._build_md(message)
+    
+        # Create MQRFH2 header
+        now = long(time() * 1000)
+        mqrfh2jms = MQRFH2JMS().build_header(message, destination, self.CMQC, now)
+        
+        buff.write(mqrfh2jms)
+        if message.text != None:
+            buff.write(message.text.encode("utf-8"))
+        
+        body = buff.getvalue()
+        buff.close()
+        
+        queue = self.get_queue_for_sending(destination)
+        
+        try:
+            queue.put(body, md)
+        except self.mq.MQMIError, e:
+            self.logger.error("MQMIError in queue.put, e.comp [%s], e.reason [%s] " % (
+                e.comp, e.reason))
+            exc = WebSphereMQJMSException(e, e.comp, e.reason)
+            raise exc
+        
+        if not self.cache_open_send_queues:
+            queue.close()            
+        
+        # Map the JMS headers overwritten by calling queue.put
+        message.jms_message_id = _WMQ_ID_PREFIX + hexlify(md.MsgId)
+        message.jms_priority = md.Priority
+        message.jms_correlation_id = _WMQ_ID_PREFIX + hexlify(md.CorrelId)
+        message.JMSXUserID = md.UserIdentifier
+        message.JMSXAppID = md.PutApplName
+
+        if md.PutDate and md.PutTime:
+            message.jms_timestamp = self._get_jms_timestamp_from_md(md.PutDate.strip(), md.PutTime.strip())
+            message.JMS_IBM_PutDate = md.PutDate.strip()
+            message.JMS_IBM_PutTime = md.PutTime.strip()
+        else:
+            self.logger.warning("No md.PutDate and md.PutTime found, md [%r]" % repr(md))
+        
+        # queue.put has succeeded, so overwrite expiration time as well
+        if message.jms_expiration != None:
+            message.jms_expiration += now
+            
+        self.logger.debug("Successfully sent a message [%s], connection info [%s]" % (
+            message, self.get_connection_info()))
+        
+        self.logger.log(TRACE1, "message [%s], body [%r], md [%r]" % (message, body, repr(md)))
             
     def receive(self, destination, wait_interval):
         if self._disconnecting:
@@ -270,6 +339,66 @@ class WebSphereMQConnectionFactory(DisposableObject):
                 self.logger.log(TRACE1, "Exception caught in get, e.comp=[%s], e.reason=[%s]" % (e.comp, e.reason))
                 exc = WebSphereMQJMSException(e, e.comp, e.reason)
                 raise exc
+                
+            
+    def open_dynamic_queue(self):
+        if self._disconnecting:
+            self.logger.info("Connection factory disconnecting, aborting open_dynamic_queue")
+            return
+        else:
+            self.logger.log(TRACE1, "open_dynamic_queue -> not disconnecting")
+        
+        if not self._is_connected:
+            self.logger.log(TRACE1, "open_dynamic_queue -> _is_connected1 %s" % self._is_connected)
+            self._connect()
+            self.logger.log(TRACE1, "open_dynamic_queue -> _is_connected2 %s" % self._is_connected)
+        
+        dynamic_queue = self.mq.Queue(self.mgr, self.local_queue_template, 
+            self.CMQC.MQOO_INPUT_SHARED)
+        
+        # A bit hackish, but there's no other way to get its name.
+        dynamic_queue_name = dynamic_queue._Queue__qDesc.ObjectName.strip()
+        
+        lock = RLock()
+        lock.acquire()
+        try:
+            self._open_dynamic_queues_cache[dynamic_queue_name] = dynamic_queue
+        finally:
+            lock.release()
+            
+        self.logger.log(TRACE1, "Successfully created a dynamic queue, descriptor [%s]" % (
+            dynamic_queue._Queue__qDesc))
+        
+        return dynamic_queue_name
+        
+    def close_dynamic_queue(self, dynamic_queue_name):
+        if self._disconnecting:
+            self.logger.info("Connection factory disconnecting, aborting close_dynamic_queue")
+            return
+        else:
+            self.logger.log(TRACE1, "close_dynamic_queue -> not disconnecting")
+        
+        if not self._is_connected:
+            # If we're not connected then all dynamic queues had been already closed.
+            self.logger.log(TRACE1, "close_dynamic_queue -> _is_connected1 %s" % self._is_connected)
+            return 
+        else:
+            self.logger.log(TRACE1, "close_dynamic_queue -> _is_connected2 %s" % self._is_connected)
+            lock = RLock()
+            lock.acquire()
+            try:
+                dynamic_queue = self._open_dynamic_queues_cache[dynamic_queue_name]
+                dynamic_queue.close()
+                
+                self._open_dynamic_queues_cache.pop(dynamic_queue_name, None)
+                self._open_send_queues_cache.pop(dynamic_queue_name, None)
+                self._open_receive_queues_cache.pop(dynamic_queue_name, None)
+                
+                self.logger.log(TRACE1, "Successfully closed a dynamic queue [%s]" % (
+                    dynamic_queue_name))
+    
+            finally:
+                lock.release()
             
     def _get_jms_timestamp_from_md(self, put_date, put_time):
         pattern = "%Y%m%d%H%M%S"
@@ -380,132 +509,6 @@ class WebSphereMQConnectionFactory(DisposableObject):
             return "/".join(no_qm_dest)
         else:
             return destination
-    
-    def send(self, message, destination):
-        if self._disconnecting:
-            self.logger.info("Connection factory disconnecting, aborting receive")
-            return
-        else:
-            self.logger.log(TRACE1, "send -> not disconnecting")
-        
-        if not self._is_connected:
-            self.logger.log(TRACE1, "send -> _is_connected1 %s" % self._is_connected)
-            self._connect()
-            self.logger.log(TRACE1, "send -> _is_connected2 %s" % self._is_connected)
-            
-        destination = self._strip_prefixes_from_destination(destination)
-        
-        # Will consist of an MQRFH2 header and the actual business payload.
-        buff = StringIO()
-        
-        # Build the message descriptor (MQMD)
-        md = self._build_md(message)
-    
-        # Create MQRFH2 header
-        now = long(time() * 1000)
-        mqrfh2jms = MQRFH2JMS().build_header(message, destination, self.CMQC, now)
-        
-        buff.write(mqrfh2jms)
-        if message.text != None:
-            buff.write(message.text.encode("utf-8"))
-        
-        body = buff.getvalue()
-        buff.close()
-        
-        queue = self.get_queue_for_sending(destination)
-        
-        try:
-            queue.put(body, md)
-        except self.mq.MQMIError, e:
-            self.logger.error("MQMIError in queue.put, e.comp [%s], e.reason [%s] " % (
-                e.comp, e.reason))
-            exc = WebSphereMQJMSException(e, e.comp, e.reason)
-            raise exc
-        
-        if not self.cache_open_send_queues:
-            queue.close()            
-        
-        # Map the JMS headers overwritten by calling queue.put
-        message.jms_message_id = _WMQ_ID_PREFIX + hexlify(md.MsgId)
-        message.jms_priority = md.Priority
-        message.jms_correlation_id = _WMQ_ID_PREFIX + hexlify(md.CorrelId)
-        message.JMSXUserID = md.UserIdentifier
-        message.JMSXAppID = md.PutApplName
-
-        if md.PutDate and md.PutTime:
-            message.jms_timestamp = self._get_jms_timestamp_from_md(md.PutDate.strip(), md.PutTime.strip())
-            message.JMS_IBM_PutDate = md.PutDate.strip()
-            message.JMS_IBM_PutTime = md.PutTime.strip()
-        else:
-            self.logger.warning("No md.PutDate and md.PutTime found, md [%r]" % repr(md))
-        
-        # queue.put has succeeded, so overwrite expiration time as well
-        if message.jms_expiration != None:
-            message.jms_expiration += now
-            
-        self.logger.debug("Successfully sent a message [%s], connection info [%s]" % (
-            message, self.get_connection_info()))
-        
-        self.logger.log(TRACE1, "message [%s], body [%r], md [%r]" % (message, body, repr(md)))
-            
-    def open_dynamic_queue(self):
-        if self._disconnecting:
-            self.logger.info("Connection factory disconnecting, aborting open_dynamic_queue")
-            return
-        else:
-            self.logger.log(TRACE1, "open_dynamic_queue -> not disconnecting")
-        
-        if not self._is_connected:
-            self.logger.log(TRACE1, "open_dynamic_queue -> _is_connected1 %s" % self._is_connected)
-            self._connect()
-            self.logger.log(TRACE1, "open_dynamic_queue -> _is_connected2 %s" % self._is_connected)
-        
-        dynamic_queue = self.mq.Queue(self.mgr, self.local_queue_template, 
-            self.CMQC.MQOO_INPUT_AS_Q_DEF)
-        
-        # A bit hackish, but there's no other way to get its name.
-        dynamic_queue_name = dynamic_queue._Queue__qDesc.ObjectName.strip()
-        
-        lock = RLock()
-        lock.acquire()
-        try:
-            self._open_dynamic_queues_cache[dynamic_queue_name] = dynamic_queue
-        finally:
-            lock.release()
-            
-        self.logger.log(TRACE1, "Successfully created a dynamic queue, descriptor [%s]" % (
-            dynamic_queue._Queue__qDesc))
-        
-        return dynamic_queue_name
-        
-    def close_dynamic_queue(self, dynamic_queue_name):
-        if self._disconnecting:
-            self.logger.info("Connection factory disconnecting, aborting close_dynamic_queue")
-            return
-        else:
-            self.logger.log(TRACE1, "close_dynamic_queue -> not disconnecting")
-        
-        if not self._is_connected:
-            # If we're not connected then all dynamic queues had been already closed.
-            self.logger.log(TRACE1, "close_dynamic_queue -> _is_connected1 %s" % self._is_connected)
-            return 
-        else:
-            self.logger.log(TRACE1, "close_dynamic_queue -> _is_connected2 %s" % self._is_connected)
-            lock = RLock()
-            lock.acquire()
-            try:
-                dynamic_queue = self._open_dynamic_queues_cache[dynamic_queue_name]
-                dynamic_queue.close()
-                
-                self._open_dynamic_queues_cache.pop(dynamic_queue_name, None)
-                self._open_send_queues_cache.pop(dynamic_queue_name, None)
-                self._open_receive_queues_cache.pop(dynamic_queue_name, None)
-                
-                self.logger.log(TRACE1, "Successfully closed a dynamic queue [%s]" % (
-                    dynamic_queue_name))
-    
-            finally:
-                lock.release()
         
     def _build_md(self, message):
         md = self.mq.md()
@@ -639,6 +642,7 @@ class MQRFH2JMS(object):
             current_folder_length = unpack("!l", left[:4])[0]
             raw_folder = left[MQRFH2JMS.FOLDER_SIZE_HEADER_LENGTH:MQRFH2JMS.FOLDER_SIZE_HEADER_LENGTH + current_folder_length]
             
+            self.logger.log(TRACE1, "raw_folder [%r]" % raw_folder)
             self.build_folder(raw_folder)
             
             left = left[MQRFH2JMS.FOLDER_SIZE_HEADER_LENGTH  + current_folder_length:]
@@ -737,6 +741,7 @@ class MQRFH2JMS(object):
         
     def add_usr(self, message):
         user_attrs = set(dir(message)) - reserved_attributes
+        self.logger.log(TRACE1, "user_attrs [%s]" % user_attrs)
         
         if user_attrs:
             usr = etree.Element("usr")
