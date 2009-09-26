@@ -665,7 +665,6 @@ class WebSphereMQTestCase(MockTestCase):
         expected_jms_ibm_puttime = "21324547"
         expected_jms_priority = priority
         expected_jms_timestamp = 1250199165470
-        expected_jms_correlation_id = "ID:51574552545955494f505b5d4153444647484a4b4c3b275a"
         
         def update_md(md):
             
@@ -675,7 +674,6 @@ class WebSphereMQTestCase(MockTestCase):
             md.PutDate = expected_jms_ibm_putdate
             md.PutTime = expected_jms_ibm_puttime
             md.Priority = priority
-            md.CorrelId = "QWERTYUIOP[]ASDFGHJKL;'Z"
             
             return True
         
@@ -716,7 +714,6 @@ class WebSphereMQTestCase(MockTestCase):
         self.assertEquals(message.JMS_IBM_PutTime, expected_jms_ibm_puttime)
         self.assertEquals(message.jms_priority, expected_jms_priority)
         self.assertEquals(message.jms_timestamp, expected_jms_timestamp)
-        self.assertEquals(message.jms_correlation_id, expected_jms_correlation_id)
         self.assertEquals(message.jms_destination, DESTINATION)
 
         del(sys.modules["pymqi"])

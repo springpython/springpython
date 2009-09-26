@@ -428,8 +428,18 @@ class WebSphereMQConnectionFactory(DisposableObject):
                 setattr(text_message, attr_name, str(attr_value))
         
         # .. set its JMS properties ..
-        if jms_folder and hasattr(jms_folder, "Dst"):
-            text_message.jms_destination = str(jms_folder.Dst).strip()
+        
+        if jms_folder:
+            if jms_folder.find("Dst") is not None:
+                text_message.jms_destination = jms_folder.find("Dst").text.strip()
+                
+            if jms_folder.find("Exp") is not None:
+                text_message.jms_expiration = long(jms_folder.find("Exp").text)
+            else:
+                text_message.jms_expiration = 0 # Same as in Java
+                
+            if jms_folder.find("Cid") is not None:
+                text_message.jms_correlation_id = jms_folder.find("Cid").text
             
         if md.Persistence == self.CMQC.MQPER_NOT_PERSISTENT:
             text_message.jms_delivery_mode = DELIVERY_MODE_NON_PERSISTENT
@@ -441,18 +451,13 @@ class WebSphereMQConnectionFactory(DisposableObject):
             exc = WebSphereMQJMSException()
             raise exc
             
-        if jms_folder and hasattr(jms_folder, "Exp"):
-            text_message.jms_expiration = long(str(jms_folder.Exp))
-        else:
-            text_message.jms_expiration = 0 # Same as in Java
-            
         if md.ReplyToQ:
             text_message.jms_reply_to = "queue://" + md.ReplyToQMgr.strip() + "/" + md.ReplyToQ.strip()
             
         text_message.jms_priority = md.Priority
         text_message.jms_message_id = _WMQ_ID_PREFIX + hexlify(md.MsgId)
         text_message.jms_timestamp = self._get_jms_timestamp_from_md(md.PutDate.strip(), md.PutTime.strip())
-        text_message.jms_correlation_id = _WMQ_ID_PREFIX + hexlify(md.CorrelId)
+        #text_message.jms_correlation_id = _WMQ_ID_PREFIX + hexlify(md.CorrelId)
         text_message.jms_redelivered = bool(int(md.BackoutCount))
 
         text_message.JMSXUserID = md.UserIdentifier.strip()
@@ -725,16 +730,19 @@ class MQRFH2JMS(object):
         if message.jms_expiration:
             exp = etree.Element("Exp")
             exp.text = unicode(now + message.jms_expiration)
+            self.logger.log(TRACE1, "jms.Exp [%r]" % exp.text)
             jms.append(exp)
             
         if message.jms_priority:
             pri = etree.Element("Pri")
-            pri.text = unicode(message.jms_priority) 
+            pri.text = unicode(message.jms_priority)
+            self.logger.log(TRACE1, "jms.Pri [%r]" % pri.text)
             jms.append(pri)
             
         if message.jms_correlation_id:
             cid = etree.Element("Cid")
-            cid.text =unicode(message.jms_correlation_id) 
+            cid.text = unicode(message.jms_correlation_id)
+            self.logger.log(TRACE1, "jms.Cid [%r]" % cid.text)
             jms.append(cid)
         
         self.folders["jms"] = jms
