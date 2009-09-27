@@ -432,12 +432,12 @@ class WebSphereMQConnectionFactory(DisposableObject):
         if jms_folder:
             if jms_folder.find("Dst") is not None:
                 text_message.jms_destination = jms_folder.find("Dst").text.strip()
-                
+            
             if jms_folder.find("Exp") is not None:
                 text_message.jms_expiration = long(jms_folder.find("Exp").text)
             else:
                 text_message.jms_expiration = 0 # Same as in Java
-                
+            
             if jms_folder.find("Cid") is not None:
                 text_message.jms_correlation_id = jms_folder.find("Cid").text
             
@@ -451,13 +451,13 @@ class WebSphereMQConnectionFactory(DisposableObject):
             exc = WebSphereMQJMSException()
             raise exc
             
-        if md.ReplyToQ:
+        if md.ReplyToQ.strip():
+            self.logger.log(TRACE1, "md.ReplyToQ [%r]" % md.ReplyToQ) 
             text_message.jms_reply_to = "queue://" + md.ReplyToQMgr.strip() + "/" + md.ReplyToQ.strip()
             
         text_message.jms_priority = md.Priority
         text_message.jms_message_id = _WMQ_ID_PREFIX + hexlify(md.MsgId)
         text_message.jms_timestamp = self._get_jms_timestamp_from_md(md.PutDate.strip(), md.PutTime.strip())
-        #text_message.jms_correlation_id = _WMQ_ID_PREFIX + hexlify(md.CorrelId)
         text_message.jms_redelivered = bool(int(md.BackoutCount))
 
         text_message.JMSXUserID = md.UserIdentifier.strip()
@@ -653,6 +653,18 @@ class MQRFH2JMS(object):
             left = left[MQRFH2JMS.FOLDER_SIZE_HEADER_LENGTH  + current_folder_length:]
             
     def build_folder(self, raw_folder):
+        
+        # Java JMS sends folders with unbound prefixes, i.e. <msgbody xsi:nil="true"></msgbody>
+        # which is in no way a valid XML so we have to insert the prefix ourselves
+        # in order to avoid parser bailing out with an ExpatError. I can't think
+        # of any other way to work around it if we'd like to treat folders as
+        # XML(-like) structures.
+        
+        if 'xsi:nil="true"' in raw_folder and not 'xmlns' in raw_folder:
+            self.logger.log(TRACE1, "Binding xsi:nil to a dummy namespace [%s]" % raw_folder)
+            raw_folder = raw_folder.replace('xsi:nil="true"', 'xmlns:xsi="dummy" xsi:nil="true"')
+            self.logger.log(TRACE1, "raw_folder after binding [%s]" % raw_folder)
+        
         folder = etree.fromstring(raw_folder)
         root_name = folder.tag
         
