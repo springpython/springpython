@@ -1310,3 +1310,12 @@ class WebSphereMQTestCase(MockTestCase):
         self.assertRaises(WebSphereMQJMSException, jms_template.receive, DESTINATION)
 
         del(sys.modules["pymqi"])
+        
+    def testMQRFH2JMSMissingNamespaceWorkaround(self):
+        mqrfh2jms = MQRFH2JMS()
+        mqrfh2jms.build_folder('<mcd><Msd>jms_text</Msd><msgbody xsi:nil="true" /></mcd>')
+        
+        msgbody = mqrfh2jms.folders["mcd"].find("msgbody")
+        
+        # msgbody.get will return None if such a namespace will not have been defined.
+        self.assertEquals("true", msgbody.get("{dummy}nil"))
