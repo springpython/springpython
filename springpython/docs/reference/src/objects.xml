@@ -255,7 +255,7 @@ service = container.get_object("sampleService")
 		<property name="filename"><value>support/movies1.txt</value></property>
 	</object>
 	
-	<object id="SingletonString" class="springpythontest.support.testSupportClasses.StringHolder">
+	<object id="SingletonString" class="springpythontest.support.testSupportClasses.StringHolder" lazy-init="True">
 		<property name="str" value="There should only be one copy of this string"></property>
 	</object>
 </objects>
@@ -688,7 +688,7 @@ service = container.get_object("MovieLister")
 			definitions stored in a <ulink url="http://www.yaml.org">YAML 1.1 format</ulink> using the 
 			<ulink url="http://pyyaml.org">PyYAML project</ulink>.</para>
 			
-			<para>The following is a simple definition of objects. Later sections will show
+			<para>The following is a simple definition of objects, including scope and lazy-init. Later sections will show
 			other options you have for wiring things together.</para>
 			
 <programlisting><![CDATA[
@@ -703,11 +703,13 @@ objects:
     - object: MovieFinder
       class: springpythontest.support.testSupportClasses.ColonMovieFinder
       scope: singleton
+      lazy-init: True
       properties:
           filename: support/movies1.txt
 
     - object: SingletonString
       class: springpythontest.support.testSupportClasses.StringHolder
+      lazy-init: True
       properties:
           str: There should only be one copy of this string
 ]]></programlisting>
@@ -989,7 +991,7 @@ class MovieBasedApplicationContext(PythonConfig):
     def MovieFinder(self):
         return ColonMovieFinder(filename="support/movies1.txt")
     
-    @Object    # scope.SINGLETON is the default
+    @Object(lazy_init=True)    # scope.SINGLETON is the default
     def SingletonString(self):
         return StringHolder("There should only be one copy of this string")
     
