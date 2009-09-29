@@ -84,7 +84,7 @@ class MovieBasedApplicationContext(PythonConfig):
     def __init__(self):
         super(MovieBasedApplicationContext, self).__init__()
         
-    @Object(scope.PROTOTYPE, True)
+    @Object(scope.PROTOTYPE)
     def MovieLister(self):
         lister = MovieLister()
         lister.finder = self.MovieFinder()

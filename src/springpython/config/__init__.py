@@ -447,7 +447,10 @@ class XMLConfig(Config):
             else:
                 object.id = prefix + ".<anonymous>"
                 
-        c = ObjectDef(object.id, factory=ReflectiveObjectFactory(object.class_))
+        if hasattr(object, "lazy_init"):
+            c = ObjectDef(object.id, factory=ReflectiveObjectFactory(object.class_), lazy_init=object.lazy_init)
+        else:
+            c = ObjectDef(object.id, factory=ReflectiveObjectFactory(object.class_), lazy_init=False)
         
         if hasattr(object, "scope"):
             c.scope = scope.convert(object.scope)
@@ -670,7 +673,10 @@ class YamlConfig(Config):
             else:
                 object["object"] = prefix + ".<anonymous>"
                 
-        c = ObjectDef(object["object"], factory=ReflectiveObjectFactory(object["class"]))
+        if "lazy-init" in object:
+            c = ObjectDef(object["object"], factory=ReflectiveObjectFactory(object["class"]), lazy_init=object["lazy-init"])
+        else:
+            c = ObjectDef(object["object"], factory=ReflectiveObjectFactory(object["class"]), lazy_init=False)
         
         if "scope" in object:
             c.scope = scope.convert(object["scope"])
