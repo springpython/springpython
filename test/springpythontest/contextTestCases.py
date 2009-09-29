@@ -92,6 +92,9 @@ class PurePythonContainerTestCase(unittest.TestCase):
     def testCreatingDecoratorBasedIocContainerUsingAppContextCalls(self):
         movieAppContainer = ApplicationContext(testSupportClasses.MovieBasedApplicationContext())
         self.assertTrue(isinstance(movieAppContainer, ApplicationContext))
+        self.assertFalse(movieAppContainer.object_defs[u"MovieLister"].lazy_init)
+        self.assertTrue(movieAppContainer.object_defs[u"MovieFinder"].lazy_init)
+        self.assertTrue(movieAppContainer.object_defs[u"SingletonString"].lazy_init)
         lister = movieAppContainer.get_object("MovieLister")
         movieList = lister.finder.findAll()
         self.assertEquals(movieList[0], "The Count of Monte Cristo")
@@ -530,6 +533,8 @@ class XMLConfigTestCase(unittest.TestCase):
     def testConstructors(self):
         ctx = ApplicationContext(XMLConfig("support/contextSpringPythonAppContext.xml"))
         self.assertTrue(isinstance(ctx, ApplicationContext))
+
+        self.assertTrue(ctx.object_defs[u"SingletonString"].lazy_init)
         
         another_str = ctx.get_object("AnotherSingletonString")
         a_third_str = ctx.get_object("AThirdSingletonString")
@@ -618,6 +623,9 @@ class YamlConfigTestCase(unittest.TestCase):
     def testPullingYamlConfig(self):
         movieAppContainer = ApplicationContext(YamlConfig("support/contextSpringPythonAppContext.yaml"))
         self.assertTrue(isinstance(movieAppContainer, ApplicationContext))
+        self.assertFalse(movieAppContainer.object_defs[u"MovieLister"].lazy_init)
+        self.assertTrue(movieAppContainer.object_defs[u"MovieFinder"].lazy_init)
+        self.assertTrue(movieAppContainer.object_defs[u"SingletonString"].lazy_init)
         lister = movieAppContainer.get_object("MovieLister")
         movieList = lister.finder.findAll()
         self.assertEquals(movieList[0], "The Count of Monte Cristo")

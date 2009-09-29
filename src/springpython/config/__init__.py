@@ -447,7 +447,10 @@ class XMLConfig(Config):
             else:
                 object.id = prefix + ".<anonymous>"
                 
-        c = ObjectDef(object.id, factory=ReflectiveObjectFactory(object.class_))
+        if hasattr(object, "lazy_init"):
+            c = ObjectDef(object.id, factory=ReflectiveObjectFactory(object.class_), lazy_init=object.lazy_init)
+        else:
+            c = ObjectDef(object.id, factory=ReflectiveObjectFactory(object.class_), lazy_init=False)
         
         if hasattr(object, "scope"):
             c.scope = scope.convert(object.scope)
@@ -670,7 +673,10 @@ class YamlConfig(Config):
             else:
                 object["object"] = prefix + ".<anonymous>"
                 
-        c = ObjectDef(object["object"], factory=ReflectiveObjectFactory(object["class"]))
+        if "lazy-init" in object:
+            c = ObjectDef(object["object"], factory=ReflectiveObjectFactory(object["class"]), lazy_init=object["lazy-init"])
+        else:
+            c = ObjectDef(object["object"], factory=ReflectiveObjectFactory(object["class"]), lazy_init=False)
         
         if "scope" in object:
             c.scope = scope.convert(object["scope"])
@@ -869,12 +875,12 @@ class PythonConfig(Config, ApplicationContextAware):
             if name not in _pythonConfigMethods:
                 try:
                     wrapper = method.im_func.func_globals["_call_"]
-
+                    
                     if wrapper.func_name.startswith("object"):
                         if wrapper.func_name == "objectPrototype":
-                            c = ObjectDef(id=name, factory=PythonObjectFactory(method, wrapper), scope=scope.PROTOTYPE)
+                            c = ObjectDef(id=name, factory=PythonObjectFactory(method, wrapper), scope=scope.PROTOTYPE, lazy_init=wrapper.lazy_init)
                         else:
-                            c = ObjectDef(id=name, factory=PythonObjectFactory(method, wrapper))
+                            c = ObjectDef(id=name, factory=PythonObjectFactory(method, wrapper), lazy_init=wrapper.lazy_init)
                         objects.append(c)
                 except KeyError, e:
                     pass
@@ -893,62 +899,60 @@ _pythonConfigMethods = [name for (name, method) in inspect.getmembers(PythonConf
 
 _object_context = {}
 
-def Object(theScope = scope.SINGLETON):
+def Object(theScope = scope.SINGLETON, lazy_init = False):
     """
     This function is a wrapper around the real decorator. It decides, based on scope
     and lazy-init, which decorator to return.
-    Default scope is SINGLETON.
     """
-    @decorator
-    def objectPrototype(f, *args, **kwargs):
-        """
-        This is basically a pass through, because everytime a prototype function
-        is called, there should be no caching of results.
-        
-        Using the @decorator library greatly simplifies the implementation of this.
-        """
-        log = logging.getLogger("springpython.config.objectPrototype%s - %s%s" % (f, str(args), theScope))
-        if f.func_name != top_func:
-            log.debug("This is NOT the top-level object %s, deferring to container." % top_func)
-            container = _object_context[args]["container"]
-            log.debug("Container = %s" % container)
-            results = container.get_object(f.func_name)
-            log.debug("Found %s inside the container" % results)
-            return results
-        else:
-            log.debug("This IS the top-level object, calling %s()." % f.func_name)
-            results = f(*args, **kwargs)
-            log.debug("Found %s" % results)
-            return results
-        
-    @decorator
-    def objectSingleton(f, *args, **kwargs):
-        """
-        This is basically a pass through, because everytime a prototype function
-        is called, there should be no caching of results.
-        
-        Using the @decorator library greatly simplifies the implementation of this.
-        """
-        log = logging.getLogger("springpython.config.objectSingleton%s - %s%s" % (f, str(args), theScope))
-        if f.func_name != top_func:
-            log.debug("This is NOT the top-level object %s, deferring to container." % top_func)
-            container = _object_context[args]["container"]
-            log.debug("Container = %s" % container)
-            results = container.get_object(f.func_name)
-            log.debug("Found %s inside the container" % results)
-            return results
-        else:
-            log.debug("This IS the top-level object, calling %s()." % f.func_name)
-            results = f(*args, **kwargs)
-            log.debug("Found %s" % results)
-            return results
-
     if type(theScope) == types.FunctionType:
         return Object()(theScope)
     elif theScope == scope.SINGLETON:
-        return objectSingleton
+        def objectSingleton(f, *args, **kwargs):
+            """
+            This function checks if the object already exists in the container. If so, it will retrieve its results.
+            Otherwise, it calls the function.
+
+            Using the @decorator library greatly simplifies the implementation of this.
+            """
+            log = logging.getLogger("springpython.config.objectSingleton%s - %s%s" % (f, str(args), theScope))
+            if f.func_name != top_func:
+                log.debug("This is NOT the top-level object %s, deferring to container." % top_func)
+                container = _object_context[args]["container"]
+                log.debug("Container = %s" % container)
+                results = container.get_object(f.func_name)
+                log.debug("Found %s inside the container" % results)
+                return results
+            else:
+                log.debug("This IS the top-level object, calling %s()." % f.func_name)
+                results = f(*args, **kwargs)
+                log.debug("Found %s" % results)
+                return results
+        objectSingleton.lazy_init = lazy_init
+        return decorator(objectSingleton)
     elif theScope == scope.PROTOTYPE:
-        return objectPrototype
+        def objectPrototype(f, *args, **kwargs):
+            """
+            This is basically a pass through, because everytime a prototype function
+            is called, there should be no caching of results.
+            
+            Using the @decorator library greatly simplifies the implementation of this.
+            """
+            
+            log = logging.getLogger("springpython.config.objectPrototype%s - %s%s" % (f, str(args), theScope))
+            if f.func_name != top_func:
+                log.debug("This is NOT the top-level object %s, deferring to container." % top_func)
+                container = _object_context[args]["container"]
+                log.debug("Container = %s" % container)
+                results = container.get_object(f.func_name)
+                log.debug("Found %s inside the container" % results)
+                return results
+            else:
+                log.debug("This IS the top-level object, calling %s()." % f.func_name)
+                results = f(*args, **kwargs)
+                log.debug("Found %s" % results)
+                return results
+        objectPrototype.lazy_init = lazy_init
+        return decorator(objectPrototype)
     else:
         raise InvalidObjectScope("Don't know how to handle scope %s" % theScope)
         
