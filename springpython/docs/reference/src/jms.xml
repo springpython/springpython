@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="jms">
+	<title>JMS messaging</title>
+	
+	<para>Java Message Service has been a well known means for decoupling the Java application's
+    parts or to provide an integration service for otherwise disconnected Java applications.
+    Thanks to JMS being purely an API, Spring Python offers a way for connecting to JMS providers and to participate
+    in JMS messaging scenarios. JMS messages sent and received by a Spring Python powered
+    application are no different than messages produced and consumed by Java applications,
+    in fact, <emphasis>you can use Spring Python and JMS with no Java applications participating
+    in message exchanging at all</emphasis>.</para>
+	
+	<para>The only JMS provider currently supported by Spring Python is IBM's WebSphere MQ, formerly known as MQSeries.</para>
+    
+    <para>Although Spring Python's JMS API is loosely based on Spring Java's, it's not a direct port
+    and features a highly Pythonic look and feel.
+    </para>
+		
+	<section id="intro-jms">
+		<title>Introduction</title>
+		<sidebar id="intro-syntax">
+			<para>Througout the chapter pure Python code or YAML syntax is used
+            to illustrate the support for JMS however it only represents the
+            author's preferences and it's worth noting that you can use
+            any of <link linkend="objects-config">Spring Python's formats</link> to configure the IoC container.
+            Or you can use no IoC at all as it's a completely optional feature
+            and one that's not strictly required by JMS.
+            </para>
+		</sidebar>
+		<para>
+        JMS messaging with Spring Python revolves around the idea of using
+        a connection factory for obtaining a connection to a JMS provider and 
+        <classname>springpython.jms.core.JmsTemplate</classname> as a means for
+        sending and receiving messages. A JmsTemplate instance is tied
+        to a connection factory however a single connection factory may be safely
+        reused across multiple JmsTemplates.
+        </para>
+	</section>
+    
+	<section id="dependencies">
+		<title>Dependencies</title>
+        <para>
+            Support for JMS messaging with WebSphere MQ is built on top of
+            the <ulink url="http://pymqi.sf.net">PyMQI</ulink> library which provides
+            Python applications an access to WebSphere MQ queue managers. You need to separately install 
+            PyMQI in order to use <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>.
+        </para>
+    </section>
+    
+	<section id="quick-start">
+		<title>Quick start</title>
+        <para>
+            Here's a few quick examples that will get you started with Spring
+            Python and JMS. Both Python code and IoC with YAML syntax are shown.
+            It's assumed there's a QM.1 queue manager running on host 192.168.1.121
+            with its listener on port 1434 and connections are made through the
+            server connection channel SVRCONN.1 to queues TEST.1 and TEST.2.
+        </para>
+        <section id="quick-start-sending">
+            <title>Sending</title>
+            <para>First, let's send a message using nothing but pure Python code.</para>
+<programlisting><![CDATA[
+from springpython.jms.core import JmsTemplate
+from springpython.jms.factory import WebSphereMQConnectionFactory
+
+qm_name = "QM.1"
+channel = "SVRCONN1.1"
+host = "192.168.1.121"
+listener_port = "1434"
+queue1 = "TEST.1"
+queue2 = "TEST.2"
+
+# The connection factory we're going to use.
+factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+
+# Every JmsTemplate uses a connection factory for actually communicating with a JMS provider.
+jms_template = JmsTemplate(factory)
+
+# And that's it, now we put the mandatory "Hello world" message on a queue.
+jms_template.send("Hello world", queue1)
+
+# We're not using an IoC so we must shut down the connection factory ourselves.
+factory.destroy()
+]]></programlisting>
+
+            <para>
+                Now do the same but use an IoC container configured via <classname>springpython.config.YamlConfig</classname>.
+                The configuration should be saved in a "jms-context.yml" file in the same directory
+                the Python code using it will be saved in.
+            </para>
+<programlisting><![CDATA[
+objects:
+    - object: MyConnectionFactory
+      class: springpython.jms.factory.WebSphereMQConnectionFactory
+      properties:
+          queue_manager: QM.1
+          channel: SVRCONN.1
+          host: 192.168.1.121
+          listener_port: 1434
+          
+    - object: MyTemplate
+      class: springpython.jms.core.JmsTemplate
+      properties:
+          factory: {ref: MyConnectionFactory}
+          
+    XXX: Doesn't work, ignore for now
+    - object: MyQueue
+      class: str
+      value: TEST.1
+          
+]]></programlisting>
+
+            <para>
+                And the Python code using the above IoC configuration.
+            </para>
+<programlisting><![CDATA[
+from springpython.context import ApplicationContext
+from springpython.config import YamlConfig
+
+container = ApplicationContext(YamlConfig("./jms-context.yml"))
+
+# Read the objects definitions from configuration
+queue1 = container.get_object("MyQueue")
+jms_template = container.get_object("MyTemplate")
+
+# Send the message
+jms_template.send("Hello world", queue1)
+
+# The connection factory is now being managed by the IoC container which takes
+# care of shutting down the factory. No need for manually destroying it.
+]]></programlisting>
+            <para>
+                An obvious change is that the configuration is now kept separately
+                from the implementation but another advantage is that the container
+                will shut down the connection factory on itself as
+                <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+                is a subclass of <classname>springpython.context.DisposableObject</classname>
+                which means its .destroy method will be executed when the container
+                will be shutting down.
+            </para>
+        </section>
+        
+        <section id="quick-start-receiving">
+            <title>Receiving</title>
+        </section>
+    </section>
+    
+    <section id="connection-factories">
+		<title>Connection factories</title>
+        <section id="websphere-mq-connection-factory">
+            <title>springpython.jms.factory.WebSphereMQConnectionFactory</title>
+            <para> 
+            .destroy &amp; IoC
+            MQRFH2JMS for the curious ones
+            </para>
+        </section>
+    </section>
+    
+    <section id="jms-template">
+        <title>springpython.jms.core.JmsTemplate</title>
+        <section id="jms-template-sending">
+            <title>Sending</title>
+        </section>
+        
+        <section id="jms-template-receiving">
+            <title>Receiving</title>
+        </section>
+        
+        <section id="jms-template-dynamic-queues">
+            <title>Dynamic queues</title>
+        </section>
+        
+        <section id="jms-template-message-converters">
+            <title>Message converters</title>
+        </section>
+    </section>
+    
+    <section id="text-message">
+        <title>springpython.jms.core.TextMessage</title>
+    </section>
+    
+    <section id="exceptions">
+        <title>Exceptions</title>
+        <para>
+            The base exception for all JMS-related issues is 
+            <classname>springpython.jms..</classname>
+        </para>
+    </section>
+    
+    <section id="logging-and-troubleshooting">
+        <title>Logging and troubleshooting</title>
+    </section>
+	
+</chapter>
