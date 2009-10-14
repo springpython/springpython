@@ -102,7 +102,7 @@
   		<title>What Spring Python is NOT</title>
   		
   		<para>Spring Python is NOT another web framework. I think there are plenty that are fine to
-  		use, like Zope, CherryPy, Quixote, and more. Spring Python is meant to provide utilities to
+  		use, like Django, TurboGears, Zope, CherryPy, Quixote, and more. Spring Python is meant to provide utilities to
   		support any python application, including a web-based one.</para>
   		
 		<para>So far, the demos have been based on CherryPy, but the idea is that these features

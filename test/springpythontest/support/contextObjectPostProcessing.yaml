@@ -1,0 +1,12 @@
+objects:
+    - object: value
+      class: springpythontest.support.testSupportClasses.Person
+      constructor-args:
+          name: Greg
+          phone: 123
+
+    - object: postProcessor
+      class: springpythontest.support.testSupportClasses.SamplePostProcessor
+
+    - object: postProcessor2
+      class: springpythontest.support.testSupportClasses.SamplePostProcessor2

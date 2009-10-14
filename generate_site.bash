@@ -26,7 +26,7 @@ export M2_HOME=~/apache-maven
 export M2=$M2_HOME/bin
 export PATH=$M2:$JAVA_HOME/bin:$PATH
 
-cd ~/springpython
+cd ~/springpython-1.1.x
 svn update
-./build.py --clean --site
+./build.py --clean --docs-all --pydoc
 

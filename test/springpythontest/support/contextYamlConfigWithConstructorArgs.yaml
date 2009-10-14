@@ -1,0 +1,44 @@
+objects:
+    - object: controller-list
+      class: springpythontest.support.testSupportClasses.Controller
+      constructor-args:
+          executors:
+              - {ref: exec1}
+              - {ref: exec2}
+
+    - object: controller-set
+      class: springpythontest.support.testSupportClasses.Controller
+      constructor-args:
+          executors:
+              set:
+                  - {ref: exec1}
+                  - {ref: exec2}
+
+    - object: controller-frozenset
+      class: springpythontest.support.testSupportClasses.Controller
+      constructor-args:
+          executors:
+              frozenset:
+                  - {ref: exec1}
+                  - {ref: exec2}
+
+    - object: controller-dict
+      class: springpythontest.support.testSupportClasses.Controller
+      constructor-args:
+          executors:
+              exec1: {ref: exec1}
+              exec2: {ref: exec2}
+
+    - object: controller-tuple
+      class: springpythontest.support.testSupportClasses.Controller
+      constructor-args:
+          executors:
+              tuple:
+                  - {ref: exec1}
+                  - {ref: exec2}
+
+    - object: exec1
+      class: springpythontest.support.testSupportClasses.Executor
+
+    - object: exec2
+      class: springpythontest.support.testSupportClasses.Executor

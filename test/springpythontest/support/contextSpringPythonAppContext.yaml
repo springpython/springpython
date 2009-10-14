@@ -1,0 +1,97 @@
+objects:
+    - object: MovieLister
+      class: springpythontest.support.testSupportClasses.MovieLister
+      scope: prototype
+      properties:
+          finder: {ref: MovieFinder}
+          description: {ref: SingletonString}
+            
+    - object: MovieFinder
+      class: springpythontest.support.testSupportClasses.ColonMovieFinder
+      scope: singleton
+      lazy-init: True
+      properties:
+          filename: support/movies1.txt
+            
+    - object: SingletonString
+      class: springpythontest.support.testSupportClasses.StringHolder
+      lazy-init: True
+      properties:
+          str: There should only be one copy of this string
+
+    - object: MovieLister2
+      class: springpythontest.support.testSupportClasses.MovieLister
+      properties:
+          finder:
+              object:
+              class: springpythontest.support.testSupportClasses.ColonMovieFinder
+              properties:
+                  filename: support/movies1.txt
+          description: {ref: SingletonString}
+            
+    - object: MovieLister3
+      class: springpythontest.support.testSupportClasses.MovieLister
+      properties:
+          finder:
+              object: named
+              class: springpythontest.support.testSupportClasses.ColonMovieFinder
+              properties:
+                  filename: support/movies1.txt
+          description: {ref: SingletonString}
+            
+    - object: ValueHolder
+      class: springpythontest.support.testSupportClasses.ValueHolder
+      constructor-args:
+          - {ref: SingletonString}
+      properties:
+          some_dict:
+                Hello: World
+                Spring: Python
+                holder: {ref: SingletonString}
+                another copy: {ref: SingletonString}
+          some_list:
+              - Hello, world!
+              - ref: SingletonString
+              - Spring Python
+          some_props:
+              administrator: administrator@example.org
+              support: support@example.org
+              development: development@example.org
+          some_set:
+              set:
+                  - Hello, world!
+                  - ref: SingletonString
+                  - Spring Python
+          some_frozen_set:
+              frozenset:
+                  - Hello, world!
+                  - ref: SingletonString
+                  - Spring Python
+          some_tuple:
+              tuple:
+                  - Hello, world!
+                  - ref: SingletonString
+                  - Spring Python
+     
+    - object: AnotherSingletonString
+      class: springpythontest.support.testSupportClasses.StringHolder
+      constructor-args:
+          - attributed value
+          
+    - object: AThirdSingletonString
+      class: springpythontest.support.testSupportClasses.StringHolder
+      constructor-args:
+          - elemental value
+          
+    - object: MultiValueHolder
+      class: springpythontest.support.testSupportClasses.MultiValueHolder
+      constructor-args:
+          a: alt a
+          b: alt b
+
+    - object: MultiValueHolder2
+      class: springpythontest.support.testSupportClasses.MultiValueHolder
+      constructor-args:
+          c: alt c
+          b: alt b
+          

@@ -17,14 +17,14 @@ import logging
 import threading
 import Pyro.core, Pyro.naming
 
-from socket import getaddrinfo, gethostbyname_ex
+from socket import getaddrinfo, gethostbyname
 
 pyro_threads = {}
 serviceList = {}
 logger = logging.getLogger("springpython.remoting.pyro.PyroDaemonHolder")
 
 def resolve(host, port):
-    canonhost = gethostbyname_ex(host)[2][0]
+    canonhost = gethostbyname(host)
     canonport = getaddrinfo(host, port)[0][4][1]
     
     return canonhost, canonport
