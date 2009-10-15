@@ -13,7 +13,14 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
-import amara
+try:
+    import cElementTree as etree
+except ImportError:
+    try:
+        import xml.etree.ElementTree as etree
+    except ImportError:
+        from elementtree import ElementTree as etree
+
 import inspect
 import logging
 import re
@@ -266,6 +273,8 @@ class FrozenSetDef(ValueDef):
             setattr(obj, self.name, new_frozen_set)
         except AttributeError:
             pass
+        except TypeError:
+            pass
         return new_frozen_set
  
 class Config(object):
@@ -280,6 +289,9 @@ class PyContainerConfig(Config):
     """
     PyContainerConfig supports the legacy XML dialect (PyContainer) of reading object definitions.
     """
+ 
+    NS = "{http://www.springframework.org/springpython/schema/pycontainer-components}"
+
     def __init__(self, config_location):
         if isinstance(config_location, list):
             self.config_location = config_location
@@ -292,34 +304,45 @@ class PyContainerConfig(Config):
         objects = []
         for config in self.config_location:
             self.logger.debug("* Parsing %s" % config)
-            doc = amara.parse(config)
-            objects.extend([self._convert_component(component) for component in doc.components.component])
+            components = etree.parse(config).getroot()
+            objects.extend([self._convert_component(component) for component in components])
         self.logger.debug("==============================================================")
         return objects
 
 
     def _convert_component(self, component):
         "This function generates a object definition, then converts scope and property elements."
-        c = ObjectDef(component.id, factory=ReflectiveObjectFactory(component.class_))
-        if hasattr(component, "scope"):
-            c.scope = scope.convert(component.scope)
-        if hasattr(component, "property"):
-            c.props = [self._convert_prop_def(p) for p in component.property]
+        self.logger.debug("component: Processing %s" % component)
+        c = ObjectDef(component.get("id"), factory=ReflectiveObjectFactory(component.get("class")))
+        if "scope" in component.attrib:
+            c.scope = scope.convert(component.get("scope"))
+        c.props = [self._convert_prop_def(p) for p in component.findall(self.NS+"property")]
         return c
 
     def _convert_prop_def(self, p):
         "This function translates object properties into useful dictionaries of information for the container."
-        if hasattr(p, "local"):
-            return ReferenceDef(p.name, p.local)
-        elif hasattr(p, "list"):
-            return ListDef(p.name, [ReferenceDef(p.name + ".list", prop_list.local) for prop_list in p.list])
+        if "local" in p.attrib or p.find(self.NS+"local") is not None:
+            if "local" in p.attrib:
+                return ReferenceDef(p.get("name"), p.get("local"))
+            else:
+                return ReferenceDef(p.get("name"), p.find(self.NS+"local"))
+        elif "list" in p.attrib or p.find(self.NS+"list") is not None:
+            if "list" in p.attrib:
+                return ListDef(p.name, [ReferenceDef(p.name + ".list", prop_list.local) for prop_list in p.list])
+            else:
+                return ListDef(p.name, [ReferenceDef(p.name + ".list", prop_list.local) for prop_list in p.list])
         else:
-            return ValueDef(p.name, eval(str(p).strip()))
+            self.logger.debug("py: name = %s code = %s" % (p.get("name"), p.text))
+            thing = eval(str(p.text).strip())
+            self.logger.debug("py: You have parsed %s" % thing)
+            return ValueDef(p.get("name"), eval(str(p.text).strip()))
 
 class SpringJavaConfig(Config):
     """
     SpringJavaConfig supports current Spring Java format of XML bean definitions.
     """
+    NS = "{http://www.springframework.org/schema/beans}"
+
     def __init__(self, config_location):
         if isinstance(config_location, list):
             self.config_location = config_location
@@ -337,79 +360,81 @@ class SpringJavaConfig(Config):
         self.objects = []
         for config in self.config_location:
             self.logger.debug("* Parsing %s" % config)
-            doc = amara.parse(config)
-            self.objects.extend([self._convert_bean(bean) for bean in doc.beans.bean])
+            beans = etree.parse(config).getroot()
+            self.objects.extend([self._convert_bean(bean) for bean in beans])
         self.logger.debug("==============================================================")
         return self.objects
 
     def _convert_bean(self, bean, prefix=""):
         "This function generates a object definition, then converts scope and property elements."
         if prefix != "":
-            if hasattr(bean, "id"):
-                bean.id = prefix + bean.id
+            if "id" in bean.attrib:
+                bean.set("id", prefix + bean.get("id"))
             else:
-                bean.id = prefix + "<anonymous>"
+                bean.set("id", prefix + "<anonymous>")
                 
-        c = ObjectDef(bean.id, factory=ReflectiveObjectFactory(bean.class_))
+        c = ObjectDef(bean.get("id"), factory=ReflectiveObjectFactory(bean.get("class")))
         
-        if hasattr(bean, "scope"):
-            c.scope = scope.convert(bean.scope)
-        if hasattr(bean, "constructor_arg"):
-            c.pos_constr = [self._convert_prop_def(bean, constr, bean.id + ".constr") for constr in bean.constructor_arg]
-            self.logger.debug("Constructors = %s" % c.pos_constr)
-        if hasattr(bean, "property"):
-            c.props = [self._convert_prop_def(bean, p, p.name) for p in bean.property]
+        if "scope" in bean.attrib:
+            c.scope = scope.convert(bean.get("scope"))
+        self.logger.debug("bean: %s" % bean)
+        c.pos_constr = [self._convert_prop_def(bean, constr, bean.get("id") + ".constr") for constr in bean.findall(self.NS+"constructor-arg")]
+        self.logger.debug("Constructors = %s" % c.pos_constr)
+        c.props = [self._convert_prop_def(bean, p, p.get("name")) for p in bean.findall(self.NS+"property")]
             
         return c
 
     def _convert_prop_def(self, bean, p, name):
         "This function translates object constructors/properties into useful collections of information for the container."
-        if hasattr(p, "ref"):
-            if hasattr(p.ref, "bean"):
-                return ReferenceDef(name, p.ref.bean)
+
+        if "ref" in p.keys() or p.find(self.NS+"ref") is not None:
+            if "ref" in p.keys():
+                return ReferenceDef(name, p.get("ref"))
             else:
-                return ReferenceDef(name, p.ref)
-        elif hasattr(p, "value"):
-            return ValueDef(name, str(p.value))
-        elif hasattr(p, "map"):
+                return ReferenceDef(name, p.find(self.NS+"ref").get("bean"))
+        elif "value" in p.keys() or p.find(self.NS+"value") is not None:
+            if "value" in p.keys():
+                return ValueDef(name, p.get("value"))
+            else:
+                return ValueDef(name, p.find(self.NS+"value").text)
+        elif p.find(self.NS+"map") is not None:
             dict = {}
-            for entry in p.map.entry:
-                if hasattr(entry, "value"):
-                    dict[str(entry.key.value)] = str(entry.value)
-                elif hasattr(entry, "ref"):
-                    dict[str(entry.key.value)] = ReferenceDef(str(entry.key.value), entry.ref.bean)
+            for entry in p.find(self.NS+"map"):
+                key = entry.find(self.NS+"key").find(self.NS+"value").text
+                if entry.find(self.NS+"value") is not None:
+                    dict[key] = str(entry.find(self.NS+"value").text)
+                elif entry.find(self.NS+"ref") is not None:
+                    dict[key] = ReferenceDef(key, entry.find(self.NS+"ref").get("bean"))
                 else:
                     self.logger.debug("Don't know how to handle %s" % entry)
             return DictDef(name, dict)
-        elif hasattr(p, "props"):
+        elif p.find(self.NS+"props") is not None:
             dict = {}
-            for prop in p.props.prop:
-                dict[prop.key] = str(prop)
+            for prop in p.find(self.NS+"props"):
+                dict[prop.get("key")] = str(prop.text)
             return DictDef(name, dict)
-        elif hasattr(p, "list"):
+        elif p.find(self.NS+"list") is not None:
             list = []
-            for element in p.list.xml_children:
-                if isinstance(element, amara.bindery.element_base):
-                    if element.localName == "value":
-                        list.append(str(element))
-                    elif element.localName == "ref":
-                        list.append(ReferenceDef(name + ".list", element.bean))
-                    else:
-                        self.logger.debug("Don't know how to handle %s" % element.localName)
+            for element in p.find(self.NS+"list"):
+                if element.tag == self.NS+"value":
+                    list.append(element.text)
+                elif element.tag == self.NS+"ref":
+                    list.append(ReferenceDef(name + ".list", element.get("bean")))
+                else:
+                    self.logger.debug("Don't know how to handle %s" % element.tag)
             return ListDef(name, list)
-        elif hasattr(p, "set"):
+        elif p.find(self.NS+"set") is not None:
             s = set()
-            for element in p.set.xml_children:
-                if isinstance(element, amara.bindery.element_base):
-                    if element.localName == "value":
-                        s.add(str(element))
-                    elif element.localName == "ref":
-                        s.add(ReferenceDef(name + ".set", element.bean))
-                    else:
-                        self.logger.debug("Don't know how to handle %s" % element.localName)
+            for element in p.find(self.NS+"set"):
+                if element.tag == self.NS+"value":
+                    s.add(element.text)
+                elif element.tag == self.NS+"ref":
+                    s.add(ReferenceDef(name + ".set", element.get("bean")))
+                else:
+                    self.logger.debug("Don't know how to handle %s" % element.tag)
             return SetDef(name, s)
-        elif hasattr(p, "bean"):
-            inner_object_def = self._convert_bean(p.bean, prefix=bean.id + "." + name + ".")
+        elif p.find(self.NS+"bean"):
+            inner_object_def = self._convert_bean(p.find(self.NS+"bean"), prefix=bean.get("id") + "." + name + ".")
             self.objects.append(inner_object_def)
             return InnerObjectDef(name, inner_object_def)
 
@@ -417,6 +442,9 @@ class XMLConfig(Config):
     """
     XMLConfig supports current Spring Python format of XML object definitions.
     """
+
+    NS = "{http://www.springframework.org/springpython/schema/objects}"
+
     def __init__(self, config_location):
         if isinstance(config_location, list):
             self.config_location = config_location
@@ -434,184 +462,238 @@ class XMLConfig(Config):
         self.objects = []
         for config in self.config_location:
             self.logger.debug("* Parsing %s" % config)
-            doc = amara.parse(config)
-            self.objects.extend([self._convert_object(object) for object in doc.objects.object])
+            objects = etree.parse(config).getroot()
+            self.objects.extend([self._convert_object(object) for object in objects])
         self.logger.debug("==============================================================")
+        for object in self.objects:
+            self.logger.debug("Parsed %s" % object)
         return self.objects
 
     def _convert_object(self, object, prefix=""):
         "This function generates a object definition, then converts scope and property elements."
         if prefix != "":
-            if hasattr(object, "id"):
-                object.id = prefix + "." + object.id
+            if "id" in object.attrib:
+                object.set("id", prefix + "." + object.get("id"))
             else:
-                object.id = prefix + ".<anonymous>"
+                object.set("id", prefix + ".<anonymous>")
                 
-        if hasattr(object, "lazy_init"):
-            c = ObjectDef(object.id, factory=ReflectiveObjectFactory(object.class_), lazy_init=object.lazy_init)
+        if "lazy-init" in object.attrib:
+            c = ObjectDef(object.get("id"), factory=ReflectiveObjectFactory(object.get("class")), lazy_init=object.get("lazy-init"))
         else:
-            c = ObjectDef(object.id, factory=ReflectiveObjectFactory(object.class_), lazy_init=False)
+            c = ObjectDef(object.get("id"), factory=ReflectiveObjectFactory(object.get("class")), lazy_init=False)
         
-        if hasattr(object, "scope"):
-            c.scope = scope.convert(object.scope)
-        if hasattr(object, "constructor_arg"):
-            c.pos_constr = [self._convert_prop_def(object, constr, object.id + ".constr") for constr in object.constructor_arg
-                            if not hasattr(constr, "name")]
-            c.named_constr = dict([(str(constr.name), self._convert_prop_def(object, constr, object.id + ".constr")) for constr in object.constructor_arg
-                                   if hasattr(constr, "name")])
-        if hasattr(object, "property"):
-            c.props = [self._convert_prop_def(object, p, p.name) for p in object.property]
+        if "scope" in object.attrib:
+            c.scope = scope.convert(object.get("scope"))
+
+        c.pos_constr = [self._convert_prop_def(object, constr, object.get("id") + ".constr") for constr in object.findall(self.NS+"constructor-arg")
+                        if not "name" in constr.attrib]
+        c.named_constr = dict([(str(constr.get("name")), self._convert_prop_def(object, constr, object.get("id") + ".constr")) for constr in object.findall(self.NS+"constructor-arg")
+                           if "name" in constr.attrib])
+        c.props = [self._convert_prop_def(object, p, p.get("name")) for p in object.findall(self.NS+"property")]
+        self.logger.debug("object: props = %s" % c.props)
+        self.logger.debug("object: There are %s props" % len(c.props))
             
         return c
     
     def _convert_ref(self, ref_node, name):
-        if hasattr(ref_node, "object"):
-            return ReferenceDef(name, ref_node.object)
+        if hasattr(ref_node, "attrib"):
+            results = ReferenceDef(name, ref_node.get("object"))
+            self.logger.debug("ref: Returning %s" % results)
+            return results
         else:
-            return ReferenceDef(name, ref_node)
+            results = ReferenceDef(name, ref_node)
+            self.logger.debug("ref: Returning %s" % results)
+            return results
  
     def _convert_value(self, value, id, name):
-        results = []
-        for element in value.xml_children:
-            if isinstance(element, amara.bindery.element_base):
-                results.append(self._convert_value(element, id, name))
+        if value.text is not None and value.text.strip() != "":
+            self.logger.debug("value: Converting a direct value <%s>" % value.text)
+            return value.text
+        else:
+            if value.tag == self.NS+"value":
+                self.logger.debug("value: Converting a value's children %s" % value.getchildren()[0])
+                results = self._convert_value(value.getchildren()[0], id, name)
+                self.logger.debug("value: results = %s" % str(results))
+                return results
+            elif value.tag == self.NS+"tuple":
+                self.logger.debug("value: Converting a tuple")
+                return self._convert_tuple(value, id, name).value
+            elif value.tag == self.NS+"list":
+                self.logger.debug("value: Converting a list")
+                return self._convert_list(value, id, name).value
+            elif value.tag == self.NS+"dict":
+                self.logger.debug("value: Converting a dict")
+                return self._convert_dict(value, id, name).value
+            elif value.tag == self.NS+"set":
+                self.logger.debug("value: Converting a set")
+                return self._convert_set(value, id, name).value
+            elif value.tag == self.NS+"frozenset":
+                self.logger.debug("value: Converting a frozenset")
+                return self._convert_frozen_set(value, id, name).value
             else:
-                if value.localName == "value":
-                    return str(element)
-
-        if value.localName == "tuple":
-            self.logger.debug("Converting a tuple")
-            results = self._convert_tuple(value, id, name).value
-        elif value.localName == "list":
-            self.logger.debug("Converting a list")
-            results = self._convert_list(value, id, name).value
-        elif value.localName == "dict":
-            self.logger.debug("Converting a dict")
-            results = self._convert_dict(value, id, name).value
-        elif value.localName == "set":
-            self.logger.debug("Converting a set")
-            results = self._convert_set(value, id, name).value
-        elif value.localName == "frozenset":
-            self.logger.debug("Converting a frozenset")
-            results = self._convert_frozen_set(value, id, name).value
-        elif len(results) == 1:
-            results = results[0]
-
-        return results
+                self.logger.debug("value: %s.%s Don't know how to handle %s" % (id, name, value.tag))
     
     def _convert_dict(self, dict_node, id, name):
         dict = {}
-        for entry in dict_node.entry:
-            key = None
-            for element in entry.xml_children:
-                if isinstance(element, amara.bindery.element_base):
-                    if element.localName == "key":
-                        pass # key is required, and known to already be at entry.key, so no need to re-parse it here
-                    elif element.localName == "value":
-                        dict[str(entry.key.value)] = self._convert_value(element, id, "%s.dict['%s']" % (name, entry.key.value))
-                    elif element.localName == "ref":
-                        dict[str(entry.key.value)] = self._convert_ref(element, "%s.dict['%s']" % (name, entry.key.value))
-                    elif element.localName == "object":
-                        self.logger.debug("Parsing an inner object definition...")
-                        dict[str(entry.key.value)] = self._convert_inner_object(element, id, "%s.dict['%s']" % (name, entry.key.value))
-                    elif element.localName in ["list", "tuple", "set", "frozenset"]:
-                        self.logger.debug("This dictionary entry has child elements of type %s." % element.localName)
-                        dict[str(entry.key.value)] = self._convert_value(element, id, "%s.dict['%s']" % (name, entry.key.value))
-                    else:
-                        self.logger.debug("dict: Don't know how to handle %s" % element.localName)
+        for entry in dict_node.findall(self.NS+"entry"):
+            self.logger.debug("dict: entry = %s" % entry)
+            key = entry.find(self.NS+"key").find(self.NS+"value").text
+            self.logger.debug("dict: key = %s" % key)
+            if entry.find(self.NS+"value") is not None:
+                dict[key] = self._convert_value(entry.find(self.NS+"value"), id, "%s.dict['%s']" % (name, key))
+            elif entry.find(self.NS+"ref") is not None:
+                dict[key] = self._convert_ref(entry.find(self.NS+"ref"), "%s.dict['%s']" % (name, key))
+            elif entry.find(self.NS+"object") is not None:
+                self.logger.debug("dict: Parsing an inner object definition...")
+                dict[key] = self._convert_inner_object(entry.find(self.NS+"object"), id, "%s.dict['%s']" % (name, key))
+            else:
+                for token in ["dict", "tuple", "set", "frozenset", "list"]:
+                    if entry.find(self.NS+token) is not None:
+                        dict[key] = self._convert_value(entry.find(self.NS+token), id, "%s.dict['%s']" % (name, key))
+                        break
+                if key not in dict:
+                    self.logger.debug("dict: Don't know how to handle %s" % entry.tag)
+
+        self.logger.debug("Dictionary is now %s" % dict)
         return DictDef(name, dict)
 
     def _convert_props(self, props_node, name):
         dict = {}
-        for prop in props_node.prop:
-            dict[prop.key] = str(prop)
+        self.logger.debug("props: Looking at %s" % props_node)
+        for prop in props_node:
+            dict[prop.get("key")] = str(prop.text)
+        self.logger.debug("props: Dictionary is now %s" % dict)
         return DictDef(name, dict)
 
     def _convert_list(self, list_node, id, name):
         list = []
-        for element in list_node.xml_children:
-            if isinstance(element, amara.bindery.element_base):
-                if element.localName == "value":
-                    list.append(str(element))
-                elif element.localName == "ref":
-                    list.append(self._convert_ref(element, "%s.list[%s]" % (name, len(list))))
-                elif element.localName == "object":
-                    self.logger.debug("Parsing an inner object definition...")
-                    list.append(self._convert_inner_object(element, id, "%s.list[%s]" % (name, len(list))))
-                elif element.localName in ["dict", "tuple", "set", "frozenset", "list"]:
-                    self.logger.debug("This list has child elements of type %s." % element.localName)
-                    list.append(self._convert_value(element, id, "%s.list[%s]" % (name, len(list))))
-                    self.logger.debug("List is now %s" % list)
-                else:
-                    self.logger.debug("list: Don't know how to handle %s" % element.localName)
+        self.logger.debug("list: Parsing %s" % list_node)
+        for element in list_node:
+            if element.tag == self.NS+"value":
+                list.append(str(element.text))
+            elif element.tag == self.NS+"ref":
+                list.append(self._convert_ref(element, "%s.list[%s]" % (name, len(list))))
+            elif element.tag == self.NS+"object":
+                self.logger.debug("list: Parsing an inner object definition...")
+                list.append(self._convert_inner_object(element, id, "%s.list[%s]" % (name, len(list))))
+            elif element.tag in [self.NS+token for token in ["dict", "tuple", "set", "frozenset", "list"]]:
+                self.logger.debug("This list has child elements of type %s." % element.tag)
+                list.append(self._convert_value(element, id, "%s.list[%s]" % (name, len(list))))
+                self.logger.debug("List is now %s" % list)
+            else:
+                self.logger.debug("list: Don't know how to handle %s" % element.tag)
+        self.logger.debug("List is now %s" % list)
         return ListDef(name, list)
 
     def _convert_tuple(self, tuple_node, id, name):
         list = []
-        for element in tuple_node.xml_children:
-            if isinstance(element, amara.bindery.element_base):
-                if element.localName == "value":
-                    list.append(str(element))
-                elif element.localName == "ref":
-                    list.append(self._convert_ref(element, "%s.tuple(%s}" % (name, len(list))))
-                elif element.localName == "object":
-                    self.logger.debug("Parsing an inner object definition...")
-                    list.append(self._convert_inner_object(element, id, "%s.tuple(%s)" % (name, len(list))))
-                elif element.localName in ["dict", "tuple", "set", "frozenset", "list"]:
-                    self.logger.debug("This tuple has child elements of type %s." % element.localName)
-                    list.append(self._convert_value(element, id, "%s.tuple(%s)" % (name, len(list))))
-                else:
-                    self.logger.debug("tuple: Don't know how to handle %s" % element.localName)
+        self.logger.debug("tuple: Parsing %s" % tuple_node)
+        for element in tuple_node:
+            self.logger.debug("tuple: Looking at %s" % element)
+            if element.tag == self.NS+"value":
+                self.logger.debug("tuple: Appending %s" % element.text)
+                list.append(str(element.text))
+            elif element.tag == self.NS+"ref":
+                list.append(self._convert_ref(element, "%s.tuple(%s}" % (name, len(list))))
+            elif element.tag == self.NS+"object":
+                self.logger.debug("tuple: Parsing an inner object definition...")
+                list.append(self._convert_inner_object(element, id, "%s.tuple(%s)" % (name, len(list))))
+            elif element.tag in [self.NS+token for token in ["dict", "tuple", "set", "frozenset", "list"]]:
+                self.logger.debug("tuple: This tuple has child elements of type %s." % element.tag)
+                list.append(self._convert_value(element, id, "%s.tuple(%s)" % (name, len(list))))
+                self.logger.debug("tuple: List is now %s" % list)
+            else:
+                self.logger.debug("tuple: Don't know how to handle %s" % element.tag)
+        self.logger.debug("Tuple is now %s" % str(tuple(list)))
         return TupleDef(name, tuple(list))
 
     def _convert_set(self, set_node, id, name):
         s = set()
-        for element in set_node.xml_children:
-            if isinstance(element, amara.bindery.element_base):
-                if element.localName == "value":
-                    s.add(str(element))
-                elif element.localName == "ref":
-                    s.add(self._convert_ref(element, name + ".set"))
-                elif element.localName == "object":
-                    self.logger.debug("Parsing an inner object definition...")
-                    s.add(self._convert_inner_object(element, id, "%s.set(%s)" % (name, len(s))))
-                elif element.localName in ["dict", "tuple", "set", "frozenset", "list"]:
-                    self.logger.debug("This set has child elements of type %s." % element.localName)
-                    s.add(self._convert_value(element, id, "%s.set(%s)" % (name,len(s)))) 
-                else:
-                    self.logger.debug("set: Don't know how to handle %s" % element.localName)
+        self.logger.debug("set: Parsing %s" % set_node)
+        for element in set_node:
+            self.logger.debug("Looking at element %s" % element)
+            if element.tag == self.NS+"value":
+                s.add(str(element.text))
+            elif element.tag == self.NS+"ref":
+                s.add(self._convert_ref(element, name + ".set"))
+            elif element.tag == self.NS+"object":
+                self.logger.debug("set: Parsing an inner object definition...")
+                s.add(self._convert_inner_object(element, id, "%s.set(%s)" % (name, len(s))))
+            elif element.tag in [self.NS+token for token in ["dict", "tuple", "set", "frozenset", "list"]]:
+                self.logger.debug("set: This set has child elements of type %s." % element.tag)
+                s.add(self._convert_value(element, id, "%s.set(%s)" % (name,len(s)))) 
+            else:
+                self.logger.debug("set: Don't know how to handle %s" % element.tag)
+        self.logger.debug("Set is now %s" % s)
         return SetDef(name, s)
 
     def _convert_frozen_set(self, frozen_set_node, id, name):
         item = self._convert_set(frozen_set_node, id, name)
+        self.logger.debug("frozenset: Frozen set is now %s" % frozenset(item.value))
         return FrozenSetDef(name, frozenset(item.value))
 
     def _convert_inner_object(self, object_node, id, name):
         inner_object_def = self._convert_object(object_node, prefix="%s.%s" % (id, name))
+        self.logger.debug("innerobj: Innerobject is now %s" % inner_object_def)
         self.objects.append(inner_object_def)
         return InnerObjectDef(name, inner_object_def)
 
     def _convert_prop_def(self, comp, p, name):
         "This function translates object properties into useful collections of information for the container."
-        if hasattr(p, "ref"):
-            return self._convert_ref(p.ref, name)
-        elif hasattr(p, "value"):
-            return ValueDef(name, str(p.value))
-        elif hasattr(p, "dict"):
-            return self._convert_dict(p.dict, comp.id, name)
-        elif hasattr(p, "props"):
-            return self._convert_props(p.props, name)
-        elif hasattr(p, "list"):
-            return self._convert_list(p.list, comp.id, name)
-        elif hasattr(p, "tuple"):
-            return self._convert_tuple(p.tuple, comp.id, name)
-        elif hasattr(p, "set"):
-            return self._convert_set(p.set, comp.id, name)
-        elif hasattr(p, "frozenset"):
-            self.logger.debug("Converting frozenset")
-            return self._convert_frozen_set(p.frozenset, comp.id, name)
-        elif hasattr(p, "object"):
-            return self._convert_inner_object(p.object, comp.id, name)
+        #self.logger.debug("Is %s.%s a ref? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"ref") is not None or "ref" in p.attrib))
+        #self.logger.debug("Is %s.%s a value? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"value") is not None or "value" in p.attrib))
+        #self.logger.debug("Is %s.%s an inner object? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"object") is not None or "object" in p.attrib))
+        #self.logger.debug("Is %s.%s a dict? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"dict") is not None or "dict" in p.attrib))
+        #self.logger.debug("Is %s.%s a list? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"list") is not None or "list" in p.attrib))
+        #self.logger.debug("Is %s.%s a tuple? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"tuple") is not None or "tuple" in p.attrib))
+        #self.logger.debug("Is %s.%s a set? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"set") is not None or "set" in p.attrib))
+        #self.logger.debug("Is %s.%s a frozenset? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"frozenset") is not None or "frozenset" in p.attrib))
+        #self.logger.debug("")
+        if "ref" in p.attrib or p.find(self.NS+"ref") is not None:
+            if "ref" in p.attrib:
+                return self._convert_ref(p.get("ref"), name)
+            else:
+                return self._convert_ref(p.find(self.NS+"ref"), name)
+        elif "value" in p.attrib or p.find(self.NS+"value") is not None:
+            if "value" in p.attrib:
+                return ValueDef(name, str(p.get("value")))
+            else:
+                return ValueDef(name, str(p.find(self.NS+"value").text))
+        elif "dict" in p.attrib or p.find(self.NS+"dict") is not None:
+            if "dict" in p.attrib:
+                return self._convert_dict(p.get("dict"), comp.get("id"), name)
+            else:
+                return self._convert_dict(p.find(self.NS+"dict"), comp.get("id"), name)
+        elif "props" in p.attrib or p.find(self.NS+"props") is not None:
+            if "props" in p.attrib:
+                return self._convert_props(p.get("props"), name)
+            else:
+                return self._convert_props(p.find(self.NS+"props"), name)
+        elif "list" in p.attrib or p.find(self.NS+"list") is not None:
+            if "list" in p.attrib:
+                return self._convert_list(p.get("list"), comp.get("id"), name)
+            else:
+                return self._convert_list(p.find(self.NS+"list"), comp.get("id"), name)
+        elif "tuple" in p.attrib or p.find(self.NS+"tuple") is not None:
+            if "tuple" in p.attrib:
+                return self._convert_tuple(p.get("tuple"), comp.get("id"), name)
+            else:
+                return self._convert_tuple(p.find(self.NS+"tuple"), comp.get("id"), name)
+        elif "set" in p.attrib or p.find(self.NS+"set") is not None:
+            if "set" in p.attrib:
+                return self._convert_set(p.get("set"), comp.get("id"), name)
+            else:
+                return self._convert_set(p.find(self.NS+"set"), comp.get("id"), name)
+        elif "frozenset" in p.attrib or p.find(self.NS+"frozenset") is not None:
+            if "frozenset" in p.attrib:
+                return self._convert_frozen_set(p.get("frozenset"), comp.get("id"), name)
+            else:
+                return self._convert_frozen_set(p.find(self.NS+"frozenset"), comp.get("id"), name)
+        elif "object" in p.attrib or p.find(self.NS+"object") is not None:
+            if "object" in p.attrib:
+                return self._convert_inner_object(p.get("object"), comp.get("id"), name)
+            else:
+                return self._convert_inner_object(p.find(self.NS+"object"), comp.get("id"), name)
 
 class YamlConfig(Config):
     """
