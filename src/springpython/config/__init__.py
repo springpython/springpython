@@ -273,6 +273,8 @@ class FrozenSetDef(ValueDef):
             setattr(obj, self.name, new_frozen_set)
         except AttributeError:
             pass
+        except TypeError:
+            pass
         return new_frozen_set
  
 class Config(object):
