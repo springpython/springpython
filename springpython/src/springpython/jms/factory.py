@@ -102,14 +102,14 @@ class WebSphereMQConnectionFactory(DisposableObject):
         
     def __init__(self, queue_manager=None, channel=None, host=None, listener_port=None,
             cache_open_send_queues=True, cache_open_receive_queues=True,
-            use_shared_connections=True, local_queue_template="SYSTEM.DEFAULT.MODEL.QUEUE"):
+            use_shared_connections=True, dynamic_queue_template="SYSTEM.DEFAULT.MODEL.QUEUE"):
         self.queue_manager = queue_manager
         self.channel = channel
         self.host = host
         self.listener_port = listener_port
         
         self.use_shared_connections = use_shared_connections
-        self.local_queue_template = local_queue_template
+        self.dynamic_queue_template = dynamic_queue_template
         
         self.logger = logging.getLogger("springpython.jms.factory.WebSphereMQConnectionFactory")
         
@@ -353,7 +353,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
             self._connect()
             self.logger.log(TRACE1, "open_dynamic_queue -> _is_connected2 %s" % self._is_connected)
         
-        dynamic_queue = self.mq.Queue(self.mgr, self.local_queue_template, 
+        dynamic_queue = self.mq.Queue(self.mgr, self.dynamic_queue_template, 
             self.CMQC.MQOO_INPUT_SHARED)
         
         # A bit hackish, but there's no other way to get its name.
