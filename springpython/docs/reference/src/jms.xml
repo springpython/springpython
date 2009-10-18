@@ -251,14 +251,14 @@ jms_template.receive(queue1)
             <para>
             <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
             provides several options that let you customize its behaviour
-            down to the very low level. Apart from the obvious ones which you
+            and apart from the obvious ones which you
             must provide (like, the queue manager's host) all other options have
             sensible defaults which you'll rarely need to change, if at all.
             </para>
             
             <para>
-            Here's the full initializer method reproduced for convenience
-            along with their explanation and default values:
+            Here's a full initializer method reproduced for convenience
+            and the explanation of default values used:
             </para>
 
 <programlisting><![CDATA[
@@ -279,8 +279,8 @@ jms_template.receive(queue1)
 							<entry>queue_manager</entry>
 							<entry>
                                 <para>default: None</para>
-                                <para><emphasis>Must be configured</emphasis></para>
-                                <para>zzZzzzZzz</para>
+                                <para><emphasis>Must be set manually</emphasis></para>
+                                <para>Name of the queue manager, e.g. EAI.QM.1</para>
                             </entry>
  						</row>
                         
@@ -288,8 +288,10 @@ jms_template.receive(queue1)
 							<entry>channel</entry>
 							<entry>
                                 <para>default: None</para>
-                                <para><emphasis>Must be configured</emphasis></para>
-                                <para>zzZzzzZzz</para>
+                                <para><emphasis>Must be set manually</emphasis></para>
+                                <para>Name of a server connection (SVRCONN) channel
+                                through which the connection will be established,
+                                e.g. EAI.SVRCONN.1</para>
                             </entry>
  						</row>
                         
@@ -297,8 +299,9 @@ jms_template.receive(queue1)
 							<entry>host</entry>
 							<entry>
                                 <para>default: None</para>
-                                <para><emphasis>Must be configured</emphasis></para>
-                                <para>zzZzzzZzz</para>
+                                <para><emphasis>Must be set manually</emphasis></para>
+                                <para>Host name or IP on which the queue manager is
+                                running, e.g. 192.168.1.103</para>
                             </entry>
  						</row>
                         
@@ -306,8 +309,9 @@ jms_template.receive(queue1)
 							<entry>listener_port</entry>
 							<entry>
                                 <para>default: None</para>
-                                <para><emphasis>Must be configured</emphasis></para>
-                                <para>zzZzzzZzz</para>
+                                <para><emphasis>Must be set manually</emphasis></para>
+                                <para>Port on which the queue manager's listener is
+                                accepting TCP connections, e.g. 1434</para>
                             </entry>
  						</row>
                         
@@ -316,7 +320,19 @@ jms_template.receive(queue1)
 							<entry>
                                 <para>default: True</para>
                                 <para></para>
-                                <para>zzZzzzZzz</para>
+                                <para>
+                                    By default, 
+                                    <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+                                    will keep references to open queues in a cache
+                                    for later re-use. This speeds-up most operations
+                                    as there's usually no need for closing a queue
+                                    if it's going to be used in subsequent
+                                    calls to queue manager. At times however,
+                                    it's prefered to close the queues as soon
+                                    as possible and <emphasis>cache_open_send_queues</emphasis>
+                                    controls whether queues open for putting
+                                    the messages on are to be kept in the cache.
+                                </para>
                             </entry>
  						</row>
                         
@@ -325,7 +341,13 @@ jms_template.receive(queue1)
 							<entry>
                                 <para>default: True</para>
                                 <para></para>
-                                <para>zzZzzzZzz</para>
+                                <para>This setting controls
+                                whether queues open for receving of messages
+                                should be kept in a cache. If set to
+                                <emphasis>False</emphasis>, they will be
+                                closed after the call to get a message off the
+                                queue will have finished.
+                                </para>
                             </entry>
  						</row>
                         
@@ -334,22 +356,44 @@ jms_template.receive(queue1)
 							<entry>
                                 <para>default: True</para>
                                 <para></para>
-                                <para>zzZzzzZzz</para>
+                                <para>A single
+                                <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+                                object may be shared between multiple threads
+                                to provide better performance. This setting allows
+                                for marking the underlying connection to a
+                                queue manager as a non-shareable and makes sure
+                                that only one thread will be able to use it,
+                                any call to the factory from a thread that
+                                didn't open the connection will result
+                                in a <classname>springpython.jms.JMSException</classname>
+                                raised. The setting should only be used when connecting to queue managers
+                                running on z/OS systems as it otherwise can
+                                hurt the performance of multi-threaded applications.
+                                It has no impact on performance of single-threaded applications.
+                                </para>
                             </entry>
  						</row>
                         
 						<row>
-							<entry>local_queue_template</entry>
+							<entry>dynamic_queue_template</entry>
 							<entry>
                                 <para>default: SYSTEM.DEFAULT.MODEL.QUEUE</para>
                                 <para></para>
-                                <para>zzZzzzZzz</para>
+                                <para>
+                                The name of a model queue basing on which
+                                the dynamic queues will be created. It is usually
+                                desirable to override the default value as,
+                                unless customized,
+                                SYSTEM.DEFAULT.MODEL.QUEUE is a non-shared
+                                (NOSHARE in MQ speak) queue and doesn't allow
+                                for opening the dynamic queues for both sending
+                                and receiving.
+                                </para>
                             </entry>
  						</row>
  					</tbody>
  				</tgroup>
  			</table>
-            
             
             <para>
                 <emphasis>.destroy</emphasis>
