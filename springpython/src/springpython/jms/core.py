@@ -134,11 +134,10 @@ class TextMessage(object):
         self.text = text
         self.jms_correlation_id = jms_correlation_id
         
-        # TODO: Remember to document the default value
         self.jms_delivery_mode = jms_delivery_mode or DEFAULT_DELIVERY_MODE
         
         self.jms_destination = jms_destination
-        self.jms_expiration = jms_expiration # TODO: Document it's in millis
+        self.jms_expiration = jms_expiration
         self.jms_message_id = jms_message_id
         self.jms_priority = jms_priority
         self.jms_redelivered = jms_redelivered

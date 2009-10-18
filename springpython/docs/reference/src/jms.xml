@@ -366,7 +366,7 @@ jms_template.receive(queue1)
                                 any call to the factory from a thread that
                                 didn't open the connection will result
                                 in a <classname>springpython.jms.JMSException</classname>
-                                raised. The setting should only be used when connecting to queue managers
+                                being raised. The setting should only be used when connecting to queue managers
                                 running on z/OS systems as it otherwise can
                                 hurt the performance of multi-threaded applications.
                                 It has no impact on performance of single-threaded applications.
@@ -396,11 +396,56 @@ jms_template.receive(queue1)
  			</table>
             
             <para>
-                <emphasis>.destroy</emphasis>
+                Here's an example of programatically creating a
+                <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+                object:
+            </para>
+<programlisting><![CDATA[
+from springpython.jms.factory import WebSphereMQConnectionFactory
+
+qm_name = "QM.1"
+channel = "SVRCONN.1"
+host = "192.168.1.121"
+listener_port = "1434"
+
+factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+
+# ... use factory here.
+
+# Always destroy the factory when not using an IoC container.
+factory.destroy()
+]]></programlisting>
+
+            <para>
+                An example of using YamlConfig for configuring
+                <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+                inside of an IoC container.
+            </para>
+<programlisting><![CDATA[
+objects:
+    - object: MyConnectionFactory
+      class: springpython.jms.factory.WebSphereMQConnectionFactory
+      properties:
+          queue_manager: QM.1
+          channel: SVRCONN.1
+          host: 192.168.1.121
+          listener_port: 1434
+]]></programlisting>
+
+            <para>
+                All cached queues will not be closed by a factory until after
+                its .destroy will have been called which will happen automatically
+                if you're using an IoC container. If the factory is configured
+                programatically in Python you must call .destroy yourself in your
+                code. A call to .destroy also closes the factory's connection
+                to a queue manager.
             </para>
             
             <para>
-                <emphasis>thread safety</emphasis>
+                <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+                objects are thread-safe and may be shared between multiple threads
+                if the queue manager supports sharing a single connection
+                which is the case on all platforms except for z/OS.
             </para>
             
             <note>
@@ -421,8 +466,341 @@ jms_template.receive(queue1)
     
     <section id="jms-jms-template">
         <title>springpython.jms.core.JmsTemplate</title>
+        
+        <para>
+            JmsTemplate is the class to use for sending and receiving JMS messages.
+            A template must be associated with a connection factory and once
+            configured, may be used for communicating in both directions. It's
+            up to you to decide whether in your circumstances it makes sense
+            to reuse a single template for all communications, have a single
+            template for each queue involved or perhaps use separate, dedicated,
+            templates, one for sending and one for receiving. Note however,
+            <emphasis>that <classname>springpython.jms.core.JmsTemplate</classname>
+            instances are not guaranteed to be thread-safe</emphasis> and no
+            attempt has been made to make them be so.
+        </para>
+        
+        <para>
+            Remember that factories postpone connecting to a queue manager
+            and creating a JmsTemplate instance doesn't necessarily mean
+            there will be no connection errors when it will be first time used
+            for sending or receiving.
+        </para>
+        
+            <para>
+                Here's how <classname>springpython.jms.core.JmsTemplate</classname>
+                may be instantiated using Python code:
+            </para>
+<programlisting><![CDATA[
+from springpython.jms.core import JmsTemplate
+from springpython.jms.factory import WebSphereMQConnectionFactory
+
+qm_name = "QM.1"
+channel = "SVRCONN1.1"
+host = "192.168.1.121"
+listener_port = "1434"
+
+factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+jms_template = JmsTemplate(factory)
+
+# Always destroy the factory when not using IoC
+factory.destroy()
+]]></programlisting>
+
+            <para>
+                An example of using YamlConfig to configure a JmsTemplate
+            </para>
+<programlisting><![CDATA[
+objects:
+    - object: MyConnectionFactory
+      class: springpython.jms.factory.WebSphereMQConnectionFactory
+      properties:
+          queue_manager: QM.1
+          channel: SVRCONN.1
+          host: 192.168.1.121
+          listener_port: 1434
+          
+    - object: jms_template
+      class: springpython.jms.core.JmsTemplate
+      properties:
+          factory: MyConnectionFactory
+]]></programlisting>
+
+            <para>
+            JmsTemplate allows for a number of options to customize its
+            behaviour. The only options required to set manually is
+            the <emphasis>factory</emphasis> parameter. Except for factory,
+            all the parameters may be overriden by individual calls to sending
+            or receiving of messages.
+            </para>
+<programlisting><![CDATA[
+    def __init__(self, factory=None, delivery_persistent=None,
+            priority=None, time_to_live=None, message_converter=None, 
+            default_destination=None):
+]]></programlisting>
+
+			<table id="jms-wmq-jms-template-init-options">
+
+				<title><classname>springpython.jms.core.JmsTemplate</classname>
+                customizable options</title>
+				
+				<tgroup cols="2">
+				
+					<tbody>
+						<row>
+							<entry>factory</entry>
+							<entry>
+                                <para>default: None</para>
+                                <para><emphasis>Must be set manually</emphasis></para>
+                                <para>A JMS connection factory associated
+                                with this JmsTemplate.</para>
+                            </entry>
+                        </row>
+                        <row>
+							<entry>delivery_persistent</entry>
+							<entry>
+                                <para>default: None</para>
+                                <para>Tells whether messagas sent to a JMS
+                                provider are by default persistent. If not set,
+                                the persistency of messages is controlled
+                                on a per messages basis (and defaults to
+                                a persistent delivery).</para>
+                            </entry>
+                        </row>
+                        <row>
+							<entry>priority</entry>
+							<entry>
+                                <para>default: None</para>
+                                <para>Messages sent to the provider may
+                                be of different priority, usually on a scale
+                                from 1 to 9. The setting controls the default
+                                priority of all messages sent by this JmsTemplate,
+                                unless overridden by individual messages.
+                                A JMS provider will set the default priority
+                                if no value is given here or when sending
+                                the individual messages.
+                                </para>
+                            </entry>
+                        </row>
+                        <row>
+							<entry>time_to_live</entry>
+							<entry>
+                                <para>default: None</para>
+                                <para>
+                                JMS allows for expiry of messages after a certain
+                                time <emphasis>expressed in milliseconds</emphasis>.
+                                The time to live of a message may be set here
+                                and it will be applied to all messages sent
+                                or can be set per each message sent. If no value
+                                is provided here and when sending the message
+                                to a destination, the message expiry time
+                                is left to the discretion of a JMS provider.
+                                </para>
+                            </entry>
+                        </row>
+                        <row>
+							<entry>message_converter</entry>
+							<entry>
+                                <para>default: None</para>
+                                <para>It is sometimes desirable to not have to
+                                deal with raw messages taken from or sent to
+                                JMS provider from within a JmsTemplate object,
+                                it may make more sense to delegate
+                                converting the objects from and to JMS representation
+                                to an external helper class. A message converter
+                                is an object that helps decoupling the domain
+                                objects from the fact that JMS is the transportation
+                                layer used for communicating.  A single converter
+                                may be used for converting the incoming
+                                as well as outgoing messages.
+                                See the <link linkend="jms-jms-template-message-converters">section
+                                on message converters</link> for more details
+                                and code examples. Setting the message converter
+                                here will take precedence over setting it on
+                                a per-message basis.
+                                </para>
+                            </entry>
+                        </row>
+                        <row>
+							<entry>default_destination</entry>
+							<entry>
+                                <para>default: None</para>
+                                <para>If all or most of the messages are sent to
+                                or received from the same JMS destination,
+                                it's usually useful to configure the destination's
+                                name here and have it used in any subsequent
+                                calls to a JMS provider. Note that
+                                <emphasis>the value given is used as a
+                                default destination for both sending and
+                                receiving of messages</emphasis>.
+                                </para>
+                            </entry>
+ 						</row>
+ 					</tbody>
+ 				</tgroup>
+ 			</table>
+
+        
         <section id="jms-template-sending">
             <title>Sending</title>
+            
+            <para>
+            The basic approach is to send ASCII strings or unicode objects,
+            which must allow for encoding into UTF-8.
+            </para>
+<programlisting><![CDATA[
+# -*- coding: utf-8 -*-
+
+from springpython.jms.core import JmsTemplate
+from springpython.jms.factory import WebSphereMQConnectionFactory
+
+qm_name = "QM.1"
+channel = "SVRCONN.1"
+host = "192.168.1.121"
+listener_port = "1434"
+queue1 = "TEST.1"
+
+# The connection factory we're going to use.
+factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+
+# Every JmsTemplate uses a connection factory for actually communicating with a JMS provider.
+jms_template = JmsTemplate(factory)
+jms_template.default_destination = queue1
+
+# Send some ASCII
+jms_template.send("Hi, Spring Python here")
+
+# Send unicode
+jms_template.send(u"Cześć, z tej strony Spring Python")
+
+# We're not using an IoC so we need to shut down the connection factory ourselves.
+factory.destroy()
+]]></programlisting>
+
+        <para>
+        Note that in an example above the message's destination has been taken
+        from JmsTemplate. We can also specify it on send time or we can
+        combine both approaches, like here:
+        </para>
+<programlisting><![CDATA[
+# -*- coding: utf-8 -*-
+
+from springpython.jms.core import JmsTemplate
+from springpython.jms.factory import WebSphereMQConnectionFactory
+
+qm_name = "QM.1"
+channel = "SVRCONN.1"
+host = "192.168.1.121"
+listener_port = "1434"
+queue1 = "TEST.1"
+queue2 = "TEST.2"
+
+# The connection factory we're going to use.
+factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+
+# Every JmsTemplate uses a connection factory for actually communicating with a JMS provider.
+jms_template = JmsTemplate(factory)
+jms_template.default_destination = queue1
+
+# Send some ASCII to one queue
+jms_template.send("Hi, Spring Python here")
+
+# Send unicode to another queue
+jms_template.send(u"Cześć, z tej strony Spring Python", queue2)
+
+# We're not using an IoC so we need to shut down the connection factory ourselves.
+factory.destroy()
+]]></programlisting>
+
+        <para>
+        Sending is not limited to strings or unicode objects though. You can customize
+        a lot of message's properties by sending a
+        <link linkend="jms-text-message">springpython.jms.core.TextMessage</link> instead.
+        The following example shows how a custom message ID and reply to destination
+        can be specified for an outgoing message.
+        </para>
+<programlisting><![CDATA[
+# stdlib
+from uuid import uuid4
+
+# Spring Python
+from springpython.jms.core import JmsTemplate, TextMessage
+from springpython.jms.factory import WebSphereMQConnectionFactory
+
+qm_name = "QM.1"
+channel = "SVRCONN.1"
+host = "192.168.1.121"
+listener_port = "1434"
+queue1 = "TEST.1"
+
+# The connection factory we're going to use.
+factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+
+# Every JmsTemplate uses a connection factory for actually communicating with a JMS provider.
+jms_template = JmsTemplate(factory)
+jms_template.default_destination = queue1
+
+# Generate the correlation ID
+jms_correlation_id = uuid4().hex
+
+message = TextMessage("Hi, Spring Python here")
+message.jms_correlation_id = jms_correlation_id
+message.jms_reply_to = "REPLY.TO.QUEUE"
+
+# Send the message
+jms_template.send(message)
+
+# We're not using an IoC so we need to shut down the connection factory ourselves.
+factory.destroy()
+]]></programlisting>
+
+        <para>
+        Using TextMessage instances instead of plain strings or unicode objects
+        is also recommended when you're interested in values a JMS provider has
+        given to JMS properties of a message after the message had been sent.
+        Here you can see the values which were assigned automatically
+        by the provider to jms_timestamp and jms_message_id properties.
+        </para>
+<programlisting><![CDATA[
+from springpython.jms.core import JmsTemplate, TextMessage
+from springpython.jms.factory import WebSphereMQConnectionFactory
+
+qm_name = "QM.1"
+channel = "SVRCONN.1"
+host = "192.168.1.121"
+listener_port = "1434"
+queue1 = "TEST.1"
+
+# The connection factory we're going to use.
+factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+
+# Every JmsTemplate uses a connection factory for actually communicating with a JMS provider.
+jms_template = JmsTemplate(factory)
+jms_template.default_destination = queue1
+
+# Create a TextMessage instance.
+message = TextMessage("Hi, Spring Python here")
+
+# Send the message
+jms_template.send(message)
+
+print "jms_timestamp = %s" % message.jms_timestamp
+print "jms_message_id = %s" % message.jms_message_id
+
+# We're not using an IoC so we need to shut down the connection factory ourselves.
+factory.destroy()
+
+#
+# Shows the following here:
+#
+# $ python jms_properties_overriding.py
+# jms_timestamp = 1255885622380
+# jms_message_id = ID:414d5120514d2e312020202020202020283cdb4a02220020
+# $
+
+
+]]></programlisting>
+            
         </section>
         
         <section id="jms-jms-template-receiving">
