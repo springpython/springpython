@@ -452,7 +452,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
             raise exc
             
         if md.ReplyToQ.strip():
-            self.logger.log(TRACE1, "md.ReplyToQ [%r]" % md.ReplyToQ) 
+            self.logger.log(TRACE1, "Found md.ReplyToQ=[%r]" % md.ReplyToQ) 
             text_message.jms_reply_to = "queue://" + md.ReplyToQMgr.strip() + "/" + md.ReplyToQ.strip()
             
         text_message.jms_priority = md.Priority
@@ -549,6 +549,9 @@ class WebSphereMQConnectionFactory(DisposableObject):
             
         if message.jms_reply_to:
             md.ReplyToQ = message.jms_reply_to
+            
+            self.logger.log(TRACE1, ("Set jms_reply_to. md.ReplyToQ=[%r],"
+                " message.jms_reply_to=[%r]" % (md.ReplyToQ, message.jms_reply_to)))
             
         # jms_expiration is in milliseconds, md.Expiry is in centiseconds.
         if message.jms_expiration:

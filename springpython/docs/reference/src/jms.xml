@@ -825,7 +825,6 @@ factory.destroy()
             .receive or you can explicitly specify the destination's name
             when you receive messages.
             </para>
-            
 <programlisting><![CDATA[
 from springpython.jms.core import JmsTemplate, TextMessage
 from springpython.jms.factory import WebSphereMQConnectionFactory
@@ -867,6 +866,105 @@ factory.destroy()
         
         <section id="jms-jms-template-dynamic-queues">
             <title>Dynamic queues</title>
+            
+            <para>
+                A dynamic queue is a usually short-lived object created on-demand
+                by JMS applications, most often found in request-reply scenarios
+                when there's no need for the response to be persistently stored.
+                An application initiating the communication will create a dynamic
+                temporary queue, send the request to the other side providing the name of
+                the dynamic queue as a destination for the responses to be sent to
+                and wait for a certain amount of time. 
+                <emphasis>With Spring Python and WebSphere MQ,
+                the requesting side must then explicitly close the dynamic queue
+                </emphasis> regardless of whether the response will be received
+                or if the request timeouts.
+            </para>
+            
+            <para>
+                The following example shows two JmsTemplate objects communicating
+                via a dynamic queue and imitating an exchange of messages
+                between two dispersed applications. You can observe than
+                from the responding application's point of view a dynamic queue's
+                name is like any other queue's name, it doesn't need to be - and indeed isn't -
+                aware that it's responding to a dynamic queue and not to a 
+                predefined one. For the requesting end a dynamic queue is also like
+                a regular queue in that its name must be provided to the JmsTemplate's
+                .receive method. Note that WebSphere MQ allows only non-persistent
+                messages to be put on <emphasis>temporary</emphasis> dynamic
+                queues which are the kind of dynamic queues you get by default
+                with Spring Python.
+            </para>
+<programlisting><![CDATA[
+from springpython.jms import DELIVERY_MODE_NON_PERSISTENT
+from springpython.jms.core import JmsTemplate, TextMessage
+from springpython.jms.factory import WebSphereMQConnectionFactory
+
+qm_name = "QM.1"
+channel = "SVRCONN.1"
+host = "192.168.1.121"
+listener_port = "1434"
+
+exchange_queue = "TEST.1"
+
+# The connection factory we're going to use.
+factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+
+requesting_side = JmsTemplate(factory)
+requesting_side.default_destination = exchange_queue
+
+responding_side = JmsTemplate(factory)
+responding_side.default_destination = exchange_queue
+
+# Create a dynamic queue.
+dyn_queue_name = requesting_side.open_dynamic_queue()
+
+# Note that we wrap the whole conversation in a try/finally block as we must
+# always close a WebSphere MQ dynamic queue.
+
+try:
+    # Create a request message.
+    message = TextMessage("Hey, what's up on the other side?")
+    
+    # WebSphere MQ messages sent to dynamic temporary queues must not
+    # be persistent.
+    message.jms_delivery_mode = DELIVERY_MODE_NON_PERSISTENT
+    
+    # Tell the other side where to send responses.
+    message.jms_reply_to = dyn_queue_name
+
+    # Send the request
+    requesting_side.send(message)
+
+    # Receive the request ..
+    request = responding_side.receive()
+    
+    # .. prepare the response ..
+    response = TextMessage("A bit stormy today!")
+    response.jms_delivery_mode = DELIVERY_MODE_NON_PERSISTENT
+    
+    # .. and send our response to a jms_reply_to destination which as we know
+    # is a dynamic queue in this example.
+    responding_side.send(response, request.jms_reply_to)
+    
+    # Receive the response. It's being read as usual, as from any other queue,
+    # there's no special JmsTemplate's method for getting messages
+    # off dynamic queues.
+    print requesting_side.receive(dyn_queue_name)
+    
+finally:
+    requesting_side.close_dynamic_queue(dyn_queue_name)
+
+# We're not using an IoC so we need to shut down the connection factory ourselves.
+factory.destroy()
+]]></programlisting>
+
+        <para>
+            It's worth mentioning again that you must close WebSphere MQ
+            dynamic queues yourself as Spring Python won't do that for you - it's a slight
+            deviation from how Java JMS works.
+        </para>
+
         </section>
         
         <section id="jms-jms-template-message-converters">
