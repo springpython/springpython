@@ -798,13 +798,71 @@ factory.destroy()
 # jms_message_id = ID:414d5120514d2e312020202020202020283cdb4a02220020
 # $
 
-
 ]]></programlisting>
+
+        <para>
+        Take a look 
+        <link linkend="jms-text-message">here</link> for more information
+        about how to use TextMessages.
+        </para>
             
         </section>
         
         <section id="jms-jms-template-receiving">
             <title>Receiving</title>
+            
+            <para>
+            The same JmsInstance may be used for both sending and receiving
+            of messages. When you receive messages you may optionally provide
+            a timeout value in milliseconds after exceeding which a 
+            <classname>springpython.jms.NoMessageAvailableException</classname>
+            will be raised if no message will have been available for a given
+            JMS destination. Default timeout is 1000 milliseconds.
+            </para>
+            
+            <para>
+            JmsTemplate may use a defualt JMS destination for each call to
+            .receive or you can explicitly specify the destination's name
+            when you receive messages.
+            </para>
+            
+<programlisting><![CDATA[
+from springpython.jms.core import JmsTemplate, TextMessage
+from springpython.jms.factory import WebSphereMQConnectionFactory
+
+qm_name = "QM.1"
+channel = "SVRCONN.1"
+host = "192.168.1.121"
+listener_port = "1434"
+queue1 = "TEST.1"
+queue2 = "TEST.2"
+
+# The connection factory we're going to use.
+factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+
+# Every JmsTemplate uses a connection factory for actually communicating with a JMS provider.
+jms_template = JmsTemplate(factory)
+jms_template.default_destination = queue1
+
+# Send a message to the first queue which is a default destination ..
+jms_template.send("Hi there!")
+
+# .. and now receive it.
+print jms_template.receive()
+
+# Now send a message to the second one ..
+jms_template.send("Hi there again!", queue2)
+
+# .. and now receive it ..
+print jms_template.receive(queue2)
+
+# .. try to receive a message again, this time requesting a timeout of 2 seconds.
+print jms_template.receive(queue2, 2000)
+
+# We're not using an IoC so we need to shut down the connection factory ourselves.
+factory.destroy()
+]]></programlisting>
+            
         </section>
         
         <section id="jms-jms-template-dynamic-queues">
