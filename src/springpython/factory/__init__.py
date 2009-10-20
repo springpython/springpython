@@ -31,9 +31,12 @@ class ReflectiveObjectFactory(ObjectFactory):
         parts = self.module_and_class.split(".")
         module_name = ".".join(parts[:-1])
         class_name = parts[-1]
-        __import__(module_name)
-        cls = getattr(sys.modules[module_name], class_name)
-        return cls(*constr, **named_constr)
+        if module_name == "":
+            return __import__(class_name)(*constr, **named_constr)
+        else:
+            __import__(module_name)
+            cls = getattr(sys.modules[module_name], class_name)
+            return cls(*constr, **named_constr)
 
 
     def __str__(self):

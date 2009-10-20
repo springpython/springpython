@@ -73,6 +73,7 @@ class PyroProxyFactory(object):
     """
     def __init__(self):
         self.__dict__["client_proxy"] = None
+        self.__dict__["service_url"] = None
         
     def __setattr__(self, name, value):
         if name == "service_url":

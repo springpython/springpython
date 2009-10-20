@@ -29,6 +29,7 @@ from springpython.config import SpringJavaConfig
 from springpython.config import Object
 from springpython.config import XMLConfig
 from springpython.config import YamlConfig
+from springpython.remoting.pyro import PyroProxyFactory
 from springpython.security.userdetails import InMemoryUserDetailsService
 from springpythontest.support import testSupportClasses
 
@@ -1117,6 +1118,21 @@ class XMLConfigConstructorBasedTestCase(unittest.TestCase):
         self.assertEquals(2, len(controller.executors))
         for executor in controller.executors:
             self.assertTrue(isinstance(executor, testSupportClasses.Executor))
+            
+class PyroFactoryTestCase(unittest.TestCase):
+    def testPyroFactoryDoesntGetApply(self):
+        class MyPythonConfig(PythonConfig):
+            @Object
+            def my_pyrofactory(config_self): # let lambda access parent test self
+                ppf = PyroProxyFactory()
+                # small hack to make the thing testable
+                ppf.__dict__["after_properties_set"] = lambda: self.fail(
+                    "after_properties_set mustn't be called on "
+                    "PyroProxyFactory objects.")
+                return ppf
+        
+        ctx = ApplicationContext(MyPythonConfig())
+
 
 class YamlConfigConstructorBasedTestCase(unittest.TestCase):
     """This test case exercises the constructors for XMLConfig"""
