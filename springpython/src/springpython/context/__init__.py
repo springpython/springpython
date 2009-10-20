@@ -19,7 +19,6 @@ import logging
 
 from springpython.util import get_last_traceback
 from springpython.container import ObjectContainer
-from springpython.remoting.pyro import PyroProxyFactory
 
 class ApplicationContext(ObjectContainer):
     """
@@ -32,8 +31,8 @@ class ApplicationContext(ObjectContainer):
         atexit.register(self.shutdown_hook)
         
         self.logger = logging.getLogger("springpython.context.ApplicationContext")
-        self.types_to_avoid = [PyroProxyFactory]
-        
+        self.classnames_to_avoid = set(["PyroProxyFactory"])
+         
         for object_def in self.object_defs.values():
             self._apply(object_def)
             
@@ -62,9 +61,9 @@ class ApplicationContext(ObjectContainer):
                     self.objects[obj_name] = post_processor.post_process_after_initialization(obj, obj_name)
             
     def _apply(self, obj):
-        if len([True for type_to_avoid in self.types_to_avoid if isinstance(obj, type_to_avoid)]) == 0: 
+        if not (obj.__class__.__name__ in self.classnames_to_avoid): 
             if hasattr(obj, "after_properties_set"):
-               obj.after_properties_set()
+                obj.after_properties_set()
             #if hasattr(obj, "post_process_after_initialization"):
             #    obj.post_process_after_initialization(self)
             if hasattr(obj, "set_app_context"):
