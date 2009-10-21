@@ -969,6 +969,111 @@ factory.destroy()
         
         <section id="jms-jms-template-message-converters">
             <title>Message converters</title>
+            
+            <para>
+                It's quite possible that you'll like to separate the code responsible for
+                core JMS communication with outside systems from the logic needed
+                for converting your business domain's objects back and forth
+                to strings needed for passing into JmsTemplate's methods. You
+                may utilize your own converting classes for it or you can use
+                the Spring Python's converters for such a work. A converter
+                is a subclass of 
+                <classname>springpython.jms.core.MessageConverter</classname>
+                which must implement at least one of the 
+                <emphasis>to_message</emphasis> or <emphasis>from_message</emphasis>
+                methods. There's nothing magical about MessageConverter objects
+                and they won't do any automatic convertions for you, they're just
+                interfaces you can implement as you'll likely need some sort
+                of separation between the objects you deal with and the JMS
+                API.
+            </para>
+            
+            <para>
+                There's one difference you must take into account when using
+                message converters - you don't use the standard send and
+                receive methods but dedicated <emphasis>convert_and_send</emphasis>
+                and <emphasis>receive_and_convert</emphasis> ones. Other than
+                that, the JMS API and features are exactly the same.
+            </para>
+            
+            <para>
+                The code below shows a sample usage of MessageConverters. Note
+                that you don't need to implement both
+                <emphasis>to_message</emphasis> and <emphasis>from_message</emphasis>
+                if that's not appropriate in your situation however it makes
+                sense for the example to handle requests and responses using
+                only one converter object. 
+            </para>
+<programlisting><![CDATA[
+from springpython.jms.factory import WebSphereMQConnectionFactory
+from springpython.jms.core import JmsTemplate, MessageConverter, TextMessage
+
+qm_name = "QM.1"
+channel = "SVRCONN.1"
+host = "192.168.1.121"
+listener_port = "1434"
+
+request_queue = "TEST.1"
+
+# Note that it's the same queue so we're going to later receive the same invoice we sent.
+response_queue = "TEST.1"
+
+# One of the business domain's objects our application deals with.
+class Invoice(object):
+    def __init__(self, customer_account_id=None, month=None, amount=None):
+        self.customer_account_id = customer_account_id
+        self.month = month
+        self.amount = amount
+        
+    def __str__(self):
+        return "<%s at %s, customer_account_id=%s, month=%s, amount=%s>" % (
+            self.__class__.__name__, hex(id(self)), self.customer_account_id,
+            self.month, self.amount)
+
+# Let's imagine the other side of a JMS link wants to receive and send CSV data.
+class InvoiceConverter(MessageConverter):
+    
+    def to_message(self, invoice):
+        """ Converts a business object to CSV.
+        """
+        text = ";".join((invoice.customer_account_id, invoice.month, invoice.amount))
+        
+        return TextMessage(text)
+        
+    def from_message(self, message):
+        """ Produces a business object out of CSV data.
+        """
+        
+        customer_account_id, month, amount = message.text.split(";")
+        
+        invoice = Invoice()
+        invoice.customer_account_id = customer_account_id
+        invoice.month = month
+        invoice.amount = amount
+        
+        return invoice
+        
+# The connection factory we're going to use.
+factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+
+# Our JmsTemplate.
+jms_template = JmsTemplate(factory)
+
+# Here we tell the template to use our converter.
+invoice_converter = InvoiceConverter()
+jms_template.message_converter = invoice_converter
+
+# See how we're now dealing only with business objects at the JmsTemplate level.
+
+invoice = Invoice("00033010118", "200909", "136.32")
+jms_template.convert_and_send(invoice, request_queue)
+
+print jms_template.receive_and_convert(response_queue)
+
+# We're not using an IoC so we need to shut down the connection factory ourselves.
+factory.destroy()
+]]></programlisting>
+            
         </section>
     </section>
     
