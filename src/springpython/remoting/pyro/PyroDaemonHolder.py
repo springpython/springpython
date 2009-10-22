@@ -49,7 +49,7 @@ def register(pyro_obj, service_name, host, port):
         pyro_threads[(host, port)] = _PyroThread(host, port)
         pyro_threads[(host, port)].start()
         
-    pyro_threads[(host, port)].daemon.connect(pyro_obj, service_name)
+    pyro_threads[(host, port)].pyro_daemon.connect(pyro_obj, service_name)
 
 def deregister(service_name, host, port):
     """
@@ -60,7 +60,7 @@ def deregister(service_name, host, port):
 
     host, port = resolve(host, port)
     
-    pyro_threads[(host, port)].daemon.disconnect(serviceList[(service_name, host, port)])
+    pyro_threads[(host, port)].pyro_daemon.disconnect(serviceList[(service_name, host, port)])
     del(serviceList[(service_name, host, port)])
 
     def get_address((service_name, host, port)):
@@ -98,7 +98,7 @@ class _PyroThread(threading.Thread):
         self.port = port
         self.logger = logging.getLogger("springpython.remoting.pyro.PyroDaemonHolder._PyroThread")
 
-        self.daemon = Pyro.core.Daemon(host=host, port=port)
+        self.pyro_daemon = Pyro.core.Daemon(host=host, port=port)
     
     def run(self):
         """
@@ -108,7 +108,7 @@ class _PyroThread(threading.Thread):
         self._running = True
         self.logger.debug("Starting up Pyro server thread for %s:%s" % (self.host, self.port))
         Pyro.core.initServer()
-        self.daemon.requestLoop(condition = lambda:self._running)
+        self.pyro_daemon.requestLoop(condition = lambda:self._running)
 
     def shutdown(self):
         """
