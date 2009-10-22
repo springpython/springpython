@@ -42,8 +42,9 @@ except ImportError:
 from springpython.context import DisposableObject
 from springpython.jms.core import reserved_attributes, TextMessage
 from springpython.util import TRACE1, get_last_traceback, synchronized
-from springpython.jms import WebSphereMQJMSException, NoMessageAvailableException, \
-    DELIVERY_MODE_NON_PERSISTENT, DELIVERY_MODE_PERSISTENT
+from springpython.jms import JMSException, WebSphereMQJMSException, \
+    NoMessageAvailableException, DELIVERY_MODE_NON_PERSISTENT, \
+    DELIVERY_MODE_PERSISTENT
 
 
 # Don't pollute the caller's namespace
@@ -448,7 +449,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
         else:
             text = "Don't know how to handle md.Persistence mode [%s]" % (md.Persistence)
             self.logger.error(text)
-            exc = WebSphereMQJMSException()
+            exc = WebSphereMQJMSException(text)
             raise exc
             
         if md.ReplyToQ.strip():
@@ -539,7 +540,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
             else:
                 info = "jms_delivery_mode should be equal to DELIVERY_MODE_NON_PERSISTENT or DELIVERY_MODE_PERSISTENT, not [%s]" % message.jms_delivery_mode
                 self.logger.error(info)
-                exc = WebSphereMQJMSException()
+                exc = JMSException(info)
                 raise exc
                 
             md.Persistence = persistence

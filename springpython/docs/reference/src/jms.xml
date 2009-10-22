@@ -1084,8 +1084,56 @@ factory.destroy()
     <section id="jms-exceptions">
         <title>Exceptions</title>
         <para>
-            The base exception for all JMS-related issues is 
-            <classname>springpython.jms..</classname>
+            <classname>springpython.jms.JMSException</classname> 
+            is the base exception class for all JMS-related issues that may be
+            raised by Spring Python's JMS
+            and a pair of 
+            its specialized subclasses is also available:
+            <classname>springpython.jms.NoMessageAvailableException</classname>
+            and
+            <classname>springpython.jms.WebSphereMQJMSException</classname>.
+        </para>
+        <para>
+            NoMessageAvailableException is raised when a call to 
+            <emphasis>receive</emphasis> or <emphasis>receive_and_convert</emphasis>
+            timeouts, which indicates that there's no message available for
+            a given JMS destination.
+        </para>
+        <para>
+            WebSphereMQJMSException is raised when the underlying error is known
+            to be caused by a call to WebSphere MQ API, such as a call to connect
+            to a queue manager. Spring Python
+            tries to populate these attributes of a WebSphereMQJMSException object
+            when an error condition arises:
+				<itemizedlist>
+					<listitem>
+						<emphasis>message</emphasis> -
+                        a descriptive information of what has happened; 
+                        taken either from an exception raised deeper in a call stack
+                        or an explanation from Spring Python itself,
+					</listitem>
+					<listitem>
+						<emphasis>completion_code</emphasis> -
+                        an integer code returned by the call a queue manager,
+                        may be either 1 (a warning) or 2 (an error), it's known
+                        as an MQCC in WebSphere MQ,
+					</listitem>
+					<listitem>
+						<emphasis>reason_code</emphasis> - 
+                        an integer code, as returned by the queue manager,
+                        giving a reason for the failure, known as MQRC in
+                        WebSphere MQ lingo. The meaning may be looked up
+                        in the "WebSphere MQ Constants" manual.
+					</listitem>
+                </itemizedlist>
+            <para>
+                Note that <emphasis>message</emphasis>,
+                    <emphasis>completion_code</emphasis> and
+                    <emphasis>reason_code</emphasis> are all optional and there's
+                    no guarantee they will be actually returned; before making
+                    any use of them, you should always check for their existence
+                    should you caught a WebSphereMQJMSException.
+            </para>
         </para>
     </section>
     
