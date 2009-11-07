@@ -156,6 +156,15 @@ Usage: coily [command]
 			
 			<para>This plugin is used to generate a skeleton <ulink url="http://cherrypy.org">CherryPy</ulink>
 			application based on feeding it a command-line argument.</para>
+            
+      <section id="plugins-dependencies">
+          <title>External dependencies</title>
+          <para>
+              <emphasis>gen-cherrypy-app</emphasis> plugin requires the installation
+              of <ulink url="http://cherrypy.org">CherryPy 3</ulink>.
+          </para>
+      </section>
+            
 			
 <programlisting><![CDATA[
 % coily --gen-cherrypy-app twitterclone

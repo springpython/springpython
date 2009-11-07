@@ -12,6 +12,22 @@
 		<para>At the time this module was implemented, Spring Security was still Acegi Security. Links
 		include reference documentation that was used at the time to implement this security module.</para>
 	</note>
+    
+      <section id="security-dependencies">
+          <title>External dependencies</title>
+          <para>
+              <classname>springpython.security.cherrypy31</classname>
+              and
+              <classname>springpython.security.web</classname>
+              packages depend on
+              <ulink url="http://cherrypy.org/">CherryPy 3</ulink>
+              being installed prior to using them. Other than that, there are
+              no specific external libraries required by Spring Python's security
+              system, however the IoC configuration format that you'll be using
+              may need some, check <link linkend="objects-dependencies">IoC documentation</link>
+              for more details.
+          </para>
+      </section>
 
 	<section id="security-objects">
 		<title>Shared Objects</title>
