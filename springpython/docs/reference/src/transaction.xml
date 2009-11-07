@@ -10,6 +10,18 @@
 	others. Spring Python offers a key level of abstraction that can remove that
 	burden and allow you to focus on the business logic.</para>
 
+      <section id="dependencies-transaction">
+          <title>External dependencies</title>
+          <para>
+              If you choose to use DatabaseTemplate along with Spring Python's
+              support for transaction management you need to install 
+              an <link linkend="dependencies-dao">appropriate SQL database driver module</link>.
+              Depending on the IoC configuration format you're going to use
+              you may also need to install one of its
+              <link linkend="dependencies-ioc">documented dependencies</link>.
+          </para>
+      </section>
+
 	<section id="transaction-solutions">
 		<title>Solutions requiring transactions</title>
 		
