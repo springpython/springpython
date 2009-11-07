@@ -10,6 +10,56 @@
 		these operations while leaving you in control of the part that matters the most,
 		the SQL.</para>
 
+      <section id="dao-dependencies">
+          <title>External dependencies</title>
+          <para>
+              DatabaseTemplate requires the use of external libraries for connecting to
+              SQL databases. Depending on which SQL connection factory you're about
+              to use, you need to install following dependencies:
+              
+		<itemizedlist>
+			<listitem>			
+				<para>
+                    <classname>springpython.database.factory.MySQLConnectionFactory</classname> - needs
+                        <ulink url="http://sourceforge.net/projects/mysql-python/">MySQLdb</ulink>
+                        for connecting to MySQL,
+                </para>
+            </listitem>
+            <listitem>
+				<para>
+                    <classname>springpython.database.factory.PgdbConnectionFactory</classname> - needs
+                        <ulink url="http://www.pygresql.org/">PyGreSQL</ulink>
+                        for connecting to PostgreSQL,
+                </para>
+            </listitem>
+            <listitem>
+				<para>
+                    <classname>springpython.database.factory.Sqlite3ConnectionFactory</classname> - needs
+                        <ulink url="http://pypi.python.org/pypi/pysqlite/">PySQLite</ulink>
+                        for connecting to SQLite 3, note that PySQLite is part
+                        of Python 2.5 and later so you need to install it separately
+                        only if you're using Python 2.4,
+                </para>
+            </listitem>
+            <listitem>
+				<para>
+                    <classname>springpython.database.factory.cxoraConnectionFactory</classname> - needs
+                        <ulink url="http://pypi.python.org/pypi/cx_Oracle">cx_Oracle</ulink>
+                        for connecting to Oracle,
+                </para>
+            </listitem>
+            <listitem>
+				<para>
+                    <classname>springpython.database.factory.SQLServerConnectionFactory</classname> - needs
+                        <ulink url="http://pypi.python.org/pypi/pyodbc">PyODBC</ulink>
+                        for connecting to SQL Server.
+                </para>
+			</listitem>
+        </itemizedlist>
+              
+          </para>
+      </section>
+        
 		<section id="dao-databasetemplate-traditional-sql">
 			<title>Traditional Database Query</title>
 			
