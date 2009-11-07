@@ -18,7 +18,7 @@
 	    said article : <ulink
 	    url="http://martinfowler.com/articles/injection.html">http://martinfowler.com/articles/injection.html</ulink>.</para>
 	  </sidebar>
-
+      
 	<para>Inversion Of Control (IoC), also known as
 	<ulink url="http://en.wikipedia.org/wiki/Dependency_injection">dependency injection</ulink> is
 	more of an architectural concept than a simple coding pattern.</para>
@@ -58,6 +58,20 @@
 	this document points out key differences. It shows how to define the objects, read them into a
 	container, and then fetch the objects into your code.</para>
 	
+      <section id="objects-dependencies">
+          <title>External dependencies</title>
+          <para>
+              XML-based IoC configuration formats use ElementTree which is a part
+              of Python's stantard library in Python 2.5 and newer. If you
+              use Python 2.4 you can download ElementTree from 
+              <ulink url="http://pypi.python.org/pypi/elementtree">here</ulink>.
+              YamlConfig requires installation of PyYAML which may be found
+              <ulink url="http://pypi.python.org/pypi/PyYAML">here</ulink>.
+              No additional dependencies needs be installed if you choose
+              PythonConfig.
+          </para>
+      </section>
+    
 	<section id="objects-container">
 		<title>Container</title>
 		
