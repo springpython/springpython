@@ -21,7 +21,7 @@
 	interpretor, or the other side of the world over an Internet connection. As long as both parties agree on the
 	configuration, they all share the same solution.</para>
 
-    <section id="dependencies-remoting">
+    <section id="remoting-dependencies">
         <title>External dependencies</title>
         <para>Spring Python currently supports and requires the installation of at least one of the libraries:</para>
         <itemizedlist>

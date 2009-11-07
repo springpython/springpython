@@ -13,7 +13,7 @@
 		include reference documentation that was used at the time to implement this security module.</para>
 	</note>
     
-      <section id="dependencies-security">
+      <section id="security-dependencies">
           <title>External dependencies</title>
           <para>
               <classname>springpython.security.cherrypy31</classname>
@@ -24,7 +24,7 @@
               being installed prior to using them. Other than that, there are
               no specific external libraries required by Spring Python's security
               system, however the IoC configuration format that you'll be using
-              may need some, check <link linkend="dependencies-ioc">IoC documentation</link>
+              may need some, check <link linkend="objects-dependencies">IoC documentation</link>
               for more details.
           </para>
       </section>

@@ -58,7 +58,7 @@
 	this document points out key differences. It shows how to define the objects, read them into a
 	container, and then fetch the objects into your code.</para>
 	
-      <section id="dependencies-ioc">
+      <section id="objects-dependencies">
           <title>External dependencies</title>
           <para>
               XML-based IoC configuration formats use ElementTree which is a part

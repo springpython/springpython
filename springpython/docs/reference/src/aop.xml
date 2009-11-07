@@ -10,13 +10,13 @@
 	point</emphasis>. This is referred to as applying <emphasis>advice</emphasis>. This
 	section shows how to use the AOP module of Spring Python.</para>
 
-      <section id="dependencies-aop">
+      <section id="aop-dependencies">
           <title>External dependencies</title>
           <para>
               Spring Python's AOP itself doesn't require any special external
               libraries to work however the IoC configuration format of your choice,
               unless you use PythonConfig, will likely need some. Refer
-              to the <link linkend="dependencies-ioc">IoC documentation</link> for more details.
+              to the <link linkend="objects-dependencies">IoC documentation</link> for more details.
           </para>
       </section>
     

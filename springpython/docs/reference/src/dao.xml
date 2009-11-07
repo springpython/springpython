@@ -10,7 +10,7 @@
 		these operations while leaving you in control of the part that matters the most,
 		the SQL.</para>
 
-      <section id="dependencies-dao">
+      <section id="dao-dependencies">
           <title>External dependencies</title>
           <para>
               DatabaseTemplate requires the use of external libraries for connecting to
