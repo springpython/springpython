@@ -1298,3 +1298,87 @@ class DisposableObjectTestCase(MockTestCase):
                 seen_shutdown_hook = True
         
         self.assertTrue(seen_shutdown_hook)
+        
+class AppContextObjectsObjectsDefsTestCase(MockTestCase):
+    """This test case exercises the application contexts' .objects and
+    .object_defs behaviour."""
+    
+    def _get_context(self):
+        class MyClass(object):
+            pass
+        
+        class MySubclass(MyClass):
+            pass
+        
+        class SampleContext(PythonConfig):
+            def __init__(self):
+                super(SampleContext, self).__init__()
+                
+            @Object
+            def http_port(self):
+                return 18000
+            
+            @Object
+            def https_port(self):
+                return self._get_https_port()
+            
+            def _get_https_port(self):
+                return self.http_port() + 443
+                
+            @Object
+            def my_class_object1(self):
+                return MyClass()
+                
+            @Object
+            def my_class_object2(self):
+                return MyClass()
+                
+            @Object
+            def my_subclass_object1(self):
+                return MySubclass()
+                
+            @Object
+            def my_subclass_object2(self):
+                return MySubclass()
+                
+            @Object
+            def my_subclass_object3(self):
+                return MySubclass()
+                
+        return ApplicationContext(SampleContext()), MyClass, MySubclass
+    
+    def testQuerying(self):
+        ctx, MyClass, MySubclass, = self._get_context()
+        
+        class_instances = ctx.get_objects_by_type(MyClass)
+        subclass_instances = ctx.get_objects_by_type(MyClass, False)
+        int_instances = ctx.get_objects_by_type(int)
+        
+        self.assertTrue(isinstance(class_instances, dict))
+        self.assertTrue(isinstance(subclass_instances, dict))
+        self.assertTrue(isinstance(int_instances, dict))
+        
+        self.assertEquals(5, len(class_instances))
+        self.assertEquals(3, len(subclass_instances))
+        self.assertEquals(2, len(int_instances))
+        
+        for name, instance in class_instances.items():
+            self.assertTrue(isinstance(instance, MyClass))
+            
+        for name, instance in subclass_instances.items():
+            self.assertTrue(isinstance(instance, MyClass) and type(instance) is not MyClass)
+            
+        for name, instance in int_instances.items():
+            self.assertTrue(isinstance(instance, int))
+            
+        self.assertTrue("http_port" in ctx.objects)
+        self.assertTrue("http_port" in ctx.objects)
+        self.assertFalse("ftp_port" in ctx.object_defs)
+        self.assertEqual(7, len(ctx.objects))
+        
+        for name in ctx.objects:
+            self.assertTrue(isinstance(name, basestring))
+            
+        for name in ctx.object_defs:
+            self.assertTrue(isinstance(name, basestring))
+            

@@ -1339,5 +1339,140 @@ class MyTestableAppContext(MovieBasedApplicationContext):
 ]]></programlisting>
 
 	</section>
+    
+	<section id="objects-querying-modifying">
+	    <title>Querying and modifying the ApplicationContext in runtime</title>
+        <para>
+            ApplicationContext instances expose two attributes and an utility
+            method which let you learn about their current state and dynamically
+            alter them in runtime.
+        </para>
+        
+		<itemizedlist>
+			<listitem>			
+				<para>
+                    <classname>object_defs</classname> is a dictionary of objects
+                    definitions, that is, the templates based upon which
+                    the container will create appropriate objects, e.g. your
+                    singletons,
+                </para>
+            </listitem>
+			<listitem>			
+				<para>
+                    <classname>objects</classname> is a dictionary of already
+                    created objects stored for later use,
+                </para>
+            </listitem>
+			<listitem>			
+				<para>
+                    <classname>get_objects_by_type(type, include_type=True)</classname>
+                    returns those ApplicationContext's objects which
+                    are instances of a given type or of its subclasses.
+                    If <emphasis>include_type</emphasis> is False then only
+                    instances of  the type's
+                    <emphasis>subclasses</emphasis> will be returned.
+                </para>
+            </listitem>
+        </itemizedlist>
+        
+        <para>
+            Here's an example showing how you can easily query a context to find
+            out what definitions and objects it holds. The context itself is
+            stored using <link linkend="objects-config-object">PythonConfig</link>
+            in the <classname>sample_context.py</classname> module and
+            <classname>demo.py</classname> contains the code which examines the
+            context.
+        </para>
+        
+<programlisting><![CDATA[
+#
+# sample_context.py
+#
+
+from springpython.config import Object
+from springpython.context import scope
+from springpython.config import PythonConfig
+
+class MyClass(object):
+    pass
+
+class MySubclass(MyClass):
+    pass
+
+class SampleContext(PythonConfig):
+    def __init__(self):
+        super(SampleContext, self).__init__()
+        
+    @Object
+    def http_port(self):
+        return 18000
+    
+    @Object
+    def https_port(self):
+        return self._get_https_port()
+    
+    def _get_https_port(self):
+        return self.http_port() + 443
+        
+    @Object
+    def my_class_object1(self):
+        return MyClass()
+        
+    @Object
+    def my_class_object2(self):
+        return MyClass()
+        
+    @Object
+    def my_subclass_object1(self):
+        return MySubclass()
+        
+    @Object
+    def my_subclass_object2(self):
+        return MySubclass()
+        
+    @Object
+    def my_subclass_object3(self):
+        return MySubclass()
+        
+
+#
+# demo.py
+#
+
+# Spring Python
+from springpython.context import ApplicationContext
+
+# Our sample code.
+from sample_context import SampleContext, MyClass, MySubclass
+
+# Create the context.
+ctx = ApplicationContext(SampleContext())
+
+# Do we have an 'http_port' object?
+print "http_port" in ctx.objects
+
+# Does the context have a definition of an 'ftp_port' object?
+print "ftp_port" in ctx.object_defs
+
+# How many objects are there? Observe the result is 7, that's because one of
+# the methods - _get_https_port - is not managed by the container.
+print len(ctx.objects)
+
+# List the names of all objects defined.
+print ctx.object_defs.keys()
+
+# Returns all instances of MyClass and of its subclasses.
+print ctx.get_objects_by_type(MyClass)
+
+# Returns all instances of MyClass' subclasses only.
+print ctx.get_objects_by_type(MyClass, False)
+
+# Returns all integer objects.
+print ctx.get_objects_by_type(int)
+]]></programlisting>
+        
+    </section>
+    
+    
 
 </chapter>
