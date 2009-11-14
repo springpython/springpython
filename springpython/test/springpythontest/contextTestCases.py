@@ -29,9 +29,12 @@ from springpython.config import SpringJavaConfig
 from springpython.config import Object
 from springpython.config import XMLConfig
 from springpython.config import YamlConfig
+from springpython.config import Object, ObjectDef
+from springpython.factory import PythonObjectFactory
 from springpython.remoting.pyro import PyroProxyFactory
 from springpython.security.userdetails import InMemoryUserDetailsService
 from springpythontest.support import testSupportClasses
+from springpython.context.scope import SINGLETON, PROTOTYPE
 
 class PyContainerTestCase(unittest.TestCase):        
     def testCreatingAnApplicationContext(self):
@@ -1303,7 +1306,8 @@ class AppContextObjectsObjectsDefsTestCase(MockTestCase):
     """This test case exercises the application contexts' .objects and
     .object_defs behaviour."""
     
-    def _get_context(self):
+    def _get_querying_context(self):
+        
         class MyClass(object):
             pass
         
@@ -1346,9 +1350,17 @@ class AppContextObjectsObjectsDefsTestCase(MockTestCase):
                 return MySubclass()
                 
         return ApplicationContext(SampleContext()), MyClass, MySubclass
+        
+    def _get_modifying_context(self):
+
+        class SampleContext2(PythonConfig):
+            def __init__(self):
+                super(SampleContext2, self).__init__()
+                
+        return ApplicationContext(SampleContext2())
     
     def testQuerying(self):
-        ctx, MyClass, MySubclass, = self._get_context()
+        ctx, MyClass, MySubclass, = self._get_querying_context()
         
         class_instances = ctx.get_objects_by_type(MyClass)
         subclass_instances = ctx.get_objects_by_type(MyClass, False)
@@ -1382,3 +1394,63 @@ class AppContextObjectsObjectsDefsTestCase(MockTestCase):
         for name in ctx.object_defs:
             self.assertTrue(isinstance(name, basestring))
             
+    def testModifying(self):
+        ctx = self._get_modifying_context()
+        
+        class Foo(object):
+            pass
+                
+        class Bar(object):
+            pass
+        
+        @Object(PROTOTYPE)
+        def foo():
+            """ Returns a new instance of Foo on each call.
+            """
+            return Foo()
+            
+        @Object # SINGLETON is the default.
+        def bar():
+            """ Returns a singleton Bar every time accessed.
+            """
+            return Bar()
+            
+        # A reference to the function wrapping the actual 'foo' function.
+        foo_wrapper = foo.func_globals["_call_"]
+        
+        # Create an object definition, note that we're telling to return
+        foo_object_def = ObjectDef(id="foo",
+            factory=PythonObjectFactory(foo, foo_wrapper), scope=PROTOTYPE,
+            lazy_init=foo_wrapper.lazy_init)
+        
+        # A reference to the function wrapping the actual 'bar' function.
+        bar_wrapper = foo.func_globals["_call_"]
+        
+        bar_object_def = ObjectDef(id="foo",
+            factory=PythonObjectFactory(bar, bar_wrapper), scope=SINGLETON,
+            lazy_init=bar_wrapper.lazy_init)
+        
+        # No definitions at this point
+        self.assertEqual({}, ctx.object_defs)
+        
+        ctx.object_defs["foo"] = foo_object_def
+        ctx.object_defs["bar"] = bar_object_def
+        
+        # Two object defs have just been added.
+        self.assertEqual(2, len(ctx.object_defs))
+        
+        for x in range(3):
+            foo_instance = ctx.get_object("foo")
+            self.assertTrue(isinstance(foo_instance, Foo))
+        
+        # Will leak the 'bar_instance' for later use.
+        for x in range(3):
+            bar_instance = ctx.get_object("bar")
+            self.assertTrue(isinstance(bar_instance, Bar))
+            
+        # 'foo' object is a PROTOTYPE and 'bar' is a SINGLETON so there must've
+        # been exactly one object created so far.
+        self.assertEqual(1, len(ctx.objects))
+        
+        obj = ctx.objects[ctx.objects.keys()[0]]
+        self.assertTrue(obj is bar_instance)
