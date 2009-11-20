@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
    Copyright 2006-2008 SpringSource (http://springsource.com), All Rights Reserved
 
@@ -20,6 +22,9 @@ from pmock import *
 import sys
 import atexit
 import unittest
+from decimal import Decimal
+from StringIO import StringIO
+
 from springpython.context import DisposableObject
 from springpython.context import ApplicationContext
 from springpython.context import ObjectPostProcessor
@@ -989,6 +994,51 @@ class YamlConfigTestCase4(unittest.TestCase):
                     self.fail("Did NOT expect a frozenset of length %s" % len(item))
             else:
                 self.fail("Cannot handle %s" % type(item))
+                
+class YamlConfigTypesCustomizing(unittest.TestCase):
+    """ Exercises the behaviour of customizations of types.
+    """
+    
+    def test_default_mapping_ok(self):
+        container = ApplicationContext(YamlConfig("support/contextYamlBuiltinTypes.yaml"))
+        
+        self.assertEqual(12, len(container.objects))
+        
+        my_string = container.get_object("MyString")
+        my_unicode = container.get_object("MyUnicode")
+        my_int = container.get_object("MyInt")
+        my_long = container.get_object("MyLong")
+        my_float = container.get_object("MyFloat")
+        my_decimal = container.get_object("MyDecimal")
+        my_boolean = container.get_object("MyBoolean")
+        my_complex = container.get_object("MyComplex")
+        my_list = container.get_object("MyList")
+        my_tuple = container.get_object("MyTuple")
+        my_dict = container.get_object("MyDict")
+        my_ref = container.get_object("MyRef")
+        
+        self.assertEqual(my_string, "My string")
+        self.assertEqual(my_unicode, u'Zażółć gęślą jaźń')
+        self.assertEqual(my_int, 10)
+        self.assertEqual(my_long, 100000000000000000000000)
+        self.assertEqual(my_float, 3.14)
+        self.assertEqual(my_decimal, Decimal("12.34"))
+        self.assertEqual(my_boolean, False)
+        self.assertEqual(my_complex, complex(10,0))
+        self.assertEqual(my_list, [1, 2, 3, 4])
+        self.assertEqual(my_tuple, ("a", "b", "c"))
+        self.assertEqual(my_dict, {1: "a", 2: "b", 3: "c"})
+        self.assertEqual(my_ref, Decimal("12.34"))
+        
+    def test_default_mapping_error_no_type_defined(self):
+        # Will raise KeyError: 'class'
+        try:
+            ApplicationContext(YamlConfig("support/contextYamlBuiltinTypesErrorNoTypeDefined.yaml"))
+        except KeyError, e:
+            # Meaning there was no 'class' key found.
+            self.assertEqual(e.message, "class")
+        else:
+            self.fail("KeyError should've been raised")
 
 class XMLConfigTestCase5(unittest.TestCase):
     def testAFourthComplexContainer(self):

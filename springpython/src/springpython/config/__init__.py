@@ -31,6 +31,15 @@ from springpython.context import ApplicationContextAware
 from springpython.factory import PythonObjectFactory
 from springpython.factory import ReflectiveObjectFactory
 
+yaml_builtins_mapping = {
+    "str":"types.StringType", "unicode":"types.UnicodeType",
+    "int":"types.IntType", "long":"types.LongType", 
+    "float":"types.FloatType", "decimal":"decimal.Decimal",
+    "bool":"types.BooleanType", "complex":"types.ComplexType",
+    "list":"types.ListType", "tuple":"types.TupleType",
+    "dict":"types.DictType", 
+}
+
 class ObjectDef(object):
     """
     ObjectDef is a format-neutral way of storing object definition information. It includes
@@ -722,13 +731,31 @@ class YamlConfig(Config):
             doc = yaml.load(stream)
             self.logger.debug(doc)
             for object in doc["objects"]:
+                if not "class" in object:
+                    self._map_custom_class(object, yaml_builtins_mapping)
                 self._print_obj(object)
             self.objects.extend([self._convert_object(object) for object in doc["objects"]])
         self.logger.debug("==============================================================")
         self.logger.debug("objects = %s" % self.objects)
         return self.objects
+        
+    def _map_custom_class(self, obj, mappings):
+        """ Enrich the object's attributes and make it look to the rest of
+        YamlConfig as if the object had all of them right in the definition.
+        """
+        for class_name in mappings:
+            if class_name in obj:
+                self.logger.debug("Found a matching type: %s -> %s" % (obj["object"],
+                    class_name))
+                
+                obj["class"] = mappings[class_name]
+                obj["constructor-args"] = [obj[class_name]]
+                break
+        else:
+            self.logger.warning("No matching type found for object %s" % obj) 
 
     def _print_obj(self, obj, level=0):
+        self.logger.debug("%sobject = %s" % ("\t"*level, obj["object"]))
         self.logger.debug("%sobject id = %s" % ("\t"*level, obj["object"]))
         self.logger.debug("%sclass = %s" % ("\t"*(level+1), obj["class"]))
 
@@ -916,6 +943,8 @@ class YamlConfig(Config):
                 return self._convert_dict(p, comp["object"], name)
         elif isinstance(p, list):
             return self._convert_list(p, comp["object"], name)
+        elif isinstance(p, unicode):
+            return ValueDef(name, unicode(p))
         else:
             return ValueDef(name, str(p))
         return None

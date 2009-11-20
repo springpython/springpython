@@ -934,6 +934,128 @@ properties:
 				</note>
 
 			</section>
+            
+            <section id="objects-config-yamlconfig-python-builtin-types-mappings">
+                <title>Support for Python builtin types and mappings of other types onto YAML syntax</title>
+            </section>
+                <para>
+                    Objects of commonly used Python builtin types may be tersely expressed
+                    in YamlConfig. Supported types are
+                        <classname>str</classname>,
+                        <classname>unicode</classname>,
+                        <classname>int</classname>,
+                        <classname>long</classname>,
+                        <classname>float</classname>,
+                        <classname>decimal.Decimal</classname>,
+                        <classname>bool</classname>,
+                        <classname>complex</classname>,
+                        <classname>dict</classname>,
+                        <classname>list</classname> and
+                        <classname>tuple</classname>.
+                </para>
+                <para>
+                    Here's a sample YamlConfig featuring their usage. Note that
+                    with the exception of <classname>decimal.Decimal</classname>,
+                    names of the YAML attributes are the same as the names of
+                    Python types.
+                </para>
+<programlisting><![CDATA[
+objects: 
+    - object:  MyString
+      str: My string
+        
+    - object:  MyUnicode
+      unicode: Zażółć gęślą jaźń
+        
+    - object:  MyInt
+      int: 10
+    
+    - object:  MyLong
+      long: 100000000000000000000000
+      
+    - object:  MyFloat
+      float: 3.14
+        
+    - object:  MyDecimal
+      decimal: 12.34
+        
+    - object:  MyBoolean
+      bool: False
+        
+    - object:  MyComplex
+      complex: 10+0j
+        
+    - object:  MyList
+      list: [1, 2, 3, 4]
+        
+    - object:  MyTuple
+      tuple: ["a", "b", "c"]
+      
+    - object: MyDict
+      dict:
+        1: "a"
+        2: "b"
+        3: "c"
+        
+    - object: MyRef
+      decimal:
+        ref: MyDecimal
+]]></programlisting>
+                <para>
+                    Under the hood, while parsing the YAML files, Spring Python
+                    will translate the definitions such as the one above into
+                    the following one:
+                </para>
+<programlisting><![CDATA[
+objects: 
+    - object:  MyString
+      class: types.StringType
+      constructor-args: ["My string"]
+        
+    - object:  MyUnicode
+      class: types.UnicodeType
+      constructor-args: ["Zażółć gęślą jaźń"]
+        
+    - object:  MyInt
+      class: types.IntType
+      constructor-args: [10]
+    
+    - object:  MyLong
+      class: types.LongType
+      constructor-args: [100000000000000000000000]
+      
+    - object:  MyFloat
+      class: types.FloatType 
+      constructor-args: [3.14]
+        
+    - object:  MyDecimal
+      class: decimal.Decimal
+      constructor-args: ["12.34"]
+        
+    - object: MyBoolean
+      class: types.BooleanType
+      constructor-args: [False]
+        
+    - object: MyComplex
+      class: types.ComplexType
+      constructor-args: [10+0j]
+        
+    - object: MyList
+      class: types.ListType
+      constructor-args: [[1,2,3,4]]
+        
+    - object: MyTuple
+      class: types.TupleType
+      constructor-args: [["a", "b", "c"]]
+      
+    - object: MyDict
+      class: types.DictType
+      constructor-args: [{1: "a", 2: "b", 3: "c"}]
+      
+    - object: MyRef
+      class: decimal.Decimal
+      constructor-args: [{ref: MyDecimal}]
+]]></programlisting>
 			
 			<section id="objects-config-yamlconfig-constructors">
 				<title>Constructors</title>
@@ -974,7 +1096,7 @@ constructor-args:
 				<para>It is also valuable to know that you can mix this up and use both.</para>
 
 			</section>
-
+            
 		</section>
 
 		<section id="objects-config-object">
