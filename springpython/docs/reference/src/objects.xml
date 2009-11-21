@@ -1056,6 +1056,64 @@ objects:
       class: decimal.Decimal
       constructor-args: [{ref: MyDecimal}]
 ]]></programlisting>
+
+            <para>
+                Configuration of how YAML elements are mapped onto Python types
+                is stored in the 
+                <classname>springpython.config.yaml_mappings</classname>
+                dictionary which can be easily customized to fulfill one's needs.
+                The dictionary's keys are names of the YAML elements and its
+                values are the coresponding Python types, written as strings
+                in the form of <classname>"package_name.module_name.class_name"</classname>
+                - note that the <classname>"package_name.module_name."</classname> part is
+                required, it needs to be a fully qualified name. 
+            </para>
+            <para>
+                Let's assume that in your configuration you're frequently creating
+                objects of type 
+                <classname>interest_rate.InterestRateFrequency</classname>,
+                here's how you can save yourself a lot of typing by customizing
+                the mappings dictionary. First, on Python side, create an
+                <classname>InterestRate</classname> class, such as:
+<programlisting><![CDATA[
+class InterestRate(object):
+    def __init__(self, value=None):
+        self.value = value
+]]></programlisting>
+
+            <para>
+                .. which will allow you to create such a YAML context
+            </para>
+            
+<programlisting><![CDATA[
+objects: 
+    - object: base_interest_rate
+      interest_rate: "7.35"
+]]></programlisting>
+
+            <para>
+                .. then, before creating the context, update the 
+                mappings dictionary as needed and next you'll be able to
+                access the <classname>base_interest_rate</classname>
+                object as if it had been defined using the standard syntax:
+            </para>
+
+<programlisting><![CDATA[
+from springpython.context import ApplicationContext
+from springpython.config import YamlConfig, yaml_mappings
+
+yaml_mappings.update({"interest_rate": "interest_rate.InterestRate"})
+
+# .. create the context now
+container = ApplicationContext(YamlConfig("./app-ctx.yaml"))
+
+# .. fetch the object
+base_interest_rate = container.get_object("base_interest_rate")
+
+# .. will show "7.35", as defined in the "./app-ctx.yaml" config
+print base_interest_rate.value
+]]></programlisting>
+            </para>
 			
 			<section id="objects-config-yamlconfig-constructors">
 				<title>Constructors</title>

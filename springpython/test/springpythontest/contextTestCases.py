@@ -33,7 +33,7 @@ from springpython.config import PyContainerConfig
 from springpython.config import SpringJavaConfig
 from springpython.config import Object
 from springpython.config import XMLConfig
-from springpython.config import YamlConfig
+from springpython.config import YamlConfig, yaml_mappings
 from springpython.config import Object, ObjectDef
 from springpython.factory import PythonObjectFactory
 from springpython.remoting.pyro import PyroProxyFactory
@@ -1039,6 +1039,25 @@ class YamlConfigTypesCustomizing(unittest.TestCase):
             self.assertEqual(e.message, "class")
         else:
             self.fail("KeyError should've been raised")
+            
+    def test_default_mappings_dictionary_contents(self):
+        self.assertEqual(yaml_mappings, {'tuple': 'types.TupleType',
+                         'int': 'types.IntType', 'float': 'types.FloatType',
+                         'unicode': 'types.UnicodeType',
+                         'decimal': 'decimal.Decimal', 'list': 'types.ListType',
+                         'long': 'types.LongType', 'complex': 'types.ComplexType',
+                         'bool': 'types.BooleanType', 'str': 'types.StringType',
+                         'dict': 'types.DictType'})
+        
+    def test_custom_mappings(self):
+        yaml_mappings.update({"interest_rate": "springpythontest.support.interest_rate.InterestRate"})
+        container = ApplicationContext(YamlConfig("support/contextYamlCustomMappings.yaml"))
+        
+        self.assertEqual(1, len(container.objects))
+        base_interest_rate = container.get_object("base_interest_rate")
+        self.assertEqual("7.35", base_interest_rate.value) 
+        
+        del yaml_mappings["interest_rate"]
 
 class XMLConfigTestCase5(unittest.TestCase):
     def testAFourthComplexContainer(self):

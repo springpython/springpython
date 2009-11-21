@@ -31,7 +31,7 @@ from springpython.context import ApplicationContextAware
 from springpython.factory import PythonObjectFactory
 from springpython.factory import ReflectiveObjectFactory
 
-yaml_builtins_mapping = {
+yaml_mappings = {
     "str":"types.StringType", "unicode":"types.UnicodeType",
     "int":"types.IntType", "long":"types.LongType", 
     "float":"types.FloatType", "decimal":"decimal.Decimal",
@@ -732,7 +732,7 @@ class YamlConfig(Config):
             self.logger.debug(doc)
             for object in doc["objects"]:
                 if not "class" in object:
-                    self._map_custom_class(object, yaml_builtins_mapping)
+                    self._map_custom_class(object, yaml_mappings)
                 self._print_obj(object)
             self.objects.extend([self._convert_object(object) for object in doc["objects"]])
         self.logger.debug("==============================================================")
