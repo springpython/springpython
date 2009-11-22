@@ -92,11 +92,11 @@ class MovieBasedApplicationContext(PythonConfig):
         self.logger.debug("Description = %s" % lister.description)
         return lister
     
-    @Object(scope.SINGLETON)
+    @Object(scope.SINGLETON, True)
     def MovieFinder(self):
         return ColonMovieFinder(filename="support/movies1.txt")
     
-    @Object    # scope.SINGLETON is the default
+    @Object(lazy_init=True)    # scope.SINGLETON is the default
     def SingletonString(self):
         return StringHolder("There should only be one copy of this string")
     

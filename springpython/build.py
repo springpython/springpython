@@ -73,6 +73,7 @@ def usage():
     print "\t--clean\t\t\tclean out this build by deleting the %s directory" % p["targetDir"]
     print "\t--test\t\t\trun the test suite, leaving all artifacts in %s" % p["testDir"]
     print "\t--suite [suite]\t\trun a specific test suite, leaving all artifacts in %s" % p["testDir"]
+    print "\t--jython\t\trun a different test suite, with different arguments to support jython"
     print "\t--coverage\t\trun the test suite with coverage analysis, leaving all artifacts in %s" % p["testDir"]
     print "\t--debug-level [info|debug]\n\t\t\t\tthreshold of logging message when running tests or coverage analysis"
     print "\t--package\t\tpackage everything up into a tarball for release to sourceforge in %s" % p["packageDir"]
@@ -92,7 +93,7 @@ try:
     optlist, args = getopt.getopt(sys.argv[1:],
                                   "hct",
                                   ["help", "clean", "test", "suite=", "debug-level=", "coverage", "package", "build-stamp=", \
-                                   "publish", "register", \
+                                   "publish", "register", "jython", \
                                    "site", "docs-html-multi", "docs-html-single", "docs-pdf", "docs-all", "pydoc"])
 except getopt.GetoptError:
     # print help information and exit:
@@ -138,6 +139,18 @@ def test(dir, test_suite, debug_level):
     
     _run_nose(argv=["", "--with-nosexunit", "--source-folder=src", "--where=test/springpythontest", "--xml-report-folder=%s" % dir, test_suite], debug_level=debug_level)
     
+def test_jython(dir, test_suite, debug_level):
+    """
+    Run nose programmatically, with the NoseXUnit option taken out, to support Jython.
+
+    Nose expects to receive a sys.argv, of which the first arg is the script path (usually nosetests). Since this isn't
+    being run that way, a filler entry was created to satisfy the library's needs.
+    """
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+    _run_nose(argv=["", "--where=test/springpythontest", test_suite], debug_level=debug_level)
+
 def test_coverage(dir, test_suite, debug_level):
     """
     Run nose programmatically, so that it uses the same python version as this script uses
@@ -489,6 +502,10 @@ for option in optlist:
     if option[0] in ("--suite"):
         print "Running test suite..."
         test(p["testDir"], option[1], debug_level)
+
+    if option[0] in ("--jython"):
+        print "Running for jython..."
+        test_jython(p["testDir"], "jython", debug_level)
 
     if option[0] in ("--coverage"):
         test_coverage(p["testDir"], "checkin", debug_level)
