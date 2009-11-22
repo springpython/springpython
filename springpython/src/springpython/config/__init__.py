@@ -40,6 +40,13 @@ yaml_mappings = {
     "dict":"types.DictType", 
 }
 
+xml_mappings = {
+    "str":"types.StringType", "unicode":"types.UnicodeType",
+    "int":"types.IntType", "long":"types.LongType", 
+    "float":"types.FloatType", "decimal":"decimal.Decimal",
+    "bool":"types.BooleanType", "complex":"types.ComplexType",
+}
+
 class ObjectDef(object):
     """
     ObjectDef is a format-neutral way of storing object definition information. It includes
@@ -453,6 +460,7 @@ class XMLConfig(Config):
     """
 
     NS = "{http://www.springframework.org/springpython/schema/objects}"
+    NS_11 = "{http://www.springframework.org/springpython/schema/objects/1.1}"
 
     def __init__(self, config_location):
         if isinstance(config_location, list):
@@ -472,13 +480,44 @@ class XMLConfig(Config):
         for config in self.config_location:
             self.logger.debug("* Parsing %s" % config)
             objects = etree.parse(config).getroot()
-            self.objects.extend([self._convert_object(object) for object in objects])
+            
+            # We need to handle both 1.0 and 1.1 XSD schemata *and* we may be
+            # passed a list of config locations of different XSD versions so we
+            # must find out here which one is used in the current config file
+            # and pass the correct namespace down to other parts of XMLConfig.
+            ns = objects.tag[:objects.tag.find("}") + 1]
+            
+            for obj in objects:
+                if obj.get("class") is None:
+                    self._map_custom_class(obj, xml_mappings, ns)
+                self.objects.append(self._convert_object(obj, ns=ns))
         self.logger.debug("==============================================================")
         for object in self.objects:
             self.logger.debug("Parsed %s" % object)
         return self.objects
+        
+    def _map_custom_class(self, obj, mappings, ns):
+        """ Fill in the missing attributes of Python objects and make it look
+        to the rest of XMLConfig as if they already were in the XML config file.
+        """
+        for class_name in mappings:
+            tag_no_ns = obj.tag.replace(ns, "")
+            if class_name == tag_no_ns:
 
-    def _convert_object(self, object, prefix=""):
+                obj.set("class", mappings[class_name])
+                constructor_arg = etree.Element("%s%s" % (ns, "constructor-arg"))
+                value = etree.Element("%s%s" % (ns, "value"))
+                value.text = obj.text
+                obj.append(constructor_arg)
+                constructor_arg.append(value)
+                obj.text = ""
+                
+                break
+
+        else:
+            self.logger.warning("No matching type found for object %s" % obj)
+
+    def _convert_object(self, object, prefix="", ns=None):
         "This function generates a object definition, then converts scope and property elements."
         if prefix != "":
             if "id" in object.attrib:
@@ -494,11 +533,11 @@ class XMLConfig(Config):
         if "scope" in object.attrib:
             c.scope = scope.convert(object.get("scope"))
 
-        c.pos_constr = [self._convert_prop_def(object, constr, object.get("id") + ".constr") for constr in object.findall(self.NS+"constructor-arg")
+        c.pos_constr = [self._convert_prop_def(object, constr, object.get("id") + ".constr", ns) for constr in object.findall(ns+"constructor-arg")
                         if not "name" in constr.attrib]
-        c.named_constr = dict([(str(constr.get("name")), self._convert_prop_def(object, constr, object.get("id") + ".constr")) for constr in object.findall(self.NS+"constructor-arg")
+        c.named_constr = dict([(str(constr.get("name")), self._convert_prop_def(object, constr, object.get("id") + ".constr", ns)) for constr in object.findall(ns+"constructor-arg")
                            if "name" in constr.attrib])
-        c.props = [self._convert_prop_def(object, p, p.get("name")) for p in object.findall(self.NS+"property")]
+        c.props = [self._convert_prop_def(object, p, p.get("name"), ns) for p in object.findall(ns+"property")]
         self.logger.debug("object: props = %s" % c.props)
         self.logger.debug("object: There are %s props" % len(c.props))
             
@@ -514,51 +553,51 @@ class XMLConfig(Config):
             self.logger.debug("ref: Returning %s" % results)
             return results
  
-    def _convert_value(self, value, id, name):
+    def _convert_value(self, value, id, name, ns):
         if value.text is not None and value.text.strip() != "":
             self.logger.debug("value: Converting a direct value <%s>" % value.text)
             return value.text
         else:
-            if value.tag == self.NS+"value":
+            if value.tag == ns+"value":
                 self.logger.debug("value: Converting a value's children %s" % value.getchildren()[0])
-                results = self._convert_value(value.getchildren()[0], id, name)
+                results = self._convert_value(value.getchildren()[0], id, name, ns)
                 self.logger.debug("value: results = %s" % str(results))
                 return results
-            elif value.tag == self.NS+"tuple":
+            elif value.tag == ns+"tuple":
                 self.logger.debug("value: Converting a tuple")
-                return self._convert_tuple(value, id, name).value
-            elif value.tag == self.NS+"list":
+                return self._convert_tuple(value, id, name, ns).value
+            elif value.tag == ns+"list":
                 self.logger.debug("value: Converting a list")
-                return self._convert_list(value, id, name).value
-            elif value.tag == self.NS+"dict":
+                return self._convert_list(value, id, name, ns).value
+            elif value.tag == ns+"dict":
                 self.logger.debug("value: Converting a dict")
-                return self._convert_dict(value, id, name).value
-            elif value.tag == self.NS+"set":
+                return self._convert_dict(value, id, name, ns).value
+            elif value.tag == ns+"set":
                 self.logger.debug("value: Converting a set")
-                return self._convert_set(value, id, name).value
-            elif value.tag == self.NS+"frozenset":
+                return self._convert_set(value, id, name, ns).value
+            elif value.tag == ns+"frozenset":
                 self.logger.debug("value: Converting a frozenset")
-                return self._convert_frozen_set(value, id, name).value
+                return self._convert_frozen_set(value, id, name, ns).value
             else:
                 self.logger.debug("value: %s.%s Don't know how to handle %s" % (id, name, value.tag))
     
-    def _convert_dict(self, dict_node, id, name):
+    def _convert_dict(self, dict_node, id, name, ns):
         dict = {}
-        for entry in dict_node.findall(self.NS+"entry"):
+        for entry in dict_node.findall(ns+"entry"):
             self.logger.debug("dict: entry = %s" % entry)
-            key = entry.find(self.NS+"key").find(self.NS+"value").text
+            key = entry.find(ns+"key").find(ns+"value").text
             self.logger.debug("dict: key = %s" % key)
-            if entry.find(self.NS+"value") is not None:
-                dict[key] = self._convert_value(entry.find(self.NS+"value"), id, "%s.dict['%s']" % (name, key))
-            elif entry.find(self.NS+"ref") is not None:
-                dict[key] = self._convert_ref(entry.find(self.NS+"ref"), "%s.dict['%s']" % (name, key))
-            elif entry.find(self.NS+"object") is not None:
+            if entry.find(ns+"value") is not None:
+                dict[key] = self._convert_value(entry.find(ns+"value"), id, "%s.dict['%s']" % (name, key), ns)
+            elif entry.find(ns+"ref") is not None:
+                dict[key] = self._convert_ref(entry.find(ns+"ref"), "%s.dict['%s']" % (name, key))
+            elif entry.find(ns+"object") is not None:
                 self.logger.debug("dict: Parsing an inner object definition...")
-                dict[key] = self._convert_inner_object(entry.find(self.NS+"object"), id, "%s.dict['%s']" % (name, key))
+                dict[key] = self._convert_inner_object(entry.find(ns+"object"), id, "%s.dict['%s']" % (name, key), ns)
             else:
                 for token in ["dict", "tuple", "set", "frozenset", "list"]:
-                    if entry.find(self.NS+token) is not None:
-                        dict[key] = self._convert_value(entry.find(self.NS+token), id, "%s.dict['%s']" % (name, key))
+                    if entry.find(ns+token) is not None:
+                        dict[key] = self._convert_value(entry.find(ns+token), id, "%s.dict['%s']" % (name, key), ns)
                         break
                 if key not in dict:
                     self.logger.debug("dict: Don't know how to handle %s" % entry.tag)
@@ -566,7 +605,7 @@ class XMLConfig(Config):
         self.logger.debug("Dictionary is now %s" % dict)
         return DictDef(name, dict)
 
-    def _convert_props(self, props_node, name):
+    def _convert_props(self, props_node, name, ns):
         dict = {}
         self.logger.debug("props: Looking at %s" % props_node)
         for prop in props_node:
@@ -574,135 +613,140 @@ class XMLConfig(Config):
         self.logger.debug("props: Dictionary is now %s" % dict)
         return DictDef(name, dict)
 
-    def _convert_list(self, list_node, id, name):
+    def _convert_list(self, list_node, id, name, ns):
         list = []
         self.logger.debug("list: Parsing %s" % list_node)
         for element in list_node:
-            if element.tag == self.NS+"value":
+            if element.tag == ns+"value":
                 list.append(str(element.text))
-            elif element.tag == self.NS+"ref":
+            elif element.tag == ns+"ref":
                 list.append(self._convert_ref(element, "%s.list[%s]" % (name, len(list))))
-            elif element.tag == self.NS+"object":
+            elif element.tag == ns+"object":
                 self.logger.debug("list: Parsing an inner object definition...")
-                list.append(self._convert_inner_object(element, id, "%s.list[%s]" % (name, len(list))))
-            elif element.tag in [self.NS+token for token in ["dict", "tuple", "set", "frozenset", "list"]]:
+                list.append(self._convert_inner_object(element, id, "%s.list[%s]" % (name, len(list)), ns))
+            elif element.tag in [ns+token for token in ["dict", "tuple", "set", "frozenset", "list"]]:
                 self.logger.debug("This list has child elements of type %s." % element.tag)
-                list.append(self._convert_value(element, id, "%s.list[%s]" % (name, len(list))))
+                list.append(self._convert_value(element, id, "%s.list[%s]" % (name, len(list)), ns))
                 self.logger.debug("List is now %s" % list)
             else:
                 self.logger.debug("list: Don't know how to handle %s" % element.tag)
         self.logger.debug("List is now %s" % list)
         return ListDef(name, list)
 
-    def _convert_tuple(self, tuple_node, id, name):
+    def _convert_tuple(self, tuple_node, id, name, ns):
         list = []
         self.logger.debug("tuple: Parsing %s" % tuple_node)
         for element in tuple_node:
             self.logger.debug("tuple: Looking at %s" % element)
-            if element.tag == self.NS+"value":
+            if element.tag == ns+"value":
                 self.logger.debug("tuple: Appending %s" % element.text)
                 list.append(str(element.text))
-            elif element.tag == self.NS+"ref":
+            elif element.tag == ns+"ref":
                 list.append(self._convert_ref(element, "%s.tuple(%s}" % (name, len(list))))
-            elif element.tag == self.NS+"object":
+            elif element.tag == ns+"object":
                 self.logger.debug("tuple: Parsing an inner object definition...")
-                list.append(self._convert_inner_object(element, id, "%s.tuple(%s)" % (name, len(list))))
-            elif element.tag in [self.NS+token for token in ["dict", "tuple", "set", "frozenset", "list"]]:
+                list.append(self._convert_inner_object(element, id, "%s.tuple(%s)" % (name, len(list)), ns))
+            elif element.tag in [ns+token for token in ["dict", "tuple", "set", "frozenset", "list"]]:
                 self.logger.debug("tuple: This tuple has child elements of type %s." % element.tag)
-                list.append(self._convert_value(element, id, "%s.tuple(%s)" % (name, len(list))))
+                list.append(self._convert_value(element, id, "%s.tuple(%s)" % (name, len(list)), ns))
                 self.logger.debug("tuple: List is now %s" % list)
             else:
                 self.logger.debug("tuple: Don't know how to handle %s" % element.tag)
         self.logger.debug("Tuple is now %s" % str(tuple(list)))
         return TupleDef(name, tuple(list))
 
-    def _convert_set(self, set_node, id, name):
+    def _convert_set(self, set_node, id, name, ns):
         s = set()
         self.logger.debug("set: Parsing %s" % set_node)
         for element in set_node:
             self.logger.debug("Looking at element %s" % element)
-            if element.tag == self.NS+"value":
+            if element.tag == ns+"value":
                 s.add(str(element.text))
-            elif element.tag == self.NS+"ref":
+            elif element.tag == ns+"ref":
                 s.add(self._convert_ref(element, name + ".set"))
-            elif element.tag == self.NS+"object":
+            elif element.tag == ns+"object":
                 self.logger.debug("set: Parsing an inner object definition...")
-                s.add(self._convert_inner_object(element, id, "%s.set(%s)" % (name, len(s))))
-            elif element.tag in [self.NS+token for token in ["dict", "tuple", "set", "frozenset", "list"]]:
+                s.add(self._convert_inner_object(element, id, "%s.set(%s)" % (name, len(s)), ns))
+            elif element.tag in [ns+token for token in ["dict", "tuple", "set", "frozenset", "list"]]:
                 self.logger.debug("set: This set has child elements of type %s." % element.tag)
-                s.add(self._convert_value(element, id, "%s.set(%s)" % (name,len(s)))) 
+                s.add(self._convert_value(element, id, "%s.set(%s)" % (name,len(s)), ns)) 
             else:
                 self.logger.debug("set: Don't know how to handle %s" % element.tag)
         self.logger.debug("Set is now %s" % s)
         return SetDef(name, s)
 
-    def _convert_frozen_set(self, frozen_set_node, id, name):
-        item = self._convert_set(frozen_set_node, id, name)
+    def _convert_frozen_set(self, frozen_set_node, id, name, ns):
+        item = self._convert_set(frozen_set_node, id, name, ns)
         self.logger.debug("frozenset: Frozen set is now %s" % frozenset(item.value))
         return FrozenSetDef(name, frozenset(item.value))
 
-    def _convert_inner_object(self, object_node, id, name):
-        inner_object_def = self._convert_object(object_node, prefix="%s.%s" % (id, name))
+    def _convert_inner_object(self, object_node, id, name, ns):
+        inner_object_def = self._convert_object(object_node, prefix="%s.%s" % (id, name), ns=ns)
         self.logger.debug("innerobj: Innerobject is now %s" % inner_object_def)
         self.objects.append(inner_object_def)
         return InnerObjectDef(name, inner_object_def)
 
-    def _convert_prop_def(self, comp, p, name):
+    def _convert_prop_def(self, comp, p, name, ns):
         "This function translates object properties into useful collections of information for the container."
-        #self.logger.debug("Is %s.%s a ref? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"ref") is not None or "ref" in p.attrib))
-        #self.logger.debug("Is %s.%s a value? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"value") is not None or "value" in p.attrib))
-        #self.logger.debug("Is %s.%s an inner object? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"object") is not None or "object" in p.attrib))
-        #self.logger.debug("Is %s.%s a dict? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"dict") is not None or "dict" in p.attrib))
-        #self.logger.debug("Is %s.%s a list? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"list") is not None or "list" in p.attrib))
-        #self.logger.debug("Is %s.%s a tuple? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"tuple") is not None or "tuple" in p.attrib))
-        #self.logger.debug("Is %s.%s a set? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"set") is not None or "set" in p.attrib))
-        #self.logger.debug("Is %s.%s a frozenset? %s" % (comp.get("id"), p.get("name"), p.find(self.NS+"frozenset") is not None or "frozenset" in p.attrib))
+        #self.logger.debug("Is %s.%s a ref? %s" % (comp.get("id"), p.get("name"), p.find(ns+"ref") is not None or "ref" in p.attrib))
+        #self.logger.debug("Is %s.%s a value? %s" % (comp.get("id"), p.get("name"), p.find(ns+"value") is not None or "value" in p.attrib))
+        #self.logger.debug("Is %s.%s an inner object? %s" % (comp.get("id"), p.get("name"), p.find(ns+"object") is not None or "object" in p.attrib))
+        #self.logger.debug("Is %s.%s a dict? %s" % (comp.get("id"), p.get("name"), p.find(ns+"dict") is not None or "dict" in p.attrib))
+        #self.logger.debug("Is %s.%s a list? %s" % (comp.get("id"), p.get("name"), p.find(ns+"list") is not None or "list" in p.attrib))
+        #self.logger.debug("Is %s.%s a tuple? %s" % (comp.get("id"), p.get("name"), p.find(ns+"tuple") is not None or "tuple" in p.attrib))
+        #self.logger.debug("Is %s.%s a set? %s" % (comp.get("id"), p.get("name"), p.find(ns+"set") is not None or "set" in p.attrib))
+        #self.logger.debug("Is %s.%s a frozenset? %s" % (comp.get("id"), p.get("name"), p.find(ns+"frozenset") is not None or "frozenset" in p.attrib))
         #self.logger.debug("")
-        if "ref" in p.attrib or p.find(self.NS+"ref") is not None:
+        if "ref" in p.attrib or p.find(ns+"ref") is not None:
             if "ref" in p.attrib:
                 return self._convert_ref(p.get("ref"), name)
             else:
-                return self._convert_ref(p.find(self.NS+"ref"), name)
-        elif "value" in p.attrib or p.find(self.NS+"value") is not None:
+                return self._convert_ref(p.find(ns+"ref"), name)
+        elif "value" in p.attrib or p.find(ns+"value") is not None:
             if "value" in p.attrib:
                 return ValueDef(name, str(p.get("value")))
             else:
-                return ValueDef(name, str(p.find(self.NS+"value").text))
-        elif "dict" in p.attrib or p.find(self.NS+"dict") is not None:
+                text = p.find(ns+"value").text
+                try:
+                    text = str(text)
+                except UnicodeEncodeError:
+                    text = unicode(text)
+                return ValueDef(name, text)
+        elif "dict" in p.attrib or p.find(ns+"dict") is not None:
             if "dict" in p.attrib:
-                return self._convert_dict(p.get("dict"), comp.get("id"), name)
+                return self._convert_dict(p.get("dict"), comp.get("id"), name, ns)
             else:
-                return self._convert_dict(p.find(self.NS+"dict"), comp.get("id"), name)
-        elif "props" in p.attrib or p.find(self.NS+"props") is not None:
+                return self._convert_dict(p.find(ns+"dict"), comp.get("id"), name, ns)
+        elif "props" in p.attrib or p.find(ns+"props") is not None:
             if "props" in p.attrib:
-                return self._convert_props(p.get("props"), name)
+                return self._convert_props(p.get("props"), name, ns)
             else:
-                return self._convert_props(p.find(self.NS+"props"), name)
-        elif "list" in p.attrib or p.find(self.NS+"list") is not None:
+                return self._convert_props(p.find(ns+"props"), name, ns)
+        elif "list" in p.attrib or p.find(ns+"list") is not None:
             if "list" in p.attrib:
-                return self._convert_list(p.get("list"), comp.get("id"), name)
+                return self._convert_list(p.get("list"), comp.get("id"), name, ns)
             else:
-                return self._convert_list(p.find(self.NS+"list"), comp.get("id"), name)
-        elif "tuple" in p.attrib or p.find(self.NS+"tuple") is not None:
+                return self._convert_list(p.find(ns+"list"), comp.get("id"), name, ns)
+        elif "tuple" in p.attrib or p.find(ns+"tuple") is not None:
             if "tuple" in p.attrib:
-                return self._convert_tuple(p.get("tuple"), comp.get("id"), name)
+                return self._convert_tuple(p.get("tuple"), comp.get("id"), name, ns)
             else:
-                return self._convert_tuple(p.find(self.NS+"tuple"), comp.get("id"), name)
-        elif "set" in p.attrib or p.find(self.NS+"set") is not None:
+                return self._convert_tuple(p.find(ns+"tuple"), comp.get("id"), name, ns)
+        elif "set" in p.attrib or p.find(ns+"set") is not None:
             if "set" in p.attrib:
-                return self._convert_set(p.get("set"), comp.get("id"), name)
+                return self._convert_set(p.get("set"), comp.get("id"), name, ns)
             else:
-                return self._convert_set(p.find(self.NS+"set"), comp.get("id"), name)
-        elif "frozenset" in p.attrib or p.find(self.NS+"frozenset") is not None:
+                return self._convert_set(p.find(ns+"set"), comp.get("id"), name, ns)
+        elif "frozenset" in p.attrib or p.find(ns+"frozenset") is not None:
             if "frozenset" in p.attrib:
-                return self._convert_frozen_set(p.get("frozenset"), comp.get("id"), name)
+                return self._convert_frozen_set(p.get("frozenset"), comp.get("id"), name, ns)
             else:
-                return self._convert_frozen_set(p.find(self.NS+"frozenset"), comp.get("id"), name)
-        elif "object" in p.attrib or p.find(self.NS+"object") is not None:
+                return self._convert_frozen_set(p.find(ns+"frozenset"), comp.get("id"), name, ns)
+        elif "object" in p.attrib or p.find(ns+"object") is not None:
             if "object" in p.attrib:
-                return self._convert_inner_object(p.get("object"), comp.get("id"), name)
+                return self._convert_inner_object(p.get("object"), comp.get("id"), name, ns)
             else:
-                return self._convert_inner_object(p.find(self.NS+"object"), comp.get("id"), name)
+                return self._convert_inner_object(p.find(ns+"object"), comp.get("id"), name, ns)
 
 class YamlConfig(Config):
     """

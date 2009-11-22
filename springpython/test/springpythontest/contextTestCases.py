@@ -32,7 +32,7 @@ from springpython.config import PythonConfig
 from springpython.config import PyContainerConfig
 from springpython.config import SpringJavaConfig
 from springpython.config import Object
-from springpython.config import XMLConfig
+from springpython.config import XMLConfig, xml_mappings
 from springpython.config import YamlConfig, yaml_mappings
 from springpython.config import Object, ObjectDef
 from springpython.factory import PythonObjectFactory
@@ -1154,6 +1154,53 @@ class XMLConfigTestCase6(unittest.TestCase):
         self.assertTrue("Test9" in [item.user_dict for item in service4.user_dict["frozenset2"]])
 
         self.assertEquals("Test10", service4.user_dict["value"])
+
+class XMLConfigTypesMappingsTestCase(unittest.TestCase):
+    """This test case exercises the types mappings for XMLConfig"""
+    
+    def test_types_mappings(self):
+        self.assertEqual({'complex': 'types.ComplexType', 
+            'bool': 'types.BooleanType', 'unicode': 'types.UnicodeType',
+            'str': 'types.StringType', 'int': 'types.IntType',
+            'decimal': 'decimal.Decimal', 'float': 'types.FloatType',
+            'long': 'types.LongType'}, xml_mappings)
+        
+        ctx = ApplicationContext(XMLConfig("support/contextXMLConfigTypesMappings.xml"))
+        self.assertEqual(8, len(ctx.objects))
+        
+        my_string = ctx.get_object("MyString")
+        my_unicode = ctx.get_object("MyUnicode")
+        my_int = ctx.get_object("MyInt")
+        my_long = ctx.get_object("MyLong")
+        my_float = ctx.get_object("MyFloat")
+        my_decimal = ctx.get_object("MyDecimal")
+        my_bool = ctx.get_object("MyBool")
+        my_complex = ctx.get_object("MyComplex")
+        
+        self.assertEqual(my_string, "My string")
+        self.assertEqual(my_unicode, u"Zażółć gęślą jaźń")
+        self.assertEqual(my_int, 10)
+        self.assertEqual(my_long, 100000000000000000000000)
+        self.assertEqual(my_float, 3.14)
+        self.assertEqual(my_decimal, Decimal("12.34"))
+        self.assertEqual(my_bool, False)
+        self.assertEqual(my_complex, 10+0j)
+
+class XMLConfigMixedXSDVersionsTestCase(unittest.TestCase):
+    """ Exercises the XMLConfig behaviour when given XML config files of
+    different XSD versions.
+    """
+    def test_mixed_xsd_versions(self):
+        config_files = ["support/contextXMLConfigXSD10.xml", "support/contextXMLConfigXSD11.xml"]
+        ctx = ApplicationContext(XMLConfig(config_files))
+        
+        self.assertEqual(2, len(ctx.objects))
+        
+        my_string_10 = ctx.get_object("MyString10")
+        my_string_11 = ctx.get_object("MyString11")
+        
+        self.assertEqual(my_string_10, "My string XSD 1.0")
+        self.assertEqual(my_string_11, "My string XSD 1.1")
 
 class XMLConfigConstructorBasedTestCase(unittest.TestCase):
     """This test case exercises the constructors for XMLConfig"""
