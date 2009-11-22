@@ -1,48 +1,41 @@
 objects: 
     - object:  MyString
-      class: types.StringType
-      constructor-args: ["My string"]
+      str: My string
         
     - object:  MyUnicode
-      class: types.UnicodeType
-      constructor-args: ["Zażółć gęślą jaźń"]
+      unicode: Zażółć gęślą jaźń
         
     - object:  MyInt
-      class: types.IntType
-      constructor-args: [10]
+      int: 10
     
     - object:  MyLong
-      class: types.LongType
-      constructor-args: [100000000000000000000000]
+      long: 100000000000000000000000
       
     - object:  MyFloat
-      class: types.FloatType 
-      constructor-args: [3.14]
+      float: 3.14
         
     - object:  MyDecimal
-      class: decimal.Decimal
-      constructor-args: ["12.34"]
+      decimal: 12.34
         
-    - object: MyBoolean
-      class: types.BooleanType
-      constructor-args: [False]
+    - object:  MyBoolean
+      bool: False
         
-    - object: MyComplex
-      class: types.ComplexType
-      constructor-args: [10+0j]
+    - object:  MyComplex
+      complex: 10+0j
         
-    - object: MyList
-      class: types.ListType
-      constructor-args: [[1,2,3,4]]
+    - object:  MyList
+      list: [1, 2, 3, 4]
         
-    - object: MyTuple
-      class: types.TupleType
-      constructor-args: [["a", "b", "c"]]
+    - object:  MyTuple
+      tuple: ["a", "b", "c"]
       
     - object: MyDict
-      class: types.DictType
-      constructor-args: [{1: "a", 2: "b", 3: "c"}]
-      
+      dict:
+        1: "a"
+        2: "b"
+        3: "c"
+        
     - object: MyRef
-      class: decimal.Decimal
-      constructor-args: [{ref: MyDecimal}]
+      decimal:
+        ref: MyDecimal
+
