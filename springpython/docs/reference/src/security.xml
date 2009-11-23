@@ -94,9 +94,9 @@ class SampleContainer(PythonConfig):
         provider.user_details_service = inMemoryUserDetailsService()
         return provider
         
-	@Object
-	def inMemoryUserDetailsService(self):
-		user_details_service = InMemoryUserDetailsService()
+    @Object
+    def inMemoryUserDetailsService(self):
+	user_details_service = InMemoryUserDetailsService()
         user_details_service.user_dict = {
            "vet1": ("password1", ["VET_ANY"], False),
            "bdavis": ("password2", ["CUSTOMER_ANY"], False),
