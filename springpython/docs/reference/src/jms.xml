@@ -102,7 +102,6 @@ objects:
       properties:
           factory: {ref: MyConnectionFactory}
           
-    XXX: Doesn't work, ignore for now
     - object: MyQueue
       str: TEST.1
           
@@ -188,7 +187,6 @@ objects:
       properties:
           factory: {ref: MyConnectionFactory}
           
-    XXX: Doesn't work, ignore for now
     - object: MyQueue
       str: TEST.1
 ]]></programlisting>
@@ -1079,6 +1077,362 @@ factory.destroy()
     
     <section id="jms-text-message">
         <title>springpython.jms.core.TextMessage</title>
+        
+        <para>
+            TextMessage objects encapsulate the data being sent to or received
+            from a JMS provider. Even if you use the plain 
+            <emphasis>jms_template.send("Foobar")</emphasis> to send an ordinary
+            text, there's still a TextMessage instance created automatically
+            underneath for you.
+        </para>
+        
+        <para>
+            If all you need from JMS is simply to send and receive some text
+            and you're not likely to be required to use TextMessages. However,
+            if you have to set or read JMS attributes or you're interested in setting
+            custom JMS properties then TextMessage is what you're looking for.
+        </para>
+        
+        <para>
+            In Spring Python, there are no clumsy setters and getter as in Java
+            JMS. If you need to set the property of a message, you just write
+            it, like for instance
+            <emphasis>message.jms_correlation_id = "1234567"</emphasis>.
+            
+            Here's the list of all TextMessage's attributes along with their
+            explanation and usage notes.
+            
+			<table id="jms-jmstemplate-attributes">
+            
+				<title><classname>springpython.jms.core.TextMessage</classname>
+                default attributes</title>
+            
+				<tgroup cols="2">
+					<tbody>
+						<row>
+							<entry>text</entry>
+							<entry>
+                                The message contents, the actual business
+                                payload carried by a message. May be both read
+                                and written to. For messages sent to a JMS
+                                provider it must be either a string or a unicode
+                                object encodable into UTF-8.
+                                <para>
+                                The following two code snippets are equivalent:
+                                </para>
+<programlisting><![CDATA[
+# Spring Python
+from springpython.jms.core import TextMessage
+
+message = TextMessage("Hey")
+]]></programlisting>
+
+<programlisting><![CDATA[
+# Spring Python
+from springpython.jms.core import TextMessage
+
+message = TextMessage()
+message.text = "Hey"
+]]></programlisting>
+                                <para>
+                                    Here's how to get the content of a message
+                                    received by a JmsTemplate.
+                                </para>
+<programlisting><![CDATA[
+# .. skip creating the connection factory and a JmsTemplate
+
+message = jms_template.receive()
+print message.text
+]]></programlisting>
+                            </entry>
+ 						</row>
+						<row>
+							<entry>jms_correlation_id</entry>
+							<entry>
+                                Equivalent to Java's JMSCorrelationID message
+                                header. It must be a string
+                                instance when set manually - a good way
+                                to produce correlation identifiers is to use
+                                the Python's <classname>uuid4</classname> type, e.g.:
+<programlisting><![CDATA[
+# stdlib
+from uuid import uuid4
+
+# Spring Python
+from springpython.jms.core import TextMessage
+
+# Prapare the JMS correlation ID
+jms_correlation_id = uuid4().hex
+
+message = TextMessage("Howdy")
+message.jms_correlation_id = jms_correlation_id
+
+# Now the message can be sent with a JMS correlation ID such as 6f5b070bb0ed472bbe63d511776bb1dc
+# which is a 128 bits long identifier.
+]]></programlisting>
+                            </entry>
+ 						</row>
+						<row>
+							<entry>jms_delivery_mode</entry>
+							<entry>Equivalent to Java's JMSDeliveryMode, can be
+                            both read and written to and must be
+                            equal to one of the following values 
+                            <classname>springpython.jms.DELIVERY_MODE_NON_PERSISTENT</classname>,
+                            <classname>springpython.jms.DELIVERY_MODE_PERSISTENT</classname> or
+                            <classname>springpython.jms.DEFAULT_DELIVERY_MODE</classname>.
+                            The default value - <classname>springpython.jms.DEFAULT_DELIVERY_MODE</classname> -
+                            equals to
+                            <classname>springpython.jms.DELIVERY_MODE_PERSISTENT</classname>.
+                            </entry>
+ 						</row>
+						<row>
+							<entry>jms_destination</entry>
+							<entry>
+                                Equivalent to Java's JMSDestination, automatically
+                                populated by JmsTemplate objects on send
+                                or receive time.
+                                May be read from but <emphasis>must not be set manually.</emphasis>
+                            </entry>
+ 						</row>
+						<row>
+							<entry>jms_expiration</entry>
+							<entry>
+                                Same as Java's JMSExpiration - allow for a message
+                                to expire after a certain amount of time.
+                                The value is automatically set by JmsTemplate
+                                for received messages.
+                                For messages being sent the time expressed
+                                is in milliseconds, as in the following code:
+<programlisting><![CDATA[
+message = TextMessage("I will expire in half a second")
+
+# Set the message's expiration time to 500 ms
+message.jms_expiration = 500
+]]></programlisting>
+                            </entry>
+ 						</row>
+						<row>
+							<entry>jms_message_id</entry>
+							<entry>
+                                Same as Java's JMSMessageID. Automatically set
+                                by JmsTemplate for received messages, may be
+                                set manually but the value will be ignored
+                                by Spring Python's JMS machinery.
+                            </entry>
+ 						</row>
+						<row>
+							<entry>jms_priority</entry>
+							<entry>
+                                Equivalent to Java's JMSPriority, may be set
+                                to an integer value. If not set manually, the
+                                value will be automatically computed by the
+                                JMS provider. An incoming message will have
+                                the value set as given by the JMS provider.
+                            </entry>
+ 						</row>
+						<row>
+							<entry>jms_redelivered</entry>
+							<entry>
+                                Same as Java's JMSRedelivered header. Should
+                                not be set manually. Default value for incoming
+                                messages is <emphasis>False</emphasis>; for messages
+                                received from WebSphere MQ (which is currently
+                                the only supported JMS provider) it will be
+                                <emphasis>True</emphasis> if the underlying
+                                MQ message's <emphasis>BackoutCount</emphasis>
+                                attribute is 1 or greater.
+                            </entry>
+ 						</row>
+						<row>
+							<entry>jms_reply_to</entry>
+							<entry>
+                                Equivalent to Java's JMSDestination,
+                                the name of a JMS destination to which responses
+                                to the currently sent message should be delivered.
+<programlisting><![CDATA[
+message = TextMessage("I will expire in half a second")
+
+# Set the reply to queue
+message.jms_reply_to = "REPLY.TO.QUEUE.1"
+]]></programlisting>
+                            <para>
+                                See <link linkend="jms-jms-template-dynamic-queues">here</link>
+                                for an example of how to use
+                                <emphasis>jms_reply_to</emphasis> in request/reply
+                                scenarios.
+                            </para>
+                            </entry>
+ 						</row>
+						<row>
+							<entry>jms_timestamp</entry>
+							<entry>
+                                Same as Java's JMSDestination, the timestamp
+                                of a message returned as a
+                                <classname>long</classname> with
+                                a centiseconds precision. Should not be set
+                                manually.
+                            </entry>
+ 						</row>
+						<row>
+							<entry>max_chars_printed</entry>
+							<entry>
+                                Specifies how many characters of the business
+                                payload (the <classname>.text</classname>
+                                attribute) will be returned by the TextMessage
+                                instance's <classname>__str__</classname> method,
+                                which is used, for instance, for logging purposes.
+                                Default value is 100 characters.
+                            <para>
+                                Consider the code below, in both cases the message's
+                                content is the same, the messages differ only
+                                by the value of the 
+                                <classname>max_chars_printed</classname>
+                                attribute.
+                            </para>
+<programlisting><![CDATA[                            
+# Spring Python
+from springpython.jms.core import TextMessage
+
+payload = "Business payload. " * 8
+
+msg = TextMessage(payload)
+msg.max_chars_printed = 50
+
+print msg
+
+# Will show in the console: 
+                            
+JMS message class: jms_text
+  jms_delivery_mode:  2
+  jms_expiration:     None
+  jms_priority:       None
+  jms_message_id:     None
+  jms_timestamp:      None
+  jms_correlation_id: None
+  jms_destination:    None
+  jms_reply_to:       None
+  jms_redelivered:    None
+Business payload. Business payload. Business paylo
+Another 94 character(s) omitted
+]]></programlisting>
+
+<programlisting><![CDATA[
+# Spring Python
+from springpython.jms.core import TextMessage
+
+payload = "Business payload. " * 8
+
+msg = TextMessage(payload)
+msg.max_chars_printed = 130
+
+print msg
+
+# Will show in the console: 
+                            
+JMS message class: jms_text
+  jms_delivery_mode:  2
+  jms_expiration:     None
+  jms_priority:       None
+  jms_message_id:     None
+  jms_timestamp:      None
+  jms_correlation_id: None
+  jms_destination:    None
+  jms_reply_to:       None
+  jms_redelivered:    None
+Business payload. Business payload. Business payload. Business payload. Business payload. Business payload. Business payload. Busi
+Another 14 character(s) omitted
+]]></programlisting>
+                            </entry>
+ 						</row>
+                    </tbody>
+                </tgroup>
+            </table>
+            
+        </para>
+        
+        <para>
+            Attributes shown in the table above are standard JMS headers, available
+            regardless of the JMS provider used. For WebSphereMQ - which is currently
+            the only JMS provider supported by Spring Python - following attributes
+            are also available:
+                JMS_IBM_Report_Exception,
+                JMS_IBM_Report_Expiration,
+                JMS_IBM_Report_COA,
+                JMS_IBM_Report_COD,
+                JMS_IBM_Report_PAN,
+                JMS_IBM_Report_NAN,
+                JMS_IBM_Report_Pass_Msg_ID,
+                JMS_IBM_Report_Pass_Correl_ID,
+                JMS_IBM_Report_Discard_Msg,
+                JMSXGroupID,
+                JMSXGroupSeq,
+                JMS_IBM_Feedback,
+                JMS_IBM_Last_Msg_In_Group,
+                JMSXUserID,
+                JMS_IBM_PutTime,
+                JMS_IBM_PutDate and
+                JMSXAppID.
+                Refer to the IBM's Java JMS documentation for info on how to use them.
+        </para>
+        
+        <para>
+            Creating custom JMS properties is simply a matter of assigning
+            a value to an attribute, there are no special methods such as
+            <methodname>setStringProperty/getStringProperty</methodname>
+            which are used in Java JMS, thus the following code will create
+            a custom <emphasis>MESSAGE_NAME</emphasis> property which can be
+            read by <methodname>getStringProperty</methodname> on the Java side.
+        </para>
+<programlisting><![CDATA[
+# Spring Python
+from springpython.jms.core import TextMessage
+
+msg = TextMessage("Hello!")
+msg.MESSAGE_NAME = "HelloRequest"
+]]></programlisting>
+
+        <para>
+            Observe how custom properties will be printed to the console along
+            with standard JMS headers:
+        </para>
+<programlisting><![CDATA[
+# Spring Python
+from springpython.jms.core import TextMessage
+
+msg = TextMessage("Hello!")
+msg.MESSAGE_NAME = "HelloRequest"
+msg.CLIENT = "CRM"
+msg.CUSTOMER_ID = "201888228"
+
+print msg
+
+# Will show:
+
+JMS message class: jms_text
+  jms_delivery_mode:  2
+  jms_expiration:     None
+  jms_priority:       None
+  jms_message_id:     None
+  jms_timestamp:      None
+  jms_correlation_id: None
+  jms_destination:    None
+  jms_reply_to:       None
+  jms_redelivered:    None
+  CLIENT:CRM
+  CUSTOMER_ID:201888228
+  MESSAGE_NAME:HelloRequest
+Hello!
+]]></programlisting>
+
+        <para>
+            Not all TextMessage's attributes can be set to a custom value,
+            the exact list of reserved attributes' names is available
+            as <classname>springpython.jms.core.reserved_attributes</classname>.
+            There's a very slim chance you'll ever encounter the conflict with
+            your application's message attributes, nevertheless be sure to check
+            the list before using custom JMS properties in your code.
+        </para>
+        
     </section>
     
     <section id="jms-exceptions">
@@ -1123,7 +1477,7 @@ factory.destroy()
                         an integer code, as returned by the queue manager,
                         giving a reason for the failure, known as MQRC in
                         WebSphere MQ lingo. The meaning may be looked up
-                        in the "WebSphere MQ Constants" manual.
+                        in the IBM's "WebSphere MQ Constants" manual.
 					</listitem>
                 </itemizedlist>
             <para>
@@ -1139,6 +1493,92 @@ factory.destroy()
     
     <section id="jms-logging-and-troubleshooting">
         <title>Logging and troubleshooting</title>
+        
+        <para>
+            Spring Python's JMS uses standard Python's 
+            <classname>logging</classname> module for emitting
+            the messages. In general, you can expect JMS to behave sane, it won't
+            overflow your logs with meaningless entries, e.g. if you configure it
+            to log the messages at the <classname>ERROR</classname> level then
+            you'll be notified of only truly erratic situtations. 
+        </para>
+        
+        <para>
+            In addition to <classname>logging</classname>'s builtin levels,
+            JMS uses one custom level - 
+            <classname>springpython.util.TRACE1</classname>, 
+            <emphasis>enabling TRACE1 will degrade the performance considerably</emphasis>
+            and will result in a huge number of messages written to the logs. 
+            Use it sparingly at troubleshooting times when you'd like to see
+            the exact flow of messages, raw bytes and JMS headers passing by
+            the JMS classes involved. Do not ever enable it in production
+            environments unless you have a very compelling reason and you're
+            sure you're comfortable with paying the performance penalty.
+        </para>
+        
+        <para>
+            The only JMS logger currently employed by Spring Python is
+            <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+            and here's how it can be configured to work at the 
+            <classname>INFO</classname> level:
+        </para>
+        
+<programlisting><![CDATA[
+
+# stdlib
+import logging
+
+log_format = "%(asctime)s - %(levelname)s - %(process)d - %(threadName)s - %(name)s - %(message)s"
+formatter = logging.Formatter(log_format)
+
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+
+jms_logger = logging.getLogger("springpython.jms.factory.WebSphereMQConnectionFactory")
+
+jms_logger.setLevel(level=logging.INFO)
+jms_logger.addHandler(handler)
+]]></programlisting>
+
+        <para>
+            Here's how to configure it to log messages at the
+            <classname>TRACE1</classname> level:
+        </para>
+        
+<programlisting><![CDATA[
+
+# stdlib
+import logging
+
+# Spring Python
+from springpython.util import TRACE1
+
+log_format = "%(asctime)s - %(levelname)s - %(process)d - %(threadName)s - %(name)s - %(message)s"
+formatter = logging.Formatter(log_format)
+
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+
+jms_logger = logging.getLogger("springpython.jms.factory.WebSphereMQConnectionFactory")
+
+jms_logger.setLevel(level=TRACE1)
+jms_logger.addHandler(handler)
+]]></programlisting>
+
+        <para>
+            How much information is being logged depends on the logging level, the 
+            average message size and the message rate. Here's a rough estimation
+            of how fast log files will log files grow depending on the logging level.
+            The average message size was 5kB, there were totaly
+            50 messages sent and received a second (25 sent, 25 received), the
+            test application was running for 1 minute and the log entries were
+            written to am ordinary log file.
+        </para>
+            
+        <para>
+            ZZzzzZZzzz: TODO
+        </para>
+        
     </section>
 	
 </chapter>
