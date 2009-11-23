@@ -1514,6 +1514,9 @@ Hello!
             the JMS classes involved. Do not ever enable it in production
             environments unless you have a very compelling reason and you're
             sure you're comfortable with paying the performance penalty.
+            Consider using the <classname>logging.DEBUG</classname>
+            level instead of <classname>TRACE1</classname> if all you're after
+            is simply seeing the messages' payload.
         </para>
         
         <para>
@@ -1567,16 +1570,44 @@ jms_logger.addHandler(handler)
 
         <para>
             How much information is being logged depends on the logging level, the 
-            average message size and the message rate. Here's a rough estimation
-            of how fast log files will log files grow depending on the logging level.
-            The average message size was 5kB, there were totaly
-            50 messages sent and received a second (25 sent, 25 received), the
-            test application was running for 1 minute and the log entries were
-            written to am ordinary log file.
+            average message size, the messages'
+            <classname>max_chars_printed</classname> attribute value and the
+            message rate.
         </para>
-            
         <para>
-            ZZzzzZZzzz: TODO
+            Here's an estimation
+            of how fast log files will grow depending on the logging level.
+            During the test, the message size was 5kB, there were totaly 10,000 messages
+            sent, the <classname>max_chars_printed</classname> attribute had
+            value of 100 and the log entries were written to an ordinary log file.
+        </para>
+        <para>
+            <itemizedlist>
+                <listitem>
+                    <classname>ERROR</classname> - 0KB, no errors were 
+                        encountered thus no entries were written to the log file,
+                </listitem>
+                    
+                <listitem>
+                    <classname>INFO</classname> - 0.9KB, only very basic info was
+                    logged, such as events of connecting to and disconnecting
+                    from a JMS provider,
+                </listitem>
+                
+                <listitem>
+                    <classname>DEBUG</classname> - 7,3MB, up to the 
+                    <classname>max_chars_printed</classname> characters of 
+                    each message were written to the file plus all of JMS headers
+                    and some additional info as well,
+                </listitem>
+                
+                <listitem>
+                    <classname>TRACE1</classname> - 79MB, full trace was taken
+                    which resulted in the log file's growing
+                    <emphasis>tenfold</emphasis> as compared to the 
+                    <classname>DEBUG</classname> level.
+                </listitem>
+            </itemizedlist>
         </para>
         
     </section>
