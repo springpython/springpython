@@ -122,6 +122,6 @@
         	<property name="allow_if_all_abstain">False</property>
         </object>
         
-		<object id="sampleService" class="springpythontest.support.testSecurityClasses.SampleService"/>        
+	<object id="sampleService" class="springpythontest.support.testSecurityClasses.SampleService"/>        
 
 </objects>

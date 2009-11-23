@@ -1,0 +1,1 @@
+from springpythontest.securityLdapTestCases import LdapAuthenticationProviderTestCase
