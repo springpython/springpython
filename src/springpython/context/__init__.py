@@ -69,20 +69,6 @@ class ApplicationContext(ObjectContainer):
             if hasattr(obj, "set_app_context"):
                 obj.set_app_context(self)
                 
-    def get_objects_by_type(self, type_, include_type=True):
-        """ Returns all objects which are instances of a given type.
-        If include_type is False then only instances of the type's subclasses
-        will be returned.
-        """
-        result = {}
-        for obj_name, obj in self.objects.iteritems():
-            if isinstance(obj, type_):
-                if include_type == False and type(obj) is type_:
-                    continue
-                result[obj_name] = obj
-                
-        return result
-                
     def shutdown_hook(self):
         self.logger.debug("Invoking the destroy_method on registered objects")
         
