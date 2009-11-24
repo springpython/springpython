@@ -364,7 +364,7 @@ jms_template.receive(queue1)
                                 any call to the factory from a thread that
                                 didn't open the connection will result
                                 in a <classname>springpython.jms.JMSException</classname>
-                                being raised. The setting should only be used when connecting to queue managers
+                                being raised. The setting should only set to False when connecting to queue managers
                                 running on z/OS systems as it otherwise can
                                 hurt the performance of multi-threaded applications.
                                 It has no impact on performance of single-threaded applications.
@@ -470,8 +470,8 @@ objects:
             A template must be associated with a connection factory and once
             configured, may be used for communicating in both directions. It's
             up to you to decide whether in your circumstances it makes sense
-            to reuse a single template for all communications, have a single
-            template for each queue involved or perhaps use separate, dedicated,
+            to reuse a single template for all communications, to have a single
+            template for each queue involved or perhaps to use separate, dedicated,
             templates, one for sending and one for receiving. Note however,
             <emphasis>that <classname>springpython.jms.core.JmsTemplate</classname>
             instances are not guaranteed to be thread-safe</emphasis> and no
@@ -558,7 +558,7 @@ objects:
 							<entry>delivery_persistent</entry>
 							<entry>
                                 <para>default: None</para>
-                                <para>Tells whether messagas sent to a JMS
+                                <para>Tells whether messages sent to a JMS
                                 provider are by default persistent. If not set,
                                 the persistency of messages is controlled
                                 on a per messages basis (and defaults to
@@ -884,7 +884,7 @@ factory.destroy()
                 via a dynamic queue and imitating an exchange of messages
                 between two dispersed applications. You can observe than
                 from the responding application's point of view a dynamic queue's
-                name is like any other queue's name, it doesn't need to be - and indeed isn't -
+                name is like any other queue's name, the application doesn't need to be - and indeed isn't -
                 aware that it's responding to a dynamic queue and not to a 
                 predefined one. For the requesting end a dynamic queue is also like
                 a regular queue in that its name must be provided to the JmsTemplate's
@@ -999,7 +999,7 @@ factory.destroy()
                 that you don't need to implement both
                 <emphasis>to_message</emphasis> and <emphasis>from_message</emphasis>
                 if that's not appropriate in your situation however it makes
-                sense for the example to handle requests and responses using
+                sense for the example below to handle requests and responses using
                 only one converter object. 
             </para>
 <programlisting><![CDATA[
@@ -1011,10 +1011,8 @@ channel = "SVRCONN.1"
 host = "192.168.1.121"
 listener_port = "1434"
 
-request_queue = "TEST.1"
-
 # Note that it's the same queue so we're going to later receive the same invoice we sent.
-response_queue = "TEST.1"
+request_queue = response_queue = "TEST.1"
 
 # One of the business domain's objects our application deals with.
 class Invoice(object):
@@ -1088,13 +1086,13 @@ factory.destroy()
         
         <para>
             If all you need from JMS is simply to send and receive some text
-            and you're not likely to be required to use TextMessages. However,
+            then you're not likely to be required to use TextMessages. However,
             if you have to set or read JMS attributes or you're interested in setting
             custom JMS properties then TextMessage is what you're looking for.
         </para>
         
         <para>
-            In Spring Python, there are no clumsy setters and getter as in Java
+            In Spring Python there are no clumsy setters and getters as in Java
             JMS. If you need to set the property of a message, you just write
             it, like for instance
             <emphasis>message.jms_correlation_id = "1234567"</emphasis>.
@@ -1217,7 +1215,7 @@ message.jms_expiration = 500
                                 Same as Java's JMSMessageID. Automatically set
                                 by JmsTemplate for received messages, may be
                                 set manually but the value will be ignored
-                                by Spring Python's JMS machinery.
+                                by the JMS provider.
                             </entry>
  						</row>
 						<row>
@@ -1246,11 +1244,11 @@ message.jms_expiration = 500
 						<row>
 							<entry>jms_reply_to</entry>
 							<entry>
-                                Equivalent to Java's JMSDestination,
+                                Equivalent to Java's JMSReplyTo,
                                 the name of a JMS destination to which responses
                                 to the currently sent message should be delivered.
 <programlisting><![CDATA[
-message = TextMessage("I will expire in half a second")
+message = TextMessage("Please, reply to me.")
 
 # Set the reply to queue
 message.jms_reply_to = "REPLY.TO.QUEUE.1"
@@ -1266,9 +1264,9 @@ message.jms_reply_to = "REPLY.TO.QUEUE.1"
 						<row>
 							<entry>jms_timestamp</entry>
 							<entry>
-                                Same as Java's JMSDestination, the timestamp
+                                Same as Java's JMSTimestamp, the timestamp
                                 of a message returned as a
-                                <classname>long</classname> with
+                                number of milliseconds with
                                 a centiseconds precision. Should not be set
                                 manually.
                             </entry>
@@ -1484,9 +1482,10 @@ Hello!
                 Note that <emphasis>message</emphasis>,
                     <emphasis>completion_code</emphasis> and
                     <emphasis>reason_code</emphasis> are all optional and there's
-                    no guarantee they will be actually returned; before making
-                    any use of them, you should always check for their existence
-                    should you caught a WebSphereMQJMSException.
+                    no guarantee they will be actually returned.
+                    Should you caught a WebSphereMQJMSException,
+                    you should always check for their existence before making
+                    any use of them.
             </para>
         </para>
     </section>
@@ -1511,7 +1510,7 @@ Hello!
             and will result in a huge number of messages written to the logs. 
             Use it sparingly at troubleshooting times when you'd like to see
             the exact flow of messages, raw bytes and JMS headers passing by
-            the JMS classes involved. Do not ever enable it in production
+            the Spring Python's JMS classes involved. Do not ever enable it in production
             environments unless you have a very compelling reason and you're
             sure you're comfortable with paying the performance penalty.
             Consider using the <classname>logging.DEBUG</classname>
