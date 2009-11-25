@@ -372,7 +372,7 @@ jms_template.receive(queue1)
                                 <para>default: True</para>
                                 <para></para>
                                 <para>A single
-                                <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+                                <classname>WebSphereMQConnectionFactory</classname>
                                 object may be shared between multiple threads
                                 to provide better performance. This setting allows
                                 for marking the underlying connection to a
