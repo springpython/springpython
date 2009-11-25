@@ -14,12 +14,6 @@
    limitations under the License.       
 """
 
-# Python 2.4 compatibility
-try:
-    set
-except NameError:
-    from sets import Set as set
-
 # stdlib
 import sys
 import logging

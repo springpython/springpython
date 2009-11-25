@@ -45,8 +45,8 @@
 	&transaction;
 	&security;
 	&remoting;
-	&plugins;
     &jms;
+	&plugins;
 	&samples;
 	
 </book>

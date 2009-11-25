@@ -14,12 +14,6 @@
    limitations under the License.       
 """
 
-# Python 2.4
-try:
-    set
-except NameError:
-    from sets import Set as set
-
 # stdlib
 import locale
 from string import Template

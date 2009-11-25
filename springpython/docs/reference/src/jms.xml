@@ -10,15 +10,30 @@
     in fact, <emphasis>you can use Spring Python and JMS with no Java applications participating
     in message exchanging at all</emphasis>.</para>
 	
-	<para>The only JMS provider currently supported by Spring Python is IBM's WebSphere MQ, formerly known as MQSeries.</para>
+    <para>Spring Python works as a JMS client, you still need a JMS provider,
+        the server part, for message brokering.
+        The only JMS provider currently supported by Spring Python is IBM's
+        WebSphere MQ, formerly known as MQSeries.
+    </para>
     
     <para>Although Spring Python's JMS API is loosely based on Spring Java's, it's not a direct port
     and features a highly Pythonic look and feel.
     </para>
+    
+	<para><mediaobject>
+		<imageobject role="fo">
+			<imagedata align="center" fileref="images/jms-map.png"
+				format="PNG" scale="100%" width="100%"/>
+		</imageobject>
+		<imageobject role="html">
+			<imagedata align="center" fileref="images/jms-map.png"
+				format="PNG"/>
+		</imageobject>
+	</mediaobject></para>
 		
 	<section id="jms-intro">
 		<title>Introduction</title>
-		<sidebar id="intro-syntax">
+		<sidebar id="jms-intro-syntax">
 			<para>Througout the chapter pure Python code or YAML syntax is used
             to illustrate the support for JMS however it only represents the
             author's preferences and it's worth noting that you can use
@@ -41,9 +56,11 @@
 		<title>Dependencies</title>
         <para>
             Support for JMS messaging with WebSphere MQ is built on top of
-            the <ulink url="http://pymqi.sf.net">PyMQI</ulink> library which provides
+            the CPython-only <ulink url="http://pymqi.sf.net">PyMQI</ulink> library which provides
             Python applications an access to WebSphere MQ queue managers. You need to separately install 
             PyMQI in order to use <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>.
+            PyMQI, in turn, needs a <emphasis>WebSphere MQ client</emphasis>, a runtime library
+            which may be freely downloaded from IBM's site.
         </para>
     </section>
     
@@ -167,7 +184,7 @@ factory.destroy()
 ]]></programlisting>
 
             <para>
-                And here's a complementary example showing the usage of <classname>springpython.config.YamlConfig</classname>.
+                And here's a complementary example showing the usage of <classname>YamlConfig</classname>.
                 The configuration should be saved in a "jms-context.yml" file in the same directory
                 the Python code using it will be saved in. Note that it's the same
                 configuration that was used in the sending example.
@@ -193,7 +210,7 @@ objects:
 
             <para>
                 The Python code used for receiving a message from a queue configured
-                using the <classname>springpython.config.YamlConfig</classname>.
+                using the <classname>YamlConfig</classname>.
             </para>
 <programlisting><![CDATA[
 from springpython.context import ApplicationContext
@@ -222,15 +239,15 @@ jms_template.receive(queue1)
             <title>springpython.jms.factory.WebSphereMQConnectionFactory</title>
             <para> 
             
-            <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+            <classname>WebSphereMQConnectionFactory</classname>
             implements access to WebSphere MQ JMS provider. Along with 
-            <classname>springpython.jms.core.JmsTemplate</classname> it's the
+            <classname>JmsTemplate</classname> it's the
             class you'll be most frequently using for sending and receiving
             of messages.
             </para>
             
             <para>
-            Each <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+            Each <classname>WebSphereMQConnectionFactory</classname>
             object will hold at most one connection to WebSphere MQ, which will
             be lazily established when it'll be actually needed, e.g. when a message
             will need to be put on a queue for the first time. The connection
@@ -239,7 +256,7 @@ jms_template.receive(queue1)
             </para>
             
             <para>
-            Like all Spring Python's classes <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+            Like all Spring Python's classes <classname>WebSphereMQConnectionFactory</classname>
             can be configured using pure Python or you can use Spring Python's IoC to separate your
             business code from configuration. Using IoC has an added benefit of taking care
             of destroying any open queues and closing the connection when the
@@ -247,7 +264,7 @@ jms_template.receive(queue1)
             </para>
 
             <para>
-            <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+            <classname>WebSphereMQConnectionFactory</classname>
             provides several options that let you customize its behaviour
             and apart from the obvious ones which you
             must provide (like, the queue manager's host) all other options have
@@ -320,7 +337,7 @@ jms_template.receive(queue1)
                                 <para></para>
                                 <para>
                                     By default, 
-                                    <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+                                    <classname>WebSphereMQConnectionFactory</classname>
                                     will keep references to open queues in a cache
                                     for later re-use. This speeds-up most operations
                                     as there's usually no need for closing a queue
@@ -395,7 +412,7 @@ jms_template.receive(queue1)
             
             <para>
                 Here's an example of programatically creating a
-                <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+                <classname>WebSphereMQConnectionFactory</classname>
                 object:
             </para>
 <programlisting><![CDATA[
@@ -416,7 +433,7 @@ factory.destroy()
 
             <para>
                 An example of using YamlConfig for configuring
-                <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+                <classname>WebSphereMQConnectionFactory</classname>
                 inside of an IoC container.
             </para>
 <programlisting><![CDATA[
@@ -440,7 +457,7 @@ objects:
             </para>
             
             <para>
-                <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
+                <classname>WebSphereMQConnectionFactory</classname>
                 objects are thread-safe and may be shared between multiple threads
                 if the queue manager supports sharing a single connection
                 which is the case on all platforms except for z/OS.
@@ -453,7 +470,7 @@ objects:
                 <classname>springpython.jms.factory.MQRFH2JMS</classname>
                 wrap the WebSphere MQ's native MQRFH2 wire-level format in a set of Python classes
                 and hide any intricate details of communicating with queue managers.
-                From the programmer's viewpoint, <classname>springpython.jms.factory.MQRFH2JMS</classname>
+                From the programmer's viewpoint, <classname>MQRFH2JMS</classname>
                 is irrelevant, however it might be of interest to anyone willing
                 to improve or expand Spring Python's JMS support.
             </note>
@@ -473,7 +490,7 @@ objects:
             to reuse a single template for all communications, to have a single
             template for each queue involved or perhaps to use separate, dedicated,
             templates, one for sending and one for receiving. Note however,
-            <emphasis>that <classname>springpython.jms.core.JmsTemplate</classname>
+            <emphasis>that <classname>JmsTemplate</classname>
             instances are not guaranteed to be thread-safe</emphasis> and no
             attempt has been made to make them be so.
         </para>
@@ -486,7 +503,7 @@ objects:
         </para>
         
             <para>
-                Here's how <classname>springpython.jms.core.JmsTemplate</classname>
+                Here's how a <classname>JmsTemplate</classname>
                 may be instantiated using Python code:
             </para>
 <programlisting><![CDATA[
@@ -521,7 +538,7 @@ objects:
     - object: jms_template
       class: springpython.jms.core.JmsTemplate
       properties:
-          factory: MyConnectionFactory
+          factory: {MyConnectionFactory}
 ]]></programlisting>
 
             <para>
@@ -810,7 +827,7 @@ factory.destroy()
             <title>Receiving</title>
             
             <para>
-            The same JmsInstance may be used for both sending and receiving
+            The same JmsTemplate instance may be used for both sending and receiving
             of messages. When you receive messages you may optionally provide
             a timeout value in milliseconds after exceeding which a 
             <classname>springpython.jms.NoMessageAvailableException</classname>
@@ -819,7 +836,7 @@ factory.destroy()
             </para>
             
             <para>
-            JmsTemplate may use a defualt JMS destination for each call to
+            JmsTemplate may use a default JMS destination for each call to
             .receive or you can explicitly specify the destination's name
             when you receive messages.
             </para>
@@ -1119,16 +1136,10 @@ factory.destroy()
                                 The following two code snippets are equivalent:
                                 </para>
 <programlisting><![CDATA[
-# Spring Python
-from springpython.jms.core import TextMessage
-
 message = TextMessage("Hey")
 ]]></programlisting>
 
 <programlisting><![CDATA[
-# Spring Python
-from springpython.jms.core import TextMessage
-
 message = TextMessage()
 message.text = "Hey"
 ]]></programlisting>
@@ -1178,9 +1189,9 @@ message.jms_correlation_id = jms_correlation_id
                             <classname>springpython.jms.DELIVERY_MODE_NON_PERSISTENT</classname>,
                             <classname>springpython.jms.DELIVERY_MODE_PERSISTENT</classname> or
                             <classname>springpython.jms.DEFAULT_DELIVERY_MODE</classname>.
-                            The default value - <classname>springpython.jms.DEFAULT_DELIVERY_MODE</classname> -
+                            The default value - <classname>DEFAULT_DELIVERY_MODE</classname> -
                             equals to
-                            <classname>springpython.jms.DELIVERY_MODE_PERSISTENT</classname>.
+                            <classname>DELIVERY_MODE_PERSISTENT</classname>.
                             </entry>
  						</row>
 						<row>
@@ -1576,7 +1587,7 @@ jms_logger.addHandler(handler)
         <para>
             Here's an estimation
             of how fast log files will grow depending on the logging level.
-            During the test, the message size was 5kB, there were totaly 10,000 messages
+            During the test, the message size was 5kB, there were a total of 10,000 messages
             sent, the <classname>max_chars_printed</classname> attribute had
             value of 100 and the log entries were written to an ordinary log file.
         </para>
