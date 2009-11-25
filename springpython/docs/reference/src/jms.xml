@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter id="jms">
-	<title>JMS messaging</title>
+	<title>JMS Messaging</title>
 	
 	<para>Java Message Service has been a well known means for decoupling the Java application's
     parts or to provide an integration service for otherwise disconnected Java applications.
