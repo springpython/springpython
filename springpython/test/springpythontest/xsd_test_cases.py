@@ -15,15 +15,30 @@
 """
 
 # stdlib
+import os
 import glob
 import logging
 import unittest
 
-# lxml
-from lxml import etree
-from lxml import objectify
+# minixsv
+from minixsv import pyxsval
 
 logger = logging.getLogger("springpythontest.xsd_test_cases")
+
+def get_xml_wrapper(xml_file, xsd_file):
+    validator = pyxsval.XsValidator()
+    xml_wrapper = validator.parse(xml_file)
+    
+    return xml_wrapper
+
+class _Validator(pyxsval.XsValidator):
+    def __init__(self, *args, **kwargs):
+        pyxsval.XsValidator.__init__(self)
+
+    def validate(self, xml, xml_wrapper, xsd=None):
+        xsd_wrapper = self.parse(xsd)
+        self._validateXmlInput (xml, xml_wrapper, [xsd_wrapper])
+        xsd_wrapper.unlink()
 
 class XSDTestCase(unittest.TestCase):
     """Verifies whether the XMLConfig files used for the tests themselves
@@ -33,36 +48,35 @@ class XSDTestCase(unittest.TestCase):
     NS_11 = "http://www.springframework.org/springpython/schema/objects/1.1"
     
     def _get_schema(self, version):
-        schema_file = open("../../xml/schema/context/spring-python-context-%s.xsd" % version)
-        schema = etree.XMLSchema(etree.parse(schema_file))
-        schema_file.close()
-        
-        return schema
+        return os.path.abspath("../../xml/schema/context/spring-python-context-%s.xsd" % version)
     
     def setUp(self):
         self.schema10 = self._get_schema("1.0")
         self.schema11 = self._get_schema("1.1")
         
     def test_xsd(self):
+        
         xmls = glob.glob("./support/*.xml")
         for xml in xmls:
-            doc = objectify.fromstring(open(xml).read())
-            xmlns = doc.nsmap[None]
+            
+            xml_data = open(xml).read()
+            
+            # XSD v. 1.1
+            if self.NS_11 in xml_data:
+                schema = self.schema11
             
             # XSD v. 1.0
-            if xmlns == self.NS_10:
+            elif self.NS_10 in xml_data:
                 schema = self.schema10
-                
-            # XSD v. 1.1
-            elif xmlns == self.NS_11:
-                schema = self.schema11
                 
             # Ignore any other XML files
             else:
                 continue
             
             try:
-                schema.assert_(doc)
+                xml_wrapper = get_xml_wrapper(xml, schema)
+                validator = _Validator()
+                validator.validate(xml, xml_wrapper, schema)
             except Exception, e:
-                logging.error("Exception in assert_, xml=[%s] e=[%s]" % (xml, e))
+                logger.error("Exception caught during validation, xml=[%s], schema=[%s], e=[%s]" % (xml, schema, e))
                 raise
