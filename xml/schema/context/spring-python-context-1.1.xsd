@@ -543,6 +543,8 @@
 			<xsd:enumeration value="default"/>
 			<xsd:enumeration value="true"/>
 			<xsd:enumeration value="false"/>
+            <xsd:enumeration value="True"/>
+            <xsd:enumeration value="False"/>
 		</xsd:restriction>
 	</xsd:simpleType>
 
