@@ -44,7 +44,11 @@ class XSDTestCase(unittest.TestCase):
         self.schema11 = self._get_schema("1.1")
         
     def test_xsd(self):
-        xmls = glob.glob("./support/*.xml")
+        xmls = glob.glob("../springpythontest/support/*.xml")
+        
+        if not xmls:
+            self.fail("No XMLs found")
+        
         for xml in xmls:
             doc = objectify.fromstring(open(xml).read())
             xmlns = doc.nsmap[None]
@@ -66,3 +70,16 @@ class XSDTestCase(unittest.TestCase):
             except Exception, e:
                 logging.error("Exception in assert_, xml=[%s] e=[%s]" % (xml, e))
                 raise
+                
+if __name__ == "__main__":
+    import logging
+
+    loggingLevel = logging.DEBUG
+    logger.setLevel(loggingLevel)
+    ch = logging.StreamHandler()
+    ch.setLevel(loggingLevel)
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+    
+    unittest.main()
