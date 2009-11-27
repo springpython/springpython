@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+
+        <object id="context_source" class="springpython.security.providers.Ldap.DefaultSpringSecurityContextSource">
+            <property name="url" value="ldap://localhost:53389/dc=springframework,dc=org"/>
+        </object>
+        
+        <object id="bindAuthenticator" class="springpython.security.providers.Ldap.BindAuthenticator">
+            <property name="context_source" ref="context_source"/>
+            <property name="user_dn_patterns" value="uid={0},ou=people"/>
+        </object>
+
+        <object id="authoritiesPopulator" class="springpython.security.providers.Ldap.DefaultLdapAuthoritiesPopulator">
+            <property name="context_source" ref="context_source"/>
+            <property name="group_search_filter" value="member={0}"/>
+        </object>
+ 
+        <object id="ldapAuthenticationProvider" class="springpython.security.providers.Ldap.LdapAuthenticationProvider">
+            <property name="ldap_authenticator" ref="bindAuthenticator"/>
+            <property name="ldap_authorities_populator" ref="authoritiesPopulator"/>
+        </object>
+        
+        <object id="ldapAuthenticationManager" class="springpython.security.providers.AuthenticationManager">
+            <property name="auth_providers">
+                <list><ref object="ldapAuthenticationProvider"/></list>
+            </property>
+        </object>
+
+        <object id="passwordAuthenticator" class="springpython.security.providers.Ldap.PasswordComparisonAuthenticator">
+            <property name="context_source" ref="context_source"/>
+            <property name="user_dn_patterns" value="uid={0},ou=people"/>
+        </object>
+
+        <object id="ldapAuthenticationProvider2" class="springpython.security.providers.Ldap.LdapAuthenticationProvider">
+            <property name="ldap_authenticator" ref="passwordAuthenticator"/>
+            <property name="ldap_authorities_populator" ref="authoritiesPopulator"/>
+        </object>
+
+        <object id="ldapAuthenticationManager2" class="springpython.security.providers.AuthenticationManager">
+            <property name="auth_providers">
+                <list><ref object="ldapAuthenticationProvider2"/></list>
+            </property>
+        </object>
+
+</objects>
