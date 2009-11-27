@@ -1,0 +1,3 @@
+objects: 
+    - object:  base_interest_rate
+      interest_rate: 7.35

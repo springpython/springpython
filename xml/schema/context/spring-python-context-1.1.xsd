@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<xsd:schema xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
+		xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+		targetNamespace="http://www.springframework.org/springpython/schema/objects/1.1"
+		elementFormDefault="qualified"
+		attributeFormDefault="unqualified">
+
+	<xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+
+	<xsd:annotation>
+		<xsd:documentation><![CDATA[
+	Spring Python XML Components Schema, version 1.1
+	Authors: Greg Turnquist, Russ Miles, Dariusz Suchojad
+
+	This defines a simple and consistent way of creating a namespace
+	of Spring Python objects.
+		]]></xsd:documentation>
+	</xsd:annotation>
+	
+	<!-- base types -->
+	<xsd:complexType name="identifiedType" abstract="true">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	The unique identifier for a object. The scope of the identifier
+	is the enclosing object factory.
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:attribute name="id" type="xsd:ID">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	The unique identifier for a object.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	
+	<!-- Top-level <objects> tag -->
+	<xsd:element name="objects">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	The top level (typically root) element. Allows the definition
+	of default values for all nested object definitions.
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="description" minOccurs="0"/>
+				<xsd:choice minOccurs="0" maxOccurs="unbounded">
+					<xsd:element ref="object" />
+					<xsd:element ref="str" />
+					<xsd:element ref="unicode" />
+					<xsd:element ref="int" />
+					<xsd:element ref="long" />
+					<xsd:element ref="float" />
+					<xsd:element ref="decimal" />
+					<xsd:element ref="bool" />
+					<xsd:element ref="complex" />
+					<xsd:any namespace="##other"
+						processContents="strict" minOccurs="0" maxOccurs="unbounded" />
+				</xsd:choice>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="description">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	Contains informative text describing the purpose of the enclosing element.
+	Used primarily for user documentation of XML object definition documents.
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType mixed="true">
+			<xsd:choice minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:group name="objectElements">
+		<xsd:sequence>
+			<xsd:element ref="description" minOccurs="0"/>
+			<xsd:choice minOccurs="0" maxOccurs="unbounded">
+				<xsd:element ref="constructor-arg"/>
+				<xsd:element ref="property"/>
+				<xsd:any namespace="##other" processContents="strict" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:group>
+	
+	<xsd:attributeGroup name="objectAttributes">
+		<xsd:attribute name="name" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	Can be used to create one or more aliases illegal in an (XML) id.
+	Multiple aliases can be separated by any number of spaces, commas,
+	or semi-colons (or indeed any mixture of the three).
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="class" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	The fully qualified name of the object's class.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="lazy-init" default="default" type="defaultable-boolean">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	Indicates whether or not this object is to be lazily initialized.
+	If false, it will be instantiated on startup by object factories
+	that perform eager initialization of singletons. The default is
+	"false".
+
+	Note: This attribute will not be inherited by child object definitions.
+	Hence, it needs to be specified per concrete object definition.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="scope" type="scopeType">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	The scope of this object: typically "singleton" (one shared instance,
+	which will be returned by all calls to get_object with the given id), or
+	"prototype" (independent instance resulting from each call to get_object).
+	Default is "singleton".
+
+	Singletons are most commonly used, and are ideal for multi-threaded
+	service objects. Further scopes, such as "request" or "session", might
+	be supported by extended factories (e.g. in a web environment).
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="local" type="xsd:IDREF">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	The name of the referenced local object. The value must be a object ID and thus can 
+	be checked by the XML parser. This is therefore the preferred technique 
+	for referencing objects within the same factory XML file.
+							]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:attributeGroup>
+
+	<xsd:simpleType name="scopeType">
+		<xsd:restriction base="xsd:NMTOKEN">
+			<xsd:enumeration value="singleton"/>
+			<xsd:enumeration value="prototype"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:element name="object">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	Defines a single (usually named) object.
+
+	A object definition may contain nested tags for constructor arguments,
+	property values, lookup methods, and replaced methods. Mixing constructor
+	injection and setter injection on the same object is explicitly supported.
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:extension base="identifiedType">
+					<xsd:group ref="objectElements"/>
+					<xsd:attributeGroup ref="objectAttributes"/>
+				</xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="constructor-arg">
+		<xsd:annotation>
+			<xsd:documentation>
+				<![CDATA[
+	Component definitions can specify zero or more constructor arguments.
+	This is an alternative to "autowire constructor".
+	Arguments correspond to either a specific index of the constructor
+	argument list or are supposed to be matched generically by type.
+
+	Note: A single generic argument value will just be used once, rather
+	than potentially matched multiple times (as of Spring 1.1).
+
+	constructor-arg elements are also used in conjunction with the
+	factory-method element to construct objects using static or instance
+	factory methods.
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="description" minOccurs="0"/>
+				<xsd:choice minOccurs="0" maxOccurs="1">
+					<xsd:element ref="object"/>
+					<xsd:element ref="ref"/>
+					<xsd:element ref="value"/>
+					<xsd:element ref="null"/>
+					<xsd:element ref="list"/>
+					<xsd:element ref="tuple"/>
+					<xsd:element ref="set"/>
+					<xsd:element ref="frozenset"/>
+					<xsd:element ref="dict"/>
+					<xsd:element ref="props"/>
+					<xsd:any namespace="##other" processContents="strict"/>
+				</xsd:choice>
+			</xsd:sequence>
+			<xsd:attribute name="name" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+	Used for named constructors.
+					]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="ref" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+	A short-cut alternative to a nested "<ref object='...'/>" element.
+					]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="value" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+	A short-cut alternative to a nested "<value>...<value/>"
+	element.
+					]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="property" type="propertyType" >
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	Component definitions can have zero or more properties.
+	Property elements correspond to setter methods exposed
+	by the object classes.
+			]]></xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	
+	<xsd:complexType name="propertyType">
+		<xsd:sequence>
+			<xsd:element ref="description" minOccurs="0"/>
+			<xsd:choice minOccurs="0" maxOccurs="1">
+				<xsd:element ref="value"/>
+				<xsd:element ref="ref"/>
+				<xsd:element ref="list"/>
+				<xsd:element ref="tuple"/>
+				<xsd:element ref="set"/>
+				<xsd:element ref="frozenset"/>
+				<xsd:element ref="dict"/>
+				<xsd:element ref="props"/>
+				<xsd:element ref="object"/>
+				<xsd:any namespace="##other" processContents="strict"/>
+			</xsd:choice>
+		</xsd:sequence>
+		<xsd:attribute name="name" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	The name of the property.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="ref" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	A short-cut alternative to a nested "<ref object='...'/>".	
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="value" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	A short-cut alternative to a nested "<value>...</value>"
+	element.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="local" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	A reference to a locally declared object.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	
+	<xsd:element name="value" type="valueType">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	Contains a string representation of a property value.
+	The property may be a string, or may be converted to the required
+	type using the Components PropertyEditor machinery. This makes it
+	possible for application developers to write custom PropertyEditor
+	implementations that can convert strings to arbitrary target objects.
+
+	Note that this is recommended for simple objects only. Configure
+	more complex objects by populating Component properties with
+	references to other objects.
+			]]></xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:complexType name="valueType" mixed="true">
+		<xsd:sequence>
+			<xsd:element ref="description" minOccurs="0"/>
+			<xsd:choice minOccurs="0" maxOccurs="1">
+				<xsd:element ref="ref"/>
+				<xsd:element ref="list"/>
+				<xsd:element ref="tuple"/>
+				<xsd:element ref="set"/>
+				<xsd:element ref="frozenset"/>
+				<xsd:element ref="dict"/>
+				<xsd:element ref="props"/>
+				<xsd:any namespace="##other" processContents="strict"/>
+			</xsd:choice>
+		</xsd:sequence>
+		<xsd:attribute name="ref" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	A short-cut alternative to a nested "<ref object='...'/>".	
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	
+	<xsd:element name="ref">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	Defines a reference to another object in this factory or an external
+	factory (parent or included factory).	
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:complexContent>
+				<xsd:restriction base="xsd:anyType">
+					<xsd:attribute name="object" type="xsd:string">
+						<xsd:annotation>
+							<xsd:documentation><![CDATA[
+	The name of the referenced object.
+							]]></xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+					<xsd:attribute name="local" type="xsd:IDREF">
+						<xsd:annotation>
+							<xsd:documentation><![CDATA[
+	The name of the referenced object. The value must be a object ID and thus can 
+	be checked by the XML parser. This is therefore the preferred technique 
+	for referencing objects.						
+							]]></xsd:documentation>
+						</xsd:annotation>
+					</xsd:attribute>
+				</xsd:restriction>
+			</xsd:complexContent>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="null">
+		<xsd:annotation>
+			<xsd:documentation>
+	Denotes a Python None value. Necessary because an empty "value" tag
+	will resolve to an empty String, which will not be resolved to a
+	None value unless a special PropertyEditor does so.		
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType mixed="true">
+			<xsd:choice minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<!-- Collection Elements -->
+	<xsd:group name="collectionElements">
+		<xsd:annotation>
+			<xsd:documentation>
+	This type represents ALL collection elements.
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:choice minOccurs="0" maxOccurs="unbounded">
+				<xsd:element ref="object"/>
+				<xsd:element ref="ref"/>
+				<xsd:element ref="value"/>
+				<xsd:element ref="null"/>
+				<xsd:element ref="list"/>
+				<xsd:element ref="tuple"/>
+				<xsd:element ref="set"/>
+				<xsd:element ref="frozenset"/>
+				<xsd:element ref="dict"/>
+			<xsd:any namespace="##other" processContents="strict" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:group>
+	
+	<!-- Collection Elements -->
+	<xsd:group name="indexableCollectionElements">
+		<xsd:annotation>
+			<xsd:documentation>
+	This type represents collection elements that are indexable, able to be
+	stored inside a set (non-mutable).
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:choice minOccurs="0" maxOccurs="unbounded">
+				<xsd:element ref="object"/>
+				<xsd:element ref="ref"/>
+				<xsd:element ref="value"/>
+				<xsd:element ref="null"/>
+				<xsd:element ref="tuple"/>
+				<xsd:element ref="frozenset"/>
+			<xsd:any namespace="##other" processContents="strict" minOccurs="0" maxOccurs="unbounded"/>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:group>
+	
+	<xsd:element name="list" type="listType">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	A list can contain multiple inner object, ref, collection, or value
+	elements. The necessary conversion is automatically performed
+	by the ComponentFactory.	
+			]]></xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="tuple" type="listType">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	A tuple can contain multiple inner object, ref, collection, or value
+	elements. The necessary conversion is automatically performed
+	by the ComponentFactory.	
+			]]></xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="set" type="setType">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	A set can contain multiple inner object, ref, collection, or value
+	elements. Set's are mutable objects.
+			]]></xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="frozenset" type="setType">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	A frozen set can contain multiple inner object, ref, collection, or value
+	elements. Frozen sets are immutable objects.
+			]]></xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	
+	<xsd:element name="dict">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	A mapping from a key to an object. Dictionaries may be empty.
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:choice minOccurs="0" maxOccurs="unbounded">
+					<xsd:element ref="entry"/>
+				</xsd:choice>
+			</xsd:sequence>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="props" type="propsType">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	Props elements differ from map elements in that values must be strings.
+	Props may be empty.
+			]]></xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+
+	<xsd:element name="key">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	A key element can contain an inner object, ref, value, or collection.
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType>
+			<xsd:group ref="collectionElements"/>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:element name="prop">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+	The string value of the property. Note that whitespace is trimmed
+	off to avoid unwanted whitespace caused by typical XML formatting.
+			]]></xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexType mixed="true">
+			<xsd:choice minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:attribute name="key" type="xsd:string" use="required">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+	The key of the property entry.
+					]]></xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="entry"/>
+	
+	<!-- 'list' and 'set' collection type -->
+	<xsd:complexType name="listType">
+		<xsd:group ref="collectionElements"/>
+		<xsd:attribute name="local" type="xsd:IDREF">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	The name of the referenced local object.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	
+	<xsd:complexType name="setType">
+		<xsd:group ref="indexableCollectionElements"/>
+		<xsd:attribute name="local" type="xsd:IDREF">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	The name of the referenced local object.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+
+	<!-- 'props' collection type -->
+	<xsd:complexType name="propsType">
+		<xsd:sequence>
+			<xsd:choice minOccurs="0" maxOccurs="unbounded">
+				<xsd:element ref="prop"/>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	
+	<!-- simple internal types -->
+	<xsd:simpleType name="defaultable-boolean">
+		<xsd:restriction base="xsd:NMTOKEN">
+			<xsd:enumeration value="default"/>
+			<xsd:enumeration value="true"/>
+			<xsd:enumeration value="false"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+
+
+    <xsd:element name="str">
+		<xsd:complexType>
+			<xsd:complexContent mixed="true">
+				<xsd:extension base="identifiedType"></xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+    </xsd:element>
+    
+    <xsd:element name="unicode">
+		<xsd:complexType>
+			<xsd:complexContent mixed="true">
+				<xsd:extension base="identifiedType"></xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+    </xsd:element>
+    
+    <xsd:element name="int">
+		<xsd:complexType>
+			<xsd:complexContent mixed="true">
+				<xsd:extension base="identifiedType"></xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+    </xsd:element>
+    
+    <xsd:element name="long">
+		<xsd:complexType>
+			<xsd:complexContent mixed="true">
+				<xsd:extension base="identifiedType"></xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+    </xsd:element>
+    
+    <xsd:element name="float">
+		<xsd:complexType>
+			<xsd:complexContent mixed="true">
+				<xsd:extension base="identifiedType"></xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+    </xsd:element>
+    
+    <xsd:element name="decimal">
+		<xsd:complexType>
+			<xsd:complexContent mixed="true">
+				<xsd:extension base="identifiedType"></xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+    </xsd:element>
+    
+    <xsd:element name="bool">
+		<xsd:complexType>
+			<xsd:complexContent mixed="true">
+				<xsd:extension base="identifiedType"></xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+    </xsd:element>
+    
+    <xsd:element name="complex">
+		<xsd:complexType>
+			<xsd:complexContent mixed="true">
+				<xsd:extension base="identifiedType"></xsd:extension>
+			</xsd:complexContent>
+		</xsd:complexType>
+    </xsd:element>
+    
+</xsd:schema>
