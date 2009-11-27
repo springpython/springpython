@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
+       		
+	<str id="MyString">My string</str>
+    
+    <unicode id="MyUnicode">Zażółć gęślą jaźń</unicode>
+    
+    <int id="MyInt">10</int>
+    
+    <long id="MyLong">100000000000000000000000</long>
+    
+    <float id="MyFloat">3.14</float>
+    
+    <decimal id="MyDecimal">12.34</decimal>
+    
+    <bool id="MyBool">False</bool>
+    
+    <complex id="MyComplex">10+0j</complex>
+    
+</objects>
