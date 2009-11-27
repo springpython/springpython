@@ -125,3 +125,9 @@ class AuthenticationProvider(object):
         """
         raise NotImplementedError()
 
+class LdapAuthenticationProvider(AuthenticationProvider):
+    """
+    An AuthenticationProvider implementation that provides integration with an LDAP server.
+    """
+    pass
+

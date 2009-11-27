@@ -32,7 +32,7 @@ class BasePasswordEncoder(PasswordEncoder):
     def __init__(self):
         super(BasePasswordEncoder, self).__init__()
         self.ignorePasswordCase = False
-        self.logger = logging.getLogger("springpython.security.providers.encoding.BasePasswordEncoder")
+        self.logger = logging.getLogger("springpython.security.providers.BasePasswordEncoder")
 
     def mergePasswordAndSalt(self, password, salt, strict):
         """
@@ -64,7 +64,7 @@ class PlaintextPasswordEncoder(BasePasswordEncoder):
 
     def __init__(self):
         super(PlaintextPasswordEncoder, self).__init__()
-        self.logger = logging.getLogger("springpython.security.providers.encoding.PlaintextPasswordEncoder")
+        self.logger = logging.getLogger("springpython.security.providers.PlaintextPasswordEncoder")
         
     def encodePassword(self, rawPass, salt):
         """Encodes the specified raw password with an implementation specific algorithm."""
@@ -92,7 +92,7 @@ class AbstractOneWayPasswordEncoder(BasePasswordEncoder):
     def __init__(self):
         super(AbstractOneWayPasswordEncoder, self).__init__()
         self.onewayHasher = None
-        self.logger = logging.getLogger("springpython.security.providers.encoding.AbstractOneWayPasswordEncoder")
+        self.logger = logging.getLogger("springpython.security.providers.AbstractOneWayPasswordEncoder")
         
     def encodePassword(self, rawPass, salt):
         """Encodes the specified raw password with an implementation specific algorithm."""
@@ -141,7 +141,7 @@ class Md5PasswordEncoder(AbstractOneWayPasswordEncoder):
         except ImportError:
             import md5
             self.onewayHashStrategy = md5.new
-        self.logger = logging.getLogger("springpython.security.providers.encoding.Md5PasswordEncoder")
+        self.logger = logging.getLogger("springpython.security.providers.Md5PasswordEncoder")
         
 class ShaPasswordEncoder(AbstractOneWayPasswordEncoder):
     """
@@ -160,29 +160,5 @@ class ShaPasswordEncoder(AbstractOneWayPasswordEncoder):
         except ImportError:
             import sha
             self.onewayHashStrategy = sha.new
-        self.logger = logging.getLogger("springpython.security.providers.encoding.ShaPasswordEncoder")
-
-
-class LdapShaPasswordEncoder(PasswordEncoder):
-    def __init__(self):
-        super(PasswordEncoder, self).__init__()
-        self.sha_encoder = ShaPasswordEncoder()
-        self.logger = logging.getLogger("springpython.security.providers.encoding.LdapShaPasswordEncoder")
-
-    def encodePassword(self, rawPass, salt):
-        """Encodes the specified raw password with an implementation specific algorithm."""
-        import base64
-        hasher = self.sha_encoder.onewayHashStrategy()
-        hasher.update(rawPass)
-        return "{SHA}" + base64.b64encode(hasher.digest())
-    
-    def isPasswordValid(self, encPass, rawPass, salt):
-        """Validates a raw password against an encrypted one. It checks the prefix, to tell if its encrypted
-           or stored in the clear."""
-
-        if encPass.startswith("{SHA}"):
-            return encPass == self.encodePassword(rawPass, salt)
-        else:
-            return encPass == rawPass
-                
+        self.logger = logging.getLogger("springpython.security.providers.ShaPasswordEncoder")
 

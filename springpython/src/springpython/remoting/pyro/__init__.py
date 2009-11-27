@@ -15,10 +15,16 @@
 """
 import logging
 import Pyro.core
-from springpython.context import InitializingObject
+#################################################################################
+# Normally, PyroServiceExporter would extend InitializingObject.
+# However, due to circular import errors due to springpython.context depending
+# on PyroServiceFactory being listed as a non-option, PyroServiceExporter must
+# use duck typing and implement an after_properties_set function without referencing
+# springpython.context.
+#################################################################################
 from springpython.remoting.pyro import PyroDaemonHolder
 
-class PyroServiceExporter(InitializingObject):
+class PyroServiceExporter(object):
     """
     This class will expose an object using Pyro. It requires that a daemon thread
     be up and running in order to receive requests and allow dispatching to the exposed

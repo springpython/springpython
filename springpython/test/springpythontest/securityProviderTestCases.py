@@ -14,8 +14,6 @@
    limitations under the License.       
 """
 import logging
-import os
-import subprocess
 import unittest
 from pmock import *
 from springpython.config import XMLConfig
