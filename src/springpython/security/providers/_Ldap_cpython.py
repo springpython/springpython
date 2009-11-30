@@ -203,7 +203,6 @@ class LdapAuthenticationProvider(AuthenticationProvider):
         from copy import deepcopy
         results = deepcopy(authentication)
         results.granted_auths = self.ldap_authorities_populator.get_granted_auths(user_details, l)
-        results.setAuthenticated(True)
         l.unbind()
         return results
         
