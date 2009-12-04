@@ -21,6 +21,7 @@ import noxml
 from springpython.config import PyContainerConfig
 from springpython.config import PythonConfig
 from springpython.context import ApplicationContext
+from springpython.security.context import SecurityContextHolder
 
 port = 8003
 
@@ -38,9 +39,15 @@ if __name__ == '__main__':
     logger.addHandler(ch)
 
     applicationContext = ApplicationContext(noxml.SpringWikiClientAndServer())
+    filterChainProxy = applicationContext.get_object("filterChainProxy")
+
+    SecurityContextHolder.setStrategy(SecurityContextHolder.MODE_GLOBAL)
+    SecurityContextHolder.getContext()
     
     # Use a configuration file for server-specific settings.
-    conf = {"/":                {"tools.staticdir.root": os.getcwd()},
+    conf = {"/":                {"tools.staticdir.root": os.getcwd(),
+                                 "tools.sessions.on": True,
+                                 "tools.filterChainProxy.on": True},
             "/images":          {"tools.staticdir.on": True,
                                  "tools.staticdir.dir": "images"},
             "/html":            {"tools.staticdir.on": True,
@@ -68,8 +75,11 @@ if __name__ == '__main__':
             }
 
     cherrypy.config.update({'server.socket_port': port})
-    
-    cherrypy.tree.mount(applicationContext.get_object(name = "read"), '/', config=conf)
+
+    app = applicationContext.get_object(name = "read")
+    app.login = applicationContext.get_object(name = "loginForm")
+
+    cherrypy.tree.mount(app, '/', config=conf)
 
     cherrypy.engine.start()
     cherrypy.engine.block()
