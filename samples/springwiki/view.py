@@ -131,6 +131,7 @@ class CherryPyAuthenticationForm:
     def logout(self):
         """Replaces current authentication token, with an empty, non-authenticated one."""
         self.filter.logout()
+        self.httpContextFilter.saveContext()
         raise cherrypy.HTTPRedirect("/")
 
     def attemptAuthentication(self, username, password):
