@@ -216,10 +216,10 @@ class DatabaseTxTestDecorativeTransactions(PythonConfig):
 			
 <programlisting><![CDATA[
 <?xml version="1.0" encoding="UTF-8"?>
-<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
-       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
        		
 	<object id="transactionalObject" class="springpython.database.transaction.AutoTransactionalObject">
 		<constructor-arg ref="tx_mgr"/>

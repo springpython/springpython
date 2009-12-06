@@ -66,10 +66,10 @@ print service.get_data("Hello")
 				
 <programlisting><![CDATA[
 <?xml version="1.0" encoding="UTF-8"?>
-<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
-       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
 
     <object id="service" class="Service"/>
     
@@ -102,10 +102,10 @@ print service.get_data("Hello")
 
 <programlisting><![CDATA[
 <?xml version="1.0" encoding="UTF-8"?>
-<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
-       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
             
     <object id="remoteService" class="Service"/>
 
@@ -146,11 +146,11 @@ print service.get_data("Hello")
 					<link linkend="objects-config-xmlconfig-constructors">constructor injection</link>.</para>
 
 <programlisting><![CDATA[
-<?xml version="1.0" encoding="UTF-8"?>^M
-<objects xmlns="http://www.springframework.org/springpython/schema/objects"^M
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"^M
-       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects^M
-                http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">^M
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
 
     <object id="remoteService" class="Service"/>
 
@@ -255,10 +255,10 @@ service_exporter.after_properties_set()
 
 <programlisting><![CDATA[
 <?xml version="1.0" encoding="UTF-8"?>
-<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
-                http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
 
     <object id="remoteService" class="server.Service"/>
 
@@ -301,10 +301,10 @@ if __name__ == "__main__":
 
 <programlisting><![CDATA[
 <?xml version="1.0" encoding="UTF-8"?>
-<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
-                http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
 
     <object id="service" class="springpython.remoting.pyro.PyroProxyFactory">
         <property name="service_url" value="PYROLOC://127.0.0.1:7000/ServiceName"/>
@@ -407,10 +407,10 @@ CLIENT: You got remote data => Hello
 
 <programlisting><![CDATA[
 <?xml version="1.0" encoding="UTF-8"?>
-<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
-                http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
 
 	<object id="personService" class="springpython.remoting.hessian.HessianProxyFactory">
 		<property name="service_url"><value>http://localhost:8080/</value></property>
