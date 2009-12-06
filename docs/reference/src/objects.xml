@@ -195,7 +195,7 @@ service = container.get_object("sampleService")
 		decorator, objects may be defined with pure python code in a centralized class.</para>
 		
 		<para>Due to limitations in the format of PyContainer, another <ulink
-		url="http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+		url="http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
 		schema has been developed</ulink> called <classname>XMLConfig</classname> that more closely models
 		the original Spring Java version. It has support for
 		<link linkend="objects-config-xmlconfig-referenced">referenced objects</link> in many more places
@@ -255,10 +255,10 @@ service = container.get_object("sampleService")
 			
 <programlisting><![CDATA[
 <?xml version="1.0" encoding="UTF-8"?>
-<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
-       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
        		
 	<object id="MovieLister" class="springpythontest.support.testSupportClasses.MovieLister" scope="prototype">
 		<property name="finder" ref="MovieFinder"/>
