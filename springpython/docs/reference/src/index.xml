@@ -9,6 +9,7 @@
 <!ENTITY remoting			SYSTEM "remoting.xml">
 <!ENTITY security			SYSTEM "security.xml">
 <!ENTITY plugins			SYSTEM "plugins.xml">
+<!ENTITY jms                SYSTEM "jms.xml">
 <!ENTITY samples			SYSTEM "samples.xml">
 ]>
 <book>
@@ -44,6 +45,7 @@
 	&transaction;
 	&security;
 	&remoting;
+    &jms;
 	&plugins;
 	&samples;
 	
