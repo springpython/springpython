@@ -119,7 +119,7 @@
         			<ref object="labelBasedAclVoter"/>
         		</list>
         	</property>
-        	<property name="allow_if_all_abstain">False</property>
+        	<property name="allow_if_all_abstain" value="False" />
         </object>
         
 	<object id="sampleService" class="springpythontest.support.testSecurityClasses.SampleService"/>        

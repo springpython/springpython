@@ -16,13 +16,17 @@
 import logging
 import traceback
 
-TRACE1 = 6
-logging.addLevelName(TRACE1, "TRACE1")
+from threading import RLock, currentThread
 
 try:
     from cStringIO import StringIO
 except ImportError, e:
     from StringIO import StringIO
+    
+    
+TRACE1 = 6
+logging.addLevelName(TRACE1, "TRACE1")
+
 
 def get_last_traceback(exception):
     """ A utility function for better displaying exceptions.
@@ -31,3 +35,27 @@ def get_last_traceback(exception):
     traceback.print_exc(file=buff)
     
     return buff.getvalue()
+    
+# Original code by Anand Balachandran Pillai (abpillai at gmail.com)
+# http://code.activestate.com/recipes/533135/
+class synchronized(object):
+    """ Class enapsulating a lock and a function allowing it to be used as
+    a synchronizing decorator making the wrapped function thread-safe """
+    
+    def __init__(self, *args):
+        self.lock = RLock()
+        self.logger = logging.getLogger("springpython.util.synchronized")
+        
+    def __call__(self, f):
+        def lockedfunc(*args, **kwargs):
+            try:
+                self.lock.acquire()
+                self.logger.log(TRACE1, "Acquired lock [%s] thread [%s]" % (self.lock, currentThread()))
+                try:
+                    return f(*args, **kwargs)
+                except Exception, e:
+                    raise
+            finally:
+                self.lock.release()
+                self.logger.log(TRACE1, "Released lock [%s] thread [%s]" % (self.lock, currentThread()))
+        return lockedfunc

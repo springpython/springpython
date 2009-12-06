@@ -20,8 +20,6 @@
 			</listitem>
  		</itemizedlist>
 
-        <para>NOTICE: Spring Python's FilterSecurityInterceptor has NOT been upgraded to CherryPy 3.1 yet (while the rest of PetClinic has). Somes pages for certain users are not yet denying access as expected.</para>
-
 		<section id="samples-petclinic-running">
 			<title>How to run</title>
 			
@@ -44,7 +42,8 @@ bash$ python petclinic.py
 
 			<para>This assumes you have <ulink url="http://www.cherrypy.org">CherryPy 3</ulink>
 			installed. It probably <emphasis>won't</emphasis> work if you are still using
-			CherryPy 2.</para>
+			CherryPy 2. NOTE: If you are using Python 2.5.2+, you must install CherryPy 3.1.2+. The older
+			version of CherryPy (3.1.0) only works pre-2.5.2.</para>
 
 			<para>Finally, after launching it, you should see a nice URL at the bottom: http://localhost:8080.
 			Well, go ahead! Things should look good now!</para>
