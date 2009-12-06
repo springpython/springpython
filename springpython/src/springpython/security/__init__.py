@@ -41,3 +41,10 @@ class UsernameNotFoundException(BadCredentialsException):
 class AuthenticationServiceException(AccessDeniedException):
     pass
 
+
+import sys, os, os.path
+if "java" in sys.platform.lower():
+    from glob import glob
+    jars = os.path.join(glob("%s/lib/*.jar" % os.path.dirname(os.path.abspath(__file__))))
+    sys.path.extend(jars)
+

@@ -94,9 +94,9 @@ class SampleContainer(PythonConfig):
         provider.user_details_service = inMemoryUserDetailsService()
         return provider
         
-	@Object
-	def inMemoryUserDetailsService(self):
-		user_details_service = InMemoryUserDetailsService()
+    @Object
+    def inMemoryUserDetailsService(self):
+	user_details_service = InMemoryUserDetailsService()
         user_details_service.user_dict = {
            "vet1": ("password1", ["VET_ANY"], False),
            "bdavis": ("password2", ["CUSTOMER_ANY"], False),
@@ -185,25 +185,184 @@ class SampleContainer(PythonConfig):
 				The last user has no password, which will cause authentication to fail.</para>
 				
 			</section>
-			
-			<section id="security-authentication-future-providers">
-				<title>Future AuthenticationProviders</title>
-				
-				<para>So far, Spring Python has implemented a DaoAuthenticationProvider than can link with any database
-				or user an in-memory user data structure. Future releases should include:</para>
-				
-				<itemizedlist>
-					<listitem><para><classname>LdapAuthenticationProvider</classname></para></listitem>
-					<listitem><para><classname>OpenIDAuthenticationProvider</classname></para></listitem>
-					<listitem>
-						<para>Anonymous authentication provider - allows you to tag anonymous users, and constrain 
-						what they can access, even if they don't provide a password</para>
-					</listitem>
-				</itemizedlist>
-			</section>
-			
-		</section>
-		
+
+                        <section id="security-authentication-ldap">
+                                <title>LDAP Authentication Provider</title>
+
+                                <para>Spring Python has an <classname>LdapAuthenticationProvider</classname> that is able to authenticate
+                                users against an LDAP server using either binding or password comparison. It will also search the LDAP
+                                server for groups in order to identify roles.</para>
+
+				<note>
+					<title>Spring Python's LDAP only works with CPython</title>
+
+					<para>Currently, Spring Python only provides LDAP support for CPython. There is on-going effort to 
+					extend support to Jython as well.</para>
+				</note>
+
+                                <para>It is possible to the customize the query parameters, as well as inject an alternative version of
+                                authentication as well as role identification.</para>
+
+				<para>There are two ways to verify a password in ldap: binding to the server using the password, or fetching
+				the password from ldap and comparing outside the server. Spring Python supports both. You can choose which
+				mechanism by injecting either a
+				<classname>BindAuthenticator</classname> or a <classname>PasswordComparisonAuthenticator</classname> into
+				<classname>LdapAuthenticationProvider</classname>.</para>
+
+                                <para>The following XML fragment demonstrates how to configure Spring Python's 
+				<classname>LdapAuthenticationProvider</classname> using a <classname>BindAuthenticator</classname> 
+				combined with a <classname>DefaultLdapAuthoritiesPopulator</classname>.</para>
+
+<programlisting><![CDATA[
+        <object id="context_source" class="springpython.security.providers.Ldap.DefaultSpringSecurityContextSource">
+            <property name="url" value="ldap://localhost:53389/dc=springframework,dc=org"/>
+        </object>
+
+        <object id="bindAuthenticator" class="springpython.security.providers.Ldap.BindAuthenticator">
+            <property name="context_source" ref="context_source"/>
+            <property name="user_dn_patterns" value="uid={0},ou=people"/>
+        </object>
+
+        <object id="authoritiesPopulator" class="springpython.security.providers.Ldap.DefaultLdapAuthoritiesPopulator">
+            <property name="context_source" ref="context_source"/>
+            <property name="group_search_filter" value="member={0}"/>
+        </object>
+
+        <object id="ldapAuthenticationProvider" class="springpython.security.providers.Ldap.LdapAuthenticationProvider">
+            <property name="ldap_authenticator" ref="bindAuthenticator"/>
+            <property name="ldap_authorities_populator" ref="authoritiesPopulator"/>
+        </object>
+
+        <object id="ldapAuthenticationManager" class="springpython.security.providers.AuthenticationManager">
+            <property name="auth_providers">
+                <list><ref object="ldapAuthenticationProvider"/></list>
+            </property>
+        </object>
+
+]]></programlisting>
+
+                                <itemizedlist>
+                                        <listitem><para><emphasis>context_source</emphasis> - points to an ldap server, defining the base DN to start searching for users and groups.</para></listitem>
+                                        <listitem><para><emphasis>bindAuthenticator</emphasis> - configured to use the context_source, and does a user search based on sub-entry <emphasis>uid={0},ou=people</emphasis>. <emphasis>{0}</emphasis> is the variable where an entered username will be substituted before
+                                                executing the ldap search.</para></listitem>
+                                        <listitem><para><emphasis>authoritiesPopulator</emphasis> - assuming the user is found, it uses the group_search_filter to find groups containing this attribute pointed at the user's DN.</para></listitem>
+                                        <listitem><para><emphasis>ldapAuthenticationProvider</emphasis> - combines together the bindAuthenticator and the authoritiesPopulator, in order to process a <classname>UsernamePasswordAuthenticationToken</classname>.</para></listitem>
+                                        <listitem><para><emphasis>ldapAuthenticationManager</emphasis> - just like the other examples, this <classname>AuthenticationManager</classname> iterates over the list of providers, giving them a chance to authenticate the user.</para></listitem>
+                                </itemizedlist>
+
+                                <para>The following shows the same configuration in pure Python, using <classname>PythonConfig</classname>.</para>
+
+<programlisting><![CDATA[
+class LdapContext(PythonConfig):
+    def __init__(self):
+        PythonConfig.__init__(self)
+
+    @Object
+    def context_source(self):
+        return DefaultSpringSecurityContext(url="ldap://localhost:53389/dc=springframework,dc=org")
+
+    @Object
+    def bind_authenticator(self):
+        return BindAuthenticator(self.context_source(), user_dn_patterns="uid={0},ou=people")
+
+    @Object
+    def authorities_populator(self):
+        return DefaultLdapAuthoritiesPopulator(self.context_source(), group_search_filter="member={0}")
+
+    @Object
+    def provider(self):
+        return LdapAuthenticationProvider(self.bind_authenticator(), self.authorities_populator())
+
+    @Object
+    def manager(self):
+        return AuthenticationManager(auth_providers=[self.provider()])
+
+]]></programlisting>
+
+				<para>To use the password comparison mechanism, substitute
+				<classname>PasswordComparisonAuthenticator</classname> for <classname>BindAuthenticator</classname> as follows:</para>
+
+<programlisting><![CDATA[
+        <object id="context_source" class="springpython.security.providers.Ldap.DefaultSpringSecurityContextSource">
+            <property name="url" value="ldap://localhost:53389/dc=springframework,dc=org"/>
+        </object>
+
+        <object id="passwordAuthenticator" class="springpython.security.providers.Ldap.PasswordComparisonAuthenticator">
+            <property name="context_source" ref="context_source"/>
+            <property name="user_dn_patterns" value="uid={0},ou=people"/>
+        </object>
+
+        <object id="authoritiesPopulator" class="springpython.security.providers.Ldap.DefaultLdapAuthoritiesPopulator">
+            <property name="context_source" ref="context_source"/>
+            <property name="group_search_filter" value="member={0}"/>
+        </object>
+
+        <object id="ldapAuthenticationProvider" class="springpython.security.providers.Ldap.LdapAuthenticationProvider">
+            <property name="ldap_authenticator" ref="bindAuthenticator"/>
+            <property name="ldap_authorities_populator" ref="authoritiesPopulator"/>
+        </object>
+
+        <object id="ldapAuthenticationManager" class="springpython.security.providers.AuthenticationManager">
+            <property name="auth_providers">
+                <list><ref object="ldapAuthenticationProvider"/></list>
+            </property>
+        </object>
+
+]]></programlisting>
+
+				<para>The following block shows the same configuration using the pure Python container:</para>
+
+<programlisting><![CDATA[
+class LdapContext(PythonConfig):
+    def __init__(self):
+        PythonConfig.__init__(self)
+
+    @Object
+    def context_source(self):
+        return DefaultSpringSecurityContext(url="ldap://localhost:53389/dc=springframework,dc=org")
+
+    @Object
+    def password_authenticator(self):
+        return PasswordComparisonAuthenticator(self.context_source(), user_dn_patterns="uid={0},ou=people")
+
+    @Object
+    def authorities_populator(self):
+        return DefaultLdapAuthoritiesPopulator(self.context_source(), group_search_filter="member={0}")
+
+    @Object
+    def provider(self):
+        return LdapAuthenticationProvider(self.password_authenticator(), self.authorities_populator())
+
+    @Object
+    def manager(self):
+        return AuthenticationManager(auth_providers=[self.provider()])
+
+]]></programlisting>
+
+				<para>By default, <classname>PasswordComparisonAuthenticator</classname> handles SHA encrypted passwords as well
+				passwords stored in plain text. However, you can inject a custom <classname>PasswordEncoder</classname> to
+				support alternative password encoding schemes.</para>
+
+
+                        </section>
+
+                        <section id="security-authentication-future-providers">
+                                <title>Future AuthenticationProviders</title>
+
+                                <para>So far, Spring Python has implemented a <classname>DaoAuthenticationProvider</classname> than can
+                                link with any database or use an in-memory user data structure, as well as an <classname>LdapAuthenticationProvider</classname>. Future releases should include:</para>
+
+                                <itemizedlist>
+                                        <listitem><para><classname>OpenIDAuthenticationProvider</classname></para></listitem>
+                                        <listitem>
+                                                <para>Anonymous authentication provider - allows you to tag anonymous users, and constrain
+                                                what they can access, even if they don't provide a password</para>
+                                        </listitem>
+                                </itemizedlist>
+                        </section>
+
+                </section>
+
 		<section id="security-authentication-manager">
 			<title>AuthenticationManager</title>
 			

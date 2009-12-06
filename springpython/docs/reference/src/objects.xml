@@ -692,7 +692,51 @@ service = container.get_object("MovieLister")
 ]]></programlisting>
 
 			</section>
-			
+            
+            <section id="objects-config-xmlconfig-python-builtin-types-mappings">
+                <title>XMLConfig and basic Python types</title>
+            </section>
+            
+            <para>Objects of most commonnly used Python types
+            -
+                <classname>str</classname>,
+                <classname>unicode</classname>,
+                <classname>int</classname>,
+                <classname>long</classname>,
+                <classname>float</classname>,
+                <classname>decimal.Decimal</classname>,
+                <classname>bool</classname> and
+                <classname>complex</classname>
+            - 
+            may be expressed in XMLConfig using a shorthand syntax which allows
+            for a following XMLConfig file:
+            </para>
+<programlisting><![CDATA[            
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
+       		
+    <str id="MyString">My string</str>
+    
+    <unicode id="MyUnicode">Zażółć gęślą jaźń</unicode>
+    
+    <int id="MyInt">10</int>
+    
+    <long id="MyLong">100000000000000000000000</long>
+    
+    <float id="MyFloat">3.14</float>
+    
+    <decimal id="MyDecimal">12.34</decimal>
+    
+    <bool id="MyBool">False</bool>
+    
+    <complex id="MyComplex">10+0j</complex>
+    
+</objects>
+]]></programlisting>
+
 		</section>
 
 		<section id="objects-config-yamlconfig">
@@ -934,6 +978,186 @@ properties:
 				</note>
 
 			</section>
+            
+            <section id="objects-config-yamlconfig-python-builtin-types-mappings">
+                <title>Support for Python builtin types and mappings of other types onto YAML syntax</title>
+            </section>
+                <para>
+                    Objects of commonly used Python builtin types may be tersely expressed
+                    in YamlConfig. Supported types are
+                        <classname>str</classname>,
+                        <classname>unicode</classname>,
+                        <classname>int</classname>,
+                        <classname>long</classname>,
+                        <classname>float</classname>,
+                        <classname>decimal.Decimal</classname>,
+                        <classname>bool</classname>,
+                        <classname>complex</classname>,
+                        <classname>dict</classname>,
+                        <classname>list</classname> and
+                        <classname>tuple</classname>.
+                </para>
+                <para>
+                    Here's a sample YamlConfig featuring their usage. Note that
+                    with the exception of <classname>decimal.Decimal</classname>,
+                    names of the YAML attributes are the same as the names of
+                    Python types.
+                </para>
+<programlisting><![CDATA[
+objects: 
+    - object:  MyString
+      str: My string
+        
+    - object:  MyUnicode
+      unicode: Zażółć gęślą jaźń
+        
+    - object:  MyInt
+      int: 10
+    
+    - object:  MyLong
+      long: 100000000000000000000000
+      
+    - object:  MyFloat
+      float: 3.14
+        
+    - object:  MyDecimal
+      decimal: 12.34
+        
+    - object:  MyBoolean
+      bool: False
+        
+    - object:  MyComplex
+      complex: 10+0j
+        
+    - object:  MyList
+      list: [1, 2, 3, 4]
+        
+    - object:  MyTuple
+      tuple: ["a", "b", "c"]
+      
+    - object: MyDict
+      dict:
+        1: "a"
+        2: "b"
+        3: "c"
+        
+    - object: MyRef
+      decimal:
+        ref: MyDecimal
+]]></programlisting>
+                <para>
+                    Under the hood, while parsing the YAML files, Spring Python
+                    will translate the definitions such as the one above into
+                    the following one:
+                </para>
+<programlisting><![CDATA[
+objects: 
+    - object:  MyString
+      class: types.StringType
+      constructor-args: ["My string"]
+        
+    - object:  MyUnicode
+      class: types.UnicodeType
+      constructor-args: ["Zażółć gęślą jaźń"]
+        
+    - object:  MyInt
+      class: types.IntType
+      constructor-args: [10]
+    
+    - object:  MyLong
+      class: types.LongType
+      constructor-args: [100000000000000000000000]
+      
+    - object:  MyFloat
+      class: types.FloatType 
+      constructor-args: [3.14]
+        
+    - object:  MyDecimal
+      class: decimal.Decimal
+      constructor-args: ["12.34"]
+        
+    - object: MyBoolean
+      class: types.BooleanType
+      constructor-args: [False]
+        
+    - object: MyComplex
+      class: types.ComplexType
+      constructor-args: [10+0j]
+        
+    - object: MyList
+      class: types.ListType
+      constructor-args: [[1,2,3,4]]
+        
+    - object: MyTuple
+      class: types.TupleType
+      constructor-args: [["a", "b", "c"]]
+      
+    - object: MyDict
+      class: types.DictType
+      constructor-args: [{1: "a", 2: "b", 3: "c"}]
+      
+    - object: MyRef
+      class: decimal.Decimal
+      constructor-args: [{ref: MyDecimal}]
+]]></programlisting>
+
+            <para>
+                Configuration of how YAML elements are mapped onto Python types
+                is stored in the 
+                <classname>springpython.config.yaml_mappings</classname>
+                dictionary which can be easily customized to fulfill one's needs.
+                The dictionary's keys are names of the YAML elements and its
+                values are the coresponding Python types, written as strings
+                in the form of <classname>"package_name.module_name.class_name"</classname>
+                - note that the <classname>"package_name.module_name."</classname> part is
+                required, it needs to be a fully qualified name. 
+            </para>
+            <para>
+                Let's assume that in your configuration you're frequently creating
+                objects of type 
+                <classname>interest_rate.InterestRateFrequency</classname>,
+                here's how you can save yourself a lot of typing by customizing
+                the mappings dictionary. First, on Python side, create an
+                <classname>InterestRate</classname> class, such as:
+<programlisting><![CDATA[
+class InterestRate(object):
+    def __init__(self, value=None):
+        self.value = value
+]]></programlisting>
+
+            <para>
+                .. which will allow you to create such a YAML context
+            </para>
+            
+<programlisting><![CDATA[
+objects: 
+    - object: base_interest_rate
+      interest_rate: "7.35"
+]]></programlisting>
+
+            <para>
+                .. then, before creating the context, update the 
+                mappings dictionary as needed and next you'll be able to
+                access the <classname>base_interest_rate</classname>
+                object as if it had been defined using the standard syntax:
+            </para>
+
+<programlisting><![CDATA[
+from springpython.context import ApplicationContext
+from springpython.config import YamlConfig, yaml_mappings
+
+yaml_mappings.update({"interest_rate": "interest_rate.InterestRate"})
+
+# .. create the context now
+container = ApplicationContext(YamlConfig("./app-ctx.yaml"))
+
+# .. fetch the object
+base_interest_rate = container.get_object("base_interest_rate")
+
+# .. will show "7.35", as defined in the "./app-ctx.yaml" config
+print base_interest_rate.value
+]]></programlisting>
+            </para>
 			
 			<section id="objects-config-yamlconfig-constructors">
 				<title>Constructors</title>
@@ -974,7 +1198,7 @@ constructor-args:
 				<para>It is also valuable to know that you can mix this up and use both.</para>
 
 			</section>
-
+            
 		</section>
 
 		<section id="objects-config-object">

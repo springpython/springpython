@@ -60,7 +60,7 @@
 	</object>
 
 	<object id="access_decision_mgr" class="springpython.security.vote.UnanimousBased">
-		<property name="allow_if_all_abstain">False</property>
+		<property name="allow_if_all_abstain" value="False" />
 		<property name="access_decision_voters">
 			<list>
 				<ref object="roleVoter"/>
@@ -70,7 +70,7 @@
 	</object>
 	
 	<object id="securityInterceptor" class="springpython.security.intercept.MethodSecurityInterceptor">
-	  <property name="validate_config_attributes">False</property>
+	  <property name="validate_config_attributes" value="False" />
 	  <property name="auth_manager" ref="auth_manager"/>
 	  <property name="access_decision_mgr" ref="access_decision_mgr"/>
 	  <property name="obj_def_source">

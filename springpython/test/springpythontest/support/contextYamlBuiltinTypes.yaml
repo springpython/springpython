@@ -1,0 +1,41 @@
+objects: 
+    - object:  MyString
+      str: My string
+        
+    - object:  MyUnicode
+      unicode: Zażółć gęślą jaźń
+        
+    - object:  MyInt
+      int: 10
+    
+    - object:  MyLong
+      long: 100000000000000000000000
+      
+    - object:  MyFloat
+      float: 3.14
+        
+    - object:  MyDecimal
+      decimal: 12.34
+        
+    - object:  MyBoolean
+      bool: False
+        
+    - object:  MyComplex
+      complex: 10+0j
+        
+    - object:  MyList
+      list: [1, 2, 3, 4]
+        
+    - object:  MyTuple
+      tuple: ["a", "b", "c"]
+      
+    - object: MyDict
+      dict:
+        1: "a"
+        2: "b"
+        3: "c"
+        
+    - object: MyRef
+      decimal:
+        ref: MyDecimal
+
