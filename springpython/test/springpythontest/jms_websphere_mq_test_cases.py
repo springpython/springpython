@@ -47,6 +47,9 @@ except ImportError:
 # pmock
 from pmock import *
 
+# ThreadPool
+from threadpool import ThreadPool
+
 # pymqi
 import pymqi as mq
 from pymqi import CMQC
@@ -64,7 +67,9 @@ from springpython.jms.factory import _WMQ_MAX_EXPIRY_TIME, _WMQ_MQRFH_VERSION_2,
 from springpython.jms.core import JmsTemplate, TextMessage, MessageConverter
 from springpython.jms import DELIVERY_MODE_NON_PERSISTENT, \
     DELIVERY_MODE_PERSISTENT, DEFAULT_DELIVERY_MODE, RECEIVE_TIMEOUT_INDEFINITE_WAIT, \
-    RECEIVE_TIMEOUT_NO_WAIT, DEFAULT_TIME_TO_LIVE \
+    RECEIVE_TIMEOUT_NO_WAIT, DEFAULT_TIME_TO_LIVE
+from springpython.jms.listener import MessageHandler, SimpleMessageListenerContainer, \
+    WebSphereMQListener
 
 random.seed()
 
@@ -1319,3 +1324,127 @@ class WebSphereMQTestCase(MockTestCase):
         
         # msgbody.get will return None if such a namespace will not have been defined.
         self.assertEquals("true", msgbody.get("{dummy}nil"))
+        
+    def testSimpleMessageListenerContainer(self):
+        
+        class TestMessageHandler(object):
+            def handle(self, message):
+                return 123
+                
+        handler = TestMessageHandler()
+        concurrent_listeners = 4
+        handlers_per_listener = 2
+        wait_interval = 1300
+        
+        queue = self.mock()
+        mgr = self.mock()
+        cd = self.mock()
+        gmo = self.mock()
+        md = get_default_md()
+        opts = CMQC.MQCNO_HANDLE_SHARE_BLOCK
+
+        sys.modules["pymqi"] = self.mock()
+        sys.modules["pymqi"].MQMIError = mq.MQMIError
+        sys.modules["pymqi"].stubs().QueueManager(eq(None)).will(return_value(mgr))
+        sys.modules["pymqi"].stubs().cd().will(return_value(cd))
+        sys.modules["pymqi"].stubs().md().will(return_value(md))
+        sys.modules["pymqi"].stubs().gmo().will(return_value(gmo))
+        sys.modules["pymqi"].expects(once()).Queue(same(mgr),
+            eq(DESTINATION), eq(CMQC.MQOO_INPUT_SHARED | CMQC.MQOO_OUTPUT)).will(return_value(queue))
+        mgr.stubs().connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
+        queue.set_default_stub(return_value(raw_message_for_get))
+        
+        factory = WebSphereMQConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
+
+        smlc = SimpleMessageListenerContainer(factory, DESTINATION, handler,
+                    concurrent_listeners, handlers_per_listener, wait_interval)
+        smlc.after_properties_set()
+
+        self.assertEquals(smlc.factory, factory)
+        self.assertEquals(smlc.destination, DESTINATION)
+        self.assertEquals(smlc.handler, handler)
+        self.assertEquals(smlc.concurrent_listeners, concurrent_listeners)
+        self.assertEquals(smlc.handlers_per_listener, handlers_per_listener)
+        self.assertEquals(smlc.wait_interval, wait_interval)
+        
+        del(sys.modules["pymqi"])
+        
+    def testWebSphereMQListener(self):
+        
+        message = get_rand_string(12)
+        exception_reason = get_rand_string(12) + "ęóąśłżźćń"
+        
+        class TestMessageHandler(object):
+            def __init__(self):
+                self.data = []
+                
+            def __str__(self):
+                return "%s %s" % (hex(id(self)), str(self.data))
+                
+            def handle(self, message):
+                self.data.append(message)
+                
+        class _ConnectionFactory(WebSphereMQConnectionFactory):
+            def __init__(self, *args):
+                super(_ConnectionFactory, self).__init__(*args)
+                self.call_count = 0
+                
+            def receive(self, destination, wait_interval):
+                self.call_count += 1
+                
+                if self.call_count == 1:
+                    import sys
+                    return message
+                elif self.call_count == 2:
+                    raise NoMessageAvailableException()
+                else:
+                    raise WebSphereMQJMSException(exception_reason, CMQC.MQCC_FAILED, CMQC.MQRC_OPTION_NOT_VALID_FOR_TYPE)
+                
+                
+        handler = TestMessageHandler()
+        handlers_per_listener = 1
+        wait_interval = 1300
+        
+        queue = self.mock()
+        mgr = self.mock()
+        cd = self.mock()
+        gmo = self.mock()
+        md = get_default_md()
+        opts = CMQC.MQCNO_HANDLE_SHARE_BLOCK
+
+        sys.modules["pymqi"] = self.mock()
+        sys.modules["pymqi"].MQMIError = mq.MQMIError
+        sys.modules["pymqi"].stubs().QueueManager(eq(None)).will(return_value(mgr))
+        sys.modules["pymqi"].stubs().cd().will(return_value(cd))
+        sys.modules["pymqi"].stubs().md().will(return_value(md))
+        sys.modules["pymqi"].stubs().gmo().will(return_value(gmo))
+        mgr.stubs().connectWithOptions(eq(QUEUE_MANAGER), cd=eq(cd), opts=eq(opts))
+        
+        factory = _ConnectionFactory(QUEUE_MANAGER, CHANNEL, HOST, LISTENER_PORT)
+        
+        listener = WebSphereMQListener()
+        listener.factory = factory
+        listener.destination = DESTINATION
+        listener.wait_interval = wait_interval
+        listener.handler = handler
+        listener.handlers_pool = ThreadPool(handlers_per_listener)
+        
+        try:
+            listener.run()
+        except WebSphereMQJMSException, e:
+            sleep(0.1) # Allows the handler thread to process the message
+            self.assertEquals(e.message, exception_reason)
+            self.assertEquals(3, factory.call_count)
+            self.assertEquals(1, len(handler.data))
+            self.assertEquals(message, handler.data[0])
+        finally:
+            del(sys.modules["pymqi"])
+        
+    def testSimpleMessageListenerContainerMessageHandler(self):
+        handler = MessageHandler()
+        self.assertRaises(NotImplementedError, handler.handle, "foo")
+
+        try:
+            handler.handle("foo")
+        except NotImplementedError, e:
+            self.assertEquals(e.message, "Should be overridden by subclasses.")
