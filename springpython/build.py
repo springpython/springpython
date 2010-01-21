@@ -240,7 +240,6 @@ def publish(filepath, s3bucket, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, versio
     filename = filepath.split("/")[-1]
     s3key = "/".join([ p['release.type'],
                        p['project.key'],
-                       p['natural.name'],
                        filename ])
 
     print "Reading in content from %s" % filepath
