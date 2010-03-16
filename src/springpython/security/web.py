@@ -38,7 +38,12 @@ class Filter(object):
         results = None
         try:
             nextFilter = environ["SPRINGPYTHON_FILTER_CHAIN"].next()
-            results = nextFilter(environ, start_response)
+            if isinstance(nextFilter, tuple):
+                func = nextFilter[0]
+                args = nextFilter[1]
+                results = func(args)
+            else:
+                results = nextFilter(environ, start_response)
         except StopIteration:
             pass
         
@@ -110,10 +115,27 @@ class FilterChainProxy(Filter, ApplicationContextAware):
 class CP3FilterChainProxy(FilterChainProxy):
     def __init__(self, filterInvocationDefinitionSource=None):
         FilterChainProxy.__init__(self, filterInvocationDefinitionSource)
-        cherrypy.tools.filterChainProxy = cherrypy.Tool('before_handler', self, priority=75)
+        self.logger = logging.getLogger("springpython.security.web.CP3FilterChainProxy")
+        cherrypy.tools.filterChainProxy = cherrypy._cptools.HandlerTool(self)
 
     def __call__(self, environ=None, start_response=None):
-        return FilterChainProxy.__call__(self, cherrypy.request.wsgi_environ, start_response)
+        innerfunc = cherrypy.request.handler
+        def mini_app(*args, **kwargs):
+            def cherrypy_wrapper(nexthandler, *args, **kwargs):
+                results = nexthandler(*args, **kwargs)
+                self.logger.debug("Results = %s" % results)
+                return results
+            return cherrypy_wrapper(innerfunc, *args, **kwargs)
+
+        self.application = (self.invoke, (mini_app,))
+
+        # Store the final results...
+        cherrypy.response.body = FilterChainProxy.__call__(self, cherrypy.request.wsgi_environ, None)
+        #...and then signal there is no more handling for CherryPy to do.
+        return True
+
+    def invoke(self, args):
+        return args[0]()
 
 class SessionStrategy(object):
     """

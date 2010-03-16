@@ -16,8 +16,8 @@
 
 import atexit
 import logging
+from traceback import format_exc
 
-from springpython.util import get_last_traceback
 from springpython.container import ObjectContainer
 
 class ApplicationContext(ObjectContainer):
@@ -31,7 +31,7 @@ class ApplicationContext(ObjectContainer):
         atexit.register(self.shutdown_hook)
         
         self.logger = logging.getLogger("springpython.context.ApplicationContext")
-        self.classnames_to_avoid = set(["PyroProxyFactory"])
+        self.classnames_to_avoid = set(["PyroProxyFactory", "ProxyFactoryObject"])
          
         for object_def in self.object_defs.values():
             self._apply(object_def)
@@ -97,7 +97,7 @@ class ApplicationContext(ObjectContainer):
                     destroy_method = getattr(obj, destroy_method_name)
                     
                 except Exception, e:
-                    self.logger.error("Could not destroy object '%s', exception '%s'" % (obj_name, get_last_traceback(e)))
+                    self.logger.error("Could not destroy object '%s', exception '%s'" % (obj_name, format_exc()))
                     
                 else:
                     if callable(destroy_method):
@@ -106,7 +106,7 @@ class ApplicationContext(ObjectContainer):
                             destroy_method()
                             self.logger.debug("Successfully destroyed object '%s'" % obj_name)
                         except Exception, e:
-                            self.logger.error("Could not destroy object '%s', exception '%s'" % (obj_name, get_last_traceback(e)))
+                            self.logger.error("Could not destroy object '%s', exception '%s'" % (obj_name, format_exc()))
                     else:
                         self.logger.error("Could not destroy object '%s', " \
                             "the 'destroy_method' attribute it defines is not callable, " \
