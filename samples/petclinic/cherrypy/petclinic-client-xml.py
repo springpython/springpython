@@ -18,16 +18,16 @@ import cherrypy
 import logging
 import os
 import noxml
-from springpython.config import PyContainerConfig
+from springpython.config import XMLConfig
 from springpython.context import ApplicationContext
-from springpython.security.cherrypy31 import AuthenticationFilter, ContextSessionFilter, SecurityFilter
 from springpython.security.context import SecurityContextHolder
 
 if __name__ == '__main__':
     """This allows the script to be run as a tiny webserver, allowing quick testing and development.
     For more scalable performance, integration with Apache web server would be a good choice."""
 
-    # Logging is turned on to allow user to see everything Spring Python is doing in background.
+    # This turns on debugging, so you can see everything Spring Python is doing in the background
+    # while executing the sample application.
 
     logger = logging.getLogger("springpython")
     loggingLevel = logging.DEBUG
@@ -41,70 +41,30 @@ if __name__ == '__main__':
     # This sample loads the IoC container from an XML file. The XML-based application context
     # automatically resolves all dependencies and order of instantiation for you. 
 
-    applicationContext = ApplicationContext(PyContainerConfig(config_location = "applicationContext-client.xml"))
+    applicationContext = ApplicationContext(XMLConfig("applicationContext-client.xml"))
+    applicationContext.get_object("filterChainProxy")
     
     SecurityContextHolder.setStrategy(SecurityContextHolder.MODE_GLOBAL)
     SecurityContextHolder.getContext()
     
-    def filter_chainer(filters):
-        for f in filters:
-            f.run()
-    
-    def make_session_filter():
-        contextSessionFilter = ContextSessionFilter()
-        cherrypy.tools.sessionFilter = cherrypy.Tool('before_handler', filter_chainer, priority=74)
-        return contextSessionFilter
-    
-    def make_authentication_filter(manager):
-        authFilter = AuthenticationFilter(authManager=manager)
-        cherrypy.tools.authFilter = cherrypy.Tool('before_handler', filter_chainer, priority=75)
-        return authFilter
-
-    def make_security_filter(manager):
-        securityFilter = SecurityFilter(authManager=manager, redirectPath="/login")
-        cherrypy.tools.securityFilter = cherrypy.Tool('before_handler', filter_chainer, priority=75)
-        return securityFilter
-    
-    manager = applicationContext.get_object("authenticationManager")
-    accessDecisionManager = applicationContext.get_object("accessDecisionManager")
-    objectDefinitionSource = [
-                             ("/vets.*", ["VET_ANY"]),
-                             ("/editOwner.*", ["VET_ANY", "OWNER"]),
-                             ("/.*", ["VET_ANY", "CUSTOMER_ANY"])
-                             ]
-    
-    session_filter = make_session_filter()
-    auth_filter = make_authentication_filter(manager)
-    security_filter = make_security_filter(manager)
-
-    conf = {'/': {'tools.sessions.on': True,
-                  'tools.sessionFilter.on': True,
-                  'tools.sessionFilter.filters': [session_filter, security_filter],
-                  "tools.staticdir.root": os.getcwd()},
-            "/images": {"tools.staticdir.on": True,
-                        "tools.staticdir.dir": "images"},
-            "/html": {"tools.staticdir.on": True,
-                      "tools.staticdir.dir": "html"}
+    conf = {'/': 	{"tools.staticdir.root": os.getcwd(),
+                         "tools.sessions.on": True,
+                         "tools.filterChainProxy.on": True},
+            "/images": 	{"tools.staticdir.on": True,
+                         "tools.staticdir.dir": "images"},
+            "/html": 	{"tools.staticdir.on": True,
+                      	 "tools.staticdir.dir": "html"}
             }
-    login_conf = {
-            '/': {
-                  'tools.sessions.on': True,
-                  'tools.sessionFilter.on': True,
-                  'tools.sessionFilter.filters': [],
-                  "tools.staticdir.root": os.getcwd()
-                  },
-            "/images": {
-                      "tools.staticdir.on": True,
-                      "tools.staticdir.dir": "images"
-                      },
-            "/html": {
-                    "tools.staticdir.on": True,
-                    "tools.staticdir.dir": "html"
-                    }
-    }
 
-    cherrypy.tree.mount(applicationContext.get_object(name = "root"), '/', config=conf)
-    cherrypy.tree.mount(applicationContext.get_object(name = "loginForm"), '/login', config=login_conf)
+    form = applicationContext.get_object(name = "root")
+    form.filter = applicationContext.get_object(name = "authenticationProcessingFilter")
+    form.hashedUserDetailsServiceList = [applicationContext.get_object(name = "md5UserDetailsService"),
+                                         applicationContext.get_object(name = "shaUserDetailsService")]
+    form.authenticationManager = applicationContext.get_object(name = "authenticationManager")
+    form.redirectStrategy = applicationContext.get_object(name = "redirectStrategy")
+    form.httpContextFilter = applicationContext.get_object(name = "httpContextFilter")
+
+    cherrypy.tree.mount(form, '/', config=conf)
 
     cherrypy.engine.start()
     cherrypy.engine.block()
