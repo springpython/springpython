@@ -117,9 +117,9 @@
 		</property>
 	</object>
 	
-	<object id="cherrypySessionStrategy" class="springpython.security.web.CherryPySessionStrategy"/>
+	<object id="cherrypySessionStrategy" class="springpython.security.cherrypy3.CP3SessionStrategy"/>
 
-	<object id="redirectStrategy" class="springpython.security.web.RedirectStrategy"/>
+	<object id="redirectStrategy" class="springpython.security.cherrypy3.CP3RedirectStrategy"/>
 	
 	<object id="httpContextFilter" class="springpython.security.web.HttpSessionContextIntegrationFilter">
 		<property name="sessionStrategy" ref="cherrypySessionStrategy"/>
@@ -131,9 +131,8 @@
 	</object>
 
 	<object id="filterSecurityInterceptor" class="springpython.security.web.FilterSecurityInterceptor">
-		<property name="validate_config_attributes" value="False"/>
 		<property name="auth_manager" ref="authenticationManager"/>
-		<property name="access_decision_manager" ref="accessDecisionManager"/>
+		<property name="access_decision_mgr" ref="accessDecisionManager"/>
 		<property name="sessionStrategy" ref="cherrypySessionStrategy"/>
 		<property name="obj_def_source">
 			<list>
@@ -153,11 +152,6 @@
 		</property>
 	</object>
 	
-	<object id="exceptionFilter" class="springpython.security.web.MiddlewareFilter">
-		<property name="clazz" value="paste.evalexception.middleware.EvalException"/>
-		<property name="appAttribute" value="application"/>
-	</object>
-	
 	<object id="authenticationProcessingFilterEntryPoint" class="springpython.security.web.AuthenticationProcessingFilterEntryPoint">
 		<property name="loginFormUrl" value="/login"/>
 		<property name="redirectStrategy" ref="redirectStrategy"/>
@@ -173,25 +167,24 @@
 		<property name="accessDeniedHandler" ref="accessDeniedHandler"/>
 	</object>
 	
-	<object id="filterChainProxy" class="springpython.security.web.FilterChainProxy">
+	<object id="filterChainProxy" class="springpython.security.cherrypy3.CP3FilterChainProxy">
 		<property name="filterInvocationDefinitionSource">
 			<list>
 				<tuple>
 					<value>/images.*</value>
-					<list><value>exceptionFilter</value></list>
+					<list></list>
 				</tuple>
 				<tuple>
 					<value>/html.*</value>
-					<list><value>exceptionFilter</value></list>
+					<list></list>
 				</tuple>
 				<tuple>
 					<value>/login.*</value>
-					<list><value>exceptionFilter</value><value>httpContextFilter</value></list>
+					<list><value>httpContextFilter</value></list>
 				</tuple>
 				<tuple>
 					<value>/.*</value>
 					<list>
-						<value>exceptionFilter</value>
 						<value>httpContextFilter</value>
 						<value>exceptionTranslationFilter</value>
 						<value>authenticationProcessingFilter</value>
@@ -202,17 +195,4 @@
 		</property>
 	</object>
 
-	<object id="loginForm" class="view.CherryPyAuthenticationForm">
-		<property name="filter" ref="authenticationProcessingFilter"/>
-		<property name="controller" ref="controller"/>
-		<property name="hashedUserDetailsServiceList">
-			<list>
-				<ref object="md5UserDetailsService"/>
-				<ref object="shaUserDetailsService"/>
-			</list>
-		</property>
-		<property name="authenticationManager" ref="authenticationManager"/>
-		<property name="redirectStrategy" ref="redirectStrategy"/>
-	</object>
-	
 </objects>

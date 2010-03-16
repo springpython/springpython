@@ -197,7 +197,7 @@ class PetClinicController(DaoSupport):
 class VetRowMapper(RowMapper):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a Vet-oriented query by mapping a Vet-record."""
-    def map_row(self, row):
+    def map_row(self, row, metadata=None):
         vet = Vet()
         vet.id = row[0]
         vet.firstName = row[1]
@@ -207,7 +207,7 @@ class VetRowMapper(RowMapper):
 class OwnerRowMapper(RowMapper):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from an owner-oriented query by mapping an Owner-record."""
-    def map_row(self, row):
+    def map_row(self, row, metadata=None):
         owner = Owner()
         owner.id = row[0]
         owner.firstName = row[1]
@@ -220,7 +220,7 @@ class OwnerRowMapper(RowMapper):
 class PetRowMapper(RowMapper):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a pet-oriented query by mapping an Pet-record."""
-    def map_row(self, row):
+    def map_row(self, row, metadata=None):
         pet = Pet()
         pet.id = row[0]
         pet.name = row[1]
@@ -231,7 +231,7 @@ class PetRowMapper(RowMapper):
 class PetTypeRowMapper(RowMapper):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a visit-oriented query by mapping an Visit-record."""
-    def map_row(self, row):
+    def map_row(self, row, metadata=None):
         petType = PetType()
         petType.id = row[0]
         petType.name = row[1]
@@ -240,7 +240,7 @@ class PetTypeRowMapper(RowMapper):
 class SpecialtyRowMapper(RowMapper):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a visit-oriented query by mapping an Visit-record."""
-    def map_row(self, row):
+    def map_row(self, row, metadata=None):
         specialty = Specialty()
         specialty.id = row[0]
         specialty.name = row[1]
@@ -249,7 +249,7 @@ class SpecialtyRowMapper(RowMapper):
 class VisitRowMapper(RowMapper):
     """This is a row callback handler used in a database template call. It is used to process
     one row of data from a visit-oriented query by mapping an Visit-record."""
-    def map_row(self, row):
+    def map_row(self, row, metadata=None):
         visit = Visit()
         visit.date = row[0]
         visit.description = row[1]

@@ -18,7 +18,6 @@ import logging
 import os
 import noxml
 from springpython.context import ApplicationContext
-from springpython.security.cherrypy31 import AuthenticationFilter, ContextSessionFilter, SecurityFilter
 from springpython.security.context import SecurityContextHolder
 
 if __name__ == '__main__':

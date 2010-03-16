@@ -33,13 +33,13 @@ from springpython.security.vote import AffirmativeBased
 from springpython.security.vote import RoleVoter
 from springpython.security.web import AuthenticationProcessingFilter
 from springpython.security.web import AuthenticationProcessingFilterEntryPoint
-from springpython.security.web import CP3SessionStrategy
+from springpython.security.cherrypy3 import CP3SessionStrategy
 from springpython.security.web import ExceptionTranslationFilter
-from springpython.security.web import CP3FilterChainProxy
+from springpython.security.cherrypy3 import CP3FilterChainProxy
 from springpython.security.web import FilterSecurityInterceptor
 from springpython.security.web import HttpSessionContextIntegrationFilter
 from springpython.security.web import MiddlewareFilter
-from springpython.security.web import CP3RedirectStrategy
+from springpython.security.cherrypy3 import CP3RedirectStrategy
 from springpython.security.web import SimpleAccessDeniedHandler
 
 class PetClinicClientAndServer(PythonConfig):
