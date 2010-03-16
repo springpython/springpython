@@ -409,7 +409,7 @@ def create_pydocs():
     pydoc.writedoc("springpython.remoting.pyro")
     pydoc.writedoc("springpython.remoting.pyro.PyroDaemonHolder")
     pydoc.writedoc("springpython.security")
-    pydoc.writedoc("springpython.security.cherrypy")
+    pydoc.writedoc("springpython.security.cherrypy3")
     pydoc.writedoc("springpython.security.intercept")
     pydoc.writedoc("springpython.security.context")
     pydoc.writedoc("springpython.security.context.SecurityContextHolder")
