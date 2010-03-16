@@ -17,7 +17,6 @@
 import cherrypy
 import logging
 import os
-from springpython.security.cherrypy31 import AuthenticationFilter, ContextSessionFilter, SecurityFilter
 from springpython.security.context import SecurityContextHolder
 from springpython.config import XMLConfig
 from springpython.context import ApplicationContext

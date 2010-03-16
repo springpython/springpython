@@ -16,10 +16,8 @@
       <section id="security-dependencies">
           <title>External dependencies</title>
           <para>
-              <classname>springpython.security.cherrypy31</classname>
-              and
-              <classname>springpython.security.web</classname>
-              packages depend on
+              <classname>springpython.security.cherrypy3</classname>
+              package depends on
               <ulink url="http://cherrypy.org/">CherryPy 3</ulink>
               being installed prior to using them. Other than that, there are
               no specific external libraries required by Spring Python's security
