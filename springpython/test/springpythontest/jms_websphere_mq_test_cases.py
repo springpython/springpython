@@ -1372,8 +1372,6 @@ class WebSphereMQTestCase(MockTestCase):
 
     def testSSLIncorrectSettings(self):
 
-        ssl_cipher_spec = SSLCipherSpec
-
         opts = CMQC.MQCNO_HANDLE_SHARE_BLOCK
         mgr = self.mock()
         cd = self.mock()
