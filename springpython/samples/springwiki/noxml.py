@@ -18,6 +18,7 @@ import controller
 import view
 
 from springpython.config import *
+from springpython.security.cherrypy3 import *
 from springpython.security.web import *
 from springpython.security.providers import *
 from springpython.security.providers.dao import *

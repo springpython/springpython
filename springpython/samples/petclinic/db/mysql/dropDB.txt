@@ -1,1 +1,1 @@
-DROP DATABASE petclinic;
+DROP DATABASE IF EXISTS petclinic;

@@ -50,7 +50,9 @@ if __name__ == '__main__':
                          "tools.staticdir.dir": "images"}
             }
 
-    cherrypy.tree.mount(applicationContext.get_object(name = "root"), '/', config=conf)
+    form = applicationContext.get_object(name = "root")
+
+    cherrypy.tree.mount(form, '/', config=conf)
 
     cherrypy.engine.start()
     cherrypy.engine.block()
