@@ -16,7 +16,6 @@
 import Cookie
 import logging
 import re
-import cherrypy
 import pickle
 import types
 from springpython.context import ApplicationContextAware
@@ -112,31 +111,6 @@ class FilterChainProxy(Filter, ApplicationContextAware):
         environ["SPRINGPYTHON_FILTER_CHAIN"] = filterChain.getFilterChain()
         return self.doNextFilter(environ, start_response)
 
-class CP3FilterChainProxy(FilterChainProxy):
-    def __init__(self, filterInvocationDefinitionSource=None):
-        FilterChainProxy.__init__(self, filterInvocationDefinitionSource)
-        self.logger = logging.getLogger("springpython.security.web.CP3FilterChainProxy")
-        cherrypy.tools.filterChainProxy = cherrypy._cptools.HandlerTool(self)
-
-    def __call__(self, environ=None, start_response=None):
-        innerfunc = cherrypy.request.handler
-        def mini_app(*args, **kwargs):
-            def cherrypy_wrapper(nexthandler, *args, **kwargs):
-                results = nexthandler(*args, **kwargs)
-                self.logger.debug("Results = %s" % results)
-                return results
-            return cherrypy_wrapper(innerfunc, *args, **kwargs)
-
-        self.application = (self.invoke, (mini_app,))
-
-        # Store the final results...
-        cherrypy.response.body = FilterChainProxy.__call__(self, cherrypy.request.wsgi_environ, None)
-        #...and then signal there is no more handling for CherryPy to do.
-        return True
-
-    def invoke(self, args):
-        return args[0]()
-
 class SessionStrategy(object):
     """
     This is an interface definition in defining access to session data. There may be many
@@ -148,51 +122,6 @@ class SessionStrategy(object):
 
     def setHttpSession(self, key, value):
         raise NotImplementedError()
-
-class CP3SessionStrategy(SessionStrategy):
-    def __init__(self):
-        SessionStrategy.__init__(self)
-        self.logger = logging.getLogger("springpython.security.web.CP3SessionStrategy")
-
-    def getHttpSession(self, environ):
-        return cherrypy.session.get("session_id")
-    
-    def setHttpSession(self, key, value):
-        if "session_id" not in cherrypy.session:
-            cherrypy.session["session_id"] = {}
-        cherrypy.session["session_id"][key] = value
-
-class CherryPySessionStrategy(SessionStrategy):
-    """
-    CherryPy provides a session filter, and this will activate it. The session id is stored
-    in a cookie, and this gets access to it. However, this needs work, because apparently the session
-    data cannot be accessed until the CherryPy app has been reached. For before-filters, the session
-    data doesn't seem to be available. For now, an in-memory dictionary is provided that keys off
-    the CherryPy session id. It may be useful to plugin some 3rd party session middleware.
-    """
-    
-    sessionData = {}
-    def __init__(self):
-        SessionStrategy.__init__(self)
-        cherrypy.config.update({"session_filter.on": True})
-        self.logger = logging.getLogger("springpython.security.web.CherryPySessionStrategy")
-
-    def getHttpSession(self, environ):
-        httpSession = Cookie.SimpleCookie()
-
-        try:
-            httpSession.load(environ["HTTP_COOKIE"])
-        except:
-            return None
-
-        if "session_id" in httpSession:
-            try:
-                return self.sessionData[httpSession["session_id"].value]
-            except KeyError:
-                self.sessionData[httpSession["session_id"].value] = {}
-                return self.sessionData[httpSession["session_id"].value]
-        else:
-            return None
 
 class HttpSessionContextIntegrationFilter(Filter):
     """
@@ -280,10 +209,6 @@ class RedirectStrategy(object):
     def redirect(self, url):
         """This is a 0-second redirect."""
         return """<META HTTP-EQUIV="Refresh" CONTENT="0; URL=%s">""" % url
-
-class CP3RedirectStrategy(object):
-    def redirect(self, url):
-        raise cherrypy.HTTPRedirect(url)
 
 class AuthenticationProcessingFilter(Filter):
     """

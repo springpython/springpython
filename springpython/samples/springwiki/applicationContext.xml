@@ -45,9 +45,9 @@
 		<property name="alwaysReauthenticate">False</property>
 	</object>
 	
-	<object id="cherrypySessionStrategy" class="springpython.security.web.CP3SessionStrategy"/>
+	<object id="cherrypySessionStrategy" class="springpython.security.cherrypy3.CP3SessionStrategy"/>
 
-	<object id="redirectStrategy" class="springpython.security.web.CP3RedirectStrategy"/>
+	<object id="redirectStrategy" class="springpython.security.cherrypy3.CP3RedirectStrategy"/>
 	
 	<object id="httpContextFilter" class="springpython.security.web.HttpSessionContextIntegrationFilter">
 		<property name="sessionStrategy" ref="cherrypySessionStrategy"/>
@@ -101,7 +101,7 @@
 		</property>
 	</object>
 	
-	<object id="filterChainProxy" class="springpython.security.web.CP3FilterChainProxy">
+	<object id="filterChainProxy" class="springpython.security.cherrypy3.CP3FilterChainProxy">
 		<property name="filterInvocationDefinitionSource">
 			<list>
 				<tuple>

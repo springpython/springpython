@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<components xmlns="http://www.springframework.org/springpython/schema/pycontainer-components"
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/springpython/schema/pycontainer-components
-       		http://springpython.webfactional.com/schema/context/spring-python-pycontainer-context-1.0.xsd">
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+ 
+	<object id="connectionFactory" class="springpython.database.factory.MySQLConnectionFactory">
+		<property name="username" value="springpython"/>
+		<property name="password" value="springpython"/>
+		<property name="hostname" value="localhost"/>
+		<property name="db" value="petclinic"/>
+	</object>
+	
+	<object id="remoteController" class="controller.PetClinicController">
+		<property name="connection_factory" ref="connectionFactory"/>
+	</object>
+	
+	<object id="controllerExporter" class="springpython.remoting.pyro.PyroServiceExporter">
+		<property name="service_name" value="Controller"/>
+		<property name="service" ref="remoteController"/>
+	</object>
+	
+	<object id="remoteUserDetailsService" class="springpython.security.userdetails.dao.DatabaseUserDetailsService">
+		<property name="dataSource" ref="connectionFactory"/>
+	</object>
 
-	<component id="connectionFactory" class="springpython.database.factory.MySQLConnectionFactory">
-		<property name="username">"springpython"</property>
-		<property name="password">"springpython"</property>
-		<property name="hostname">"localhost"</property>
-		<property name="db">"petclinic"</property>
-	</component>
+	<object id="userDetailsServiceExporter" class="springpython.remoting.pyro.PyroServiceExporter">
+		<property name="service_name" value="UserDetails"/>
+		<property name="service" ref="remoteUserDetailsService"/>
+	</object>
 	
-	<component id="remoteController" class="controller.PetClinicController">
-		<property name="connection_factory" local="connectionFactory"/>
-	</component>
-	
-	<component id="controllerExporter" class="springpython.remoting.pyro.PyroServiceExporter">
-		<property name="service_name">"Controller"</property>
-		<property name="service" local="remoteController"/>
-	</component>
-	
-	<component id="remoteUserDetailsService" class="springpython.security.userdetails.dao.DatabaseUserDetailsService">
-		<property name="dataSource" local="connectionFactory"/>
-	</component>
-
-	<component id="userDetailsServiceExporter" class="springpython.remoting.pyro.PyroServiceExporter">
-		<property name="service_name">"UserDetails"</property>
-		<property name="service" local="remoteUserDetailsService"/>
-	</component>
-	
-</components>
+</objects>

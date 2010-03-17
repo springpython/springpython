@@ -34,9 +34,9 @@ from springpython.security.vote import AffirmativeBased
 from springpython.security.vote import RoleVoter
 from springpython.security.web import AuthenticationProcessingFilter
 from springpython.security.web import AuthenticationProcessingFilterEntryPoint
-from springpython.security.web import CP3FilterChainProxy
-from springpython.security.web import CP3RedirectStrategy
-from springpython.security.web import CP3SessionStrategy
+from springpython.security.cherrypy3 import CP3FilterChainProxy
+from springpython.security.cherrypy3 import CP3RedirectStrategy
+from springpython.security.cherrypy3 import CP3SessionStrategy
 from springpython.security.web import ExceptionTranslationFilter
 from springpython.security.web import FilterSecurityInterceptor
 from springpython.security.web import HttpSessionContextIntegrationFilter
@@ -55,7 +55,7 @@ class ${properName}Configuration(PythonConfig):
         form.hashedUserDetailsServiceList = [self.shaUserDetailsService()]
         form.authenticationManager = self.authenticationManager()
         form.redirectStrategy = self.redirectStrategy()
-	form.httpSessionContextIntegrationFilter = self.httpSessionContextIntegrationFilter()
+	form.httpContextFilter = self.httpSessionContextIntegrationFilter()
         return form
     
     @Object
@@ -63,7 +63,7 @@ class ${properName}Configuration(PythonConfig):
         """This user details service uses a pre-built, in-memory for demonstration purposes only. Do NOT use in a
         production system!!!"""
         userDetailsService = InMemoryUserDetailsService()
-        userDetailsService.user_dict = {"jcoleman": ("password5", ["CUSTOMER_ANY"], True)}
+        userDetailsService.user_dict = {"jcoleman": ("password5", ["ROLE_ANY"], True)}
         return userDetailsService
 
     @Object

@@ -240,7 +240,6 @@ def publish(filepath, s3bucket, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, versio
     filename = filepath.split("/")[-1]
     s3key = "/".join([ p['release.type'],
                        p['project.key'],
-                       p['natural.name'],
                        filename ])
 
     print "Reading in content from %s" % filepath
@@ -410,7 +409,7 @@ def create_pydocs():
     pydoc.writedoc("springpython.remoting.pyro")
     pydoc.writedoc("springpython.remoting.pyro.PyroDaemonHolder")
     pydoc.writedoc("springpython.security")
-    pydoc.writedoc("springpython.security.cherrypy31")
+    pydoc.writedoc("springpython.security.cherrypy3")
     pydoc.writedoc("springpython.security.intercept")
     pydoc.writedoc("springpython.security.context")
     pydoc.writedoc("springpython.security.context.SecurityContextHolder")

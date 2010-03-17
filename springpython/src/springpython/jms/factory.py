@@ -23,6 +23,7 @@ from struct import pack, unpack
 from xml.sax.saxutils import escape
 from binascii import hexlify, unhexlify
 from time import time, mktime, strptime, altzone
+from traceback import format_exc
 
 try:
     import cElementTree as etree
@@ -35,7 +36,7 @@ except ImportError:
 # Spring Python
 from springpython.context import DisposableObject
 from springpython.jms.core import reserved_attributes, TextMessage
-from springpython.util import TRACE1, get_last_traceback, synchronized
+from springpython.util import TRACE1, synchronized
 from springpython.jms import JMSException, WebSphereMQJMSException, \
     NoMessageAvailableException, DELIVERY_MODE_NON_PERSISTENT, \
     DELIVERY_MODE_PERSISTENT
@@ -138,7 +139,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
                 self.logger.info("Caches cleared")
             except Exception, e:
                 try:
-                    self.logger.error("Could not clear the caches. Exception [%s]" % get_last_traceback(e))
+                    self.logger.error("Could not clear the caches. Exception [%s]" % format_exc())
                 except:
                     pass
             try:
@@ -148,7 +149,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
             except Exception, e:
                 try:
                     self.logger.error("Could not disconnect from queue manager [%s], exception [%s] " % (self.queue_manager, 
-                        get_last_traceback(e)))
+                        format_exc()))
                 except Exception:
                     pass
                 
