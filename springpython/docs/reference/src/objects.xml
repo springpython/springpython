@@ -737,8 +737,121 @@ service = container.get_object("MovieLister")
 </objects>
 ]]></programlisting>
 
-		</section>
+            <section id="objects-config-xmlconfig-inheritance">
+                <title>Object definition inheritance</title>
+            
+            <para>
+                XMLConfig's definitions may be stacked up into hierarchies of abstract
+                parents and their children objects. A child object not
+                only inherits all the properties and constructor arguments from
+                its parent but it can also easily override any of the inherited
+                values. This can save a lot of typing when configuring
+                non-trivial application contexts which would otherwise need to
+                repeat the same configuration properties over many objects
+                definitions.
+            </para>
+            <para>
+                An abstract object is identified by having an
+                <emphasis>abstract="True"</emphasis> attribute and the child
+                ones are those which have a <emphasis>parent</emphasis> attribute
+                set to ID of an object from which the properties or constructor
+                arguments should be inherited. Child objects must not specify
+                the <emphasis>class</emphasis> attribute, its value is taken
+                from their parents.
+            </para>
+            <para>
+                An object may be both a child and an abstract one. 
+            </para>
+            
+            <para>
+                Here's a hypothetical configuration of a set of services exposed
+                by a server. Note how you can easily change the CRM environment
+                you're invoking by merely changing the concrete service's
+                (get_customer_id or get_customer_profile) parent ID.
+            </para>
+            
+<programlisting><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
 
+    <object id="service" class="springpythontest.support.testSupportClasses.Service" scope="singleton" abstract="True" lazy-init="True">
+        <property name="ip"><value>192.168.1.153</value></property>
+    </object>
+    
+    <object id="crm_service_dev" parent="service" abstract="True">
+        <property name="port"><value>3392</value></property>
+    </object>
+    
+    <object id="crm_service_test" parent="service" abstract="True">
+        <property name="port"><value>3393</value></property>
+    </object>
+    
+    <object id="get_customer_id" parent="crm_service_dev">
+        <property name="path"><value>/soap/invoke/get_customer_id</value></property>
+    </object>
+    
+    <object id="get_customer_profile" parent="crm_service_test">
+        <property name="path"><value>/soap/invoke/get_customer_profile</value></property>
+    </object>
+	
+</objects>
+]]></programlisting>
+
+        <para>
+            Here's how you can override inherited properties; both get_customer_id
+            and get_customer_profile object definitions will inherit the
+            <emphasis>path</emphasis> property however the actual objects returned by
+            the container will use local, overridden, values of the property.
+        </para>
+        
+<programlisting><![CDATA[
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
+
+    <object id="service" class="springpythontest.support.testSupportClasses.Service" scope="singleton" abstract="True" lazy-init="True">
+        <property name="ip"><value>192.168.1.153</value></property>
+        <property name="port"><value>3392</value></property>
+        <property name="path"><value>/DOES-NOT-EXIST</value></property>
+    </object>
+    
+    <object id="get_customer_id" parent="service">
+        <property name="path"><value>/soap/invoke/get_customer_id</value></property>
+    </object>
+    
+    <object id="get_customer_profile" parent="service">
+        <property name="path"><value>/soap/invoke/get_customer_profile</value></property>
+    </object>
+	
+</objects>
+]]></programlisting>
+
+        <para>
+            If you need to get an abstract object from a container, use the .get_object's <emphasis>ignore_abstract</emphasis> parameter, 
+            otherwise <emphasis>springpython.container.AbstractObjectException</emphasis> will be raised. Observe the difference:
+        </para>
+        
+<programlisting><![CDATA[
+# .. skip creating the context
+
+# No exception will be raised, even though 'service' is an abstract object
+service = ctx.get_object("service", ignore_abstract=True)
+
+# Will show the object
+print service
+
+# Will raise AbstractObjectException
+service = ctx.get_object("service")
+]]></programlisting>
+            </section>
+
+        </section>
+        
 		<section id="objects-config-yamlconfig">
 			<title><classname>YamlConfig</classname> - Spring Python's YAML format</title>
 
@@ -1199,6 +1312,129 @@ constructor-args:
 
 			</section>
             
+            <section id="objects-config-yamlconfig-inheritance">
+                <title>Object definition inheritance</title>
+                
+            <para>
+                Just like XMLConfig, YamlConfig allows for wiring the objects
+                definitions into hierarchies of abstract and children objects,
+                thus this section is in most parts a repetition of what's
+                documented
+                <link linkend="objects-config-xmlconfig-inheritance">here</link>
+            </para>
+            
+            <para>
+                Definitions may be stacked up into hierarchies of abstract
+                parents and their children objects. A child object not
+                only inherits all the properties and constructor arguments from
+                its parent but it can also easily override any of the inherited
+                values. This can save a lot of typing when configuring
+                non-trivial application contexts which would otherwise need to
+                repeat the same configuration properties over many objects
+                definitions.
+            </para>
+            <para>
+                An abstract object is identified by having an
+                <emphasis>abstract</emphasis> attribute equal to True and the child
+                ones are those which have a <emphasis>parent</emphasis> attribute
+                set to ID of an object from which the properties or constructor
+                arguments should be inherited. Child objects must not specify
+                the <emphasis>class</emphasis> attribute, its value is taken
+                from their parents.
+            </para>
+            <para>
+                An object may be both a child and an abstract one. 
+            </para>
+            
+            <para>
+                Here's a hypothetical configuration of a set of services exposed
+                by a server. Note how you can easily change the CRM environment
+                you're invoking by merely changing the concrete service's
+                (get_customer_id or get_customer_profile) parent ID.
+            </para>
+            
+<programlisting><![CDATA[
+objects: 
+    - object: service
+      class: springpythontest.support.testSupportClasses.Service
+      abstract: True
+      scope: singleton
+      lazy-init: True
+      properties:
+        ip: 192.168.1.153
+        
+    - object: crm_service_dev
+      abstract: True
+      parent: service
+      properties:
+        port: "3392"
+        
+    - object: crm_service_test
+      abstract: True
+      parent: service
+      properties:
+        port: "3393"
+        
+    - object: get_customer_id
+      parent: crm_service_dev
+      properties:
+        path: /soap/invoke/get_customer_id
+        
+    - object: get_customer_profile
+      parent: crm_service_test
+      properties:
+        path: /soap/invoke/get_customer_profile
+]]></programlisting>
+
+        <para>
+            Here's how you can override inherited properties; both get_customer_id
+            and get_customer_profile object definitions will inherit the
+            <emphasis>path</emphasis> property however the actual objects returned by
+            the container will use local, overridden, values of the property.
+        </para>
+        
+<programlisting><![CDATA[
+objects: 
+    - object: service
+      class: foo.Service
+      abstract: True
+      scope: singleton
+      lazy-init: True
+      properties:
+        ip: 192.168.1.153
+        port: "3392"
+        path: /DOES-NOT-EXIST
+        
+    - object: get_customer_id
+      parent: service
+      properties:
+        path: /soap/invoke/get_customer_id
+        
+    - object: get_customer_profile
+      parent: service
+      properties:
+        path: /soap/invoke/get_customer_profile
+]]></programlisting>
+
+        <para>
+            If you need to get an abstract object from a container, use the .get_object's <emphasis>ignore_abstract</emphasis> parameter, 
+            otherwise <emphasis>springpython.container.AbstractObjectException</emphasis> will be raised. Observe the difference:
+        </para>
+        
+<programlisting><![CDATA[
+# .. skip creating the context
+
+# No exception will be raised, even though 'service' is an abstract object
+service = ctx.get_object("service", ignore_abstract=True)
+
+# Will show the object
+print service
+
+# Will raise AbstractObjectException
+service = ctx.get_object("service")
+]]></programlisting>
+            </section>
+            
 		</section>
 
 		<section id="objects-config-object">
@@ -1250,6 +1486,104 @@ from springpython.context import ApplicationContext
 
 container = ApplicationContext(MovieBasedApplicationContext())
 service = container.get_object("MovieLister")
+]]></programlisting>
+
+            <para>PythonConfig's support for abstract objects is different to
+                that of
+                <link linkend="objects-config-xmlconfig-inheritance">XMLConfig</link>
+                or
+                <link linkend="objects-config-yamlconfig-inheritance">YamlConfig</link>.
+                With PythonConfig, the children object do not automatically
+                inherit nor override the parents' properties, they in fact
+                <emphasis>receive</emphasis> the values returned by their
+                parents and it's up to them to decide, using Python code,
+                whether to use or to discard the values received.
+            </para>
+            
+            <para>
+                A child object must have as many optional arguments as there
+                are expected to be returned by its parent.
+            </para>
+            
+            <para>
+                Observe that in the following example the child definitions must
+                define an optional 'req' argument; in runtime they will be passed
+                its value basing on what their parent object will return.
+                Note also that <emphasis>request</emphasis> is of PROTOTYPE
+                scope, if it were a SINGLETON then both get_customer_id_request
+                and get_customer_profile_request would receive the very same
+                Request instance which, in other circumstances, could be a 
+                desirable effect but not in the example. 
+            </para>
+
+<programlisting><![CDATA[
+
+# stdlib
+import uuid4
+
+# .. skip Spring Python imports
+
+class Request(object):
+    def __init__(self, nonce=None, user=None, password=None):
+        self.nonce = nonce
+        self.user = user
+        self.password = password
+
+    def __str__(self):
+        return "<id=%s %s %s %s>" % (hex(id(self)), self.nonce, self.user, self.password)
+
+class TestAbstractContext(PythonConfig):
+
+    @Object(scope.PROTOTYPE, abstract=True)
+    def request(self):
+        return Request()
+
+    @Object(parent="request")
+    def request_dev(self, req=None):
+        req.user = "dev-user"
+        req.password = "dev-password"
+        
+        return req
+        
+    @Object(parent="request")
+    def request_test(self, req=None):
+        req.user = "test-user"
+        req.password = "test-password"
+        
+        return req
+        
+    @Object(parent="request_dev")
+    def get_customer_id_request(self, req=None):
+        req.nonce = uuid4().hex
+        
+        return req
+        
+    @Object(parent="request_test")
+    def get_customer_profile_request(self, req=None):
+        req.nonce = uuid4().hex
+        
+        return req
+]]></programlisting>
+            
+        <para>
+            Same as with the other configuration modes, if you need to get an
+            abstract object from a container, use the .get_object's
+            <emphasis>ignore_abstract</emphasis> parameter, 
+            otherwise <emphasis>springpython.container.AbstractObjectException</emphasis>
+            will be raised:
+        </para>
+        
+<programlisting><![CDATA[
+# .. skip creating the context
+
+# No exception will be raised, even though 'request' is an abstract object
+request = ctx.get_object("request", ignore_abstract=True)
+
+# Will show the object
+print request
+
+# Will raise AbstractObjectException
+request = ctx.get_object("request")
 ]]></programlisting>
 
 		</section>

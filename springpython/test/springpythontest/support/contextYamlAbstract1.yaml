@@ -1,0 +1,25 @@
+objects: 
+    - object:  service
+      class: springpythontest.support.testSupportClasses.Service
+      abstract: True
+      scope: singleton
+      lazy-init: True
+      properties:
+        ip: 192.168.1.153
+      
+    - object: crm_service
+      abstract: True
+      parent: service
+      properties:
+        port: 3392
+        
+    - object: get_customer_id1
+      parent: crm_service
+      properties:
+        path: /soap/invoke/get-customer-id1
+        
+    - object: get_customer_id2
+      parent: crm_service
+      scope: prototype
+      properties:
+        path: /soap/invoke/get-customer-id2

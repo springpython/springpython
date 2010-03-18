@@ -57,18 +57,27 @@ class ObjectContainer(object):
 
         self.objects = {}
 
-    def get_object(self, name):
+    def get_object(self, name, ignore_abstract=False):
         """
         This function attempts to find the object in the singleton cache. If not found, 
         delegates to _create_object in order to hunt for the definition, and request a
         object factory to generate one.
         """
         try:
+            object_def = self.object_defs[name]
+            if object_def.abstract and not ignore_abstract:
+                raise AbstractObjectException("Object [%s] is an abstract one." % name)
+                
             return self.objects[name]
+            
         except KeyError, e:
             self.logger.debug("Did NOT find object '%s' in the singleton storage." % name)
             try:
-                comp = self._create_object(self.object_defs[name])
+                object_def = self.object_defs[name]
+                if object_def.abstract and not ignore_abstract:
+                    raise AbstractObjectException("Object [%s] is an abstract one." % name)
+                
+                comp = self._create_object(object_def)
                 
                 # Evaluate any scopes, and store appropriately.
                 if self.object_defs[name].scope == scope.SINGLETON:
@@ -123,3 +132,12 @@ class ObjectContainer(object):
         [prop.set_value(obj, self) for prop in object_def.props if hasattr(prop, "set_value")]
         
         return obj
+        
+        
+class AbstractObjectException(Exception):
+    """ Raised when the user's code tries to get an abstract object from
+    the container.
+    """
+    
+class InvalidObjectScope(Exception):
+    pass
