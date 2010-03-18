@@ -11,7 +11,7 @@
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
-   limitations under the License.       
+   limitations under the License.
 """
 try:
     import cElementTree as etree
@@ -21,28 +21,30 @@ except ImportError:
     except ImportError:
         from elementtree import ElementTree as etree
 
-import inspect
-import logging
 import re
 import types
-from decorator import decorator
+import inspect
+import logging
+
 from springpython.context import scope
+from decorator import decorator, partial
 from springpython.context import ApplicationContextAware
 from springpython.factory import PythonObjectFactory
 from springpython.factory import ReflectiveObjectFactory
+from springpython.container import InvalidObjectScope
 
 yaml_mappings = {
     "str":"types.StringType", "unicode":"types.UnicodeType",
-    "int":"types.IntType", "long":"types.LongType", 
+    "int":"types.IntType", "long":"types.LongType",
     "float":"types.FloatType", "decimal":"decimal.Decimal",
     "bool":"types.BooleanType", "complex":"types.ComplexType",
     "list":"types.ListType", "tuple":"types.TupleType",
-    "dict":"types.DictType", 
+    "dict":"types.DictType",
 }
 
 xml_mappings = {
     "str":"types.StringType", "unicode":"types.UnicodeType",
-    "int":"types.IntType", "long":"types.LongType", 
+    "int":"types.IntType", "long":"types.LongType",
     "float":"types.FloatType", "decimal":"decimal.Decimal",
     "bool":"types.BooleanType", "complex":"types.ComplexType",
 }
@@ -53,7 +55,8 @@ class ObjectDef(object):
     a handle for the actual ObjectFactory that should be used to utilize this information when
     creating an instance of a object.
     """
-    def __init__(self, id, props = None, factory = None, scope = scope.SINGLETON, lazy_init = False):
+    def __init__(self, id, props=None, factory=None, scope=scope.SINGLETON,
+                 lazy_init=False, abstract=False, parent=None):
         super(ObjectDef, self).__init__()
         self.id = id
         self.factory = factory
@@ -63,6 +66,8 @@ class ObjectDef(object):
             self.props = props
         self.scope = scope
         self.lazy_init = lazy_init
+        self.abstract = abstract
+        self.parent = parent
         self.pos_constr = []
         self.named_constr = {}
 
@@ -76,19 +81,19 @@ class ReferenceDef(object):
     def __init__(self, name, ref):
         self.name = name
         self.ref = ref
-        
+
     def prefetch(self, container):
         self.get_value(container)
- 
+
     def get_value(self, container):
         return container.get_object(self.ref)
 
     def set_value(self, obj, container):
         setattr(obj, self.name, container.objects[self.ref])
-            
+
     def __str__(self):
         return "name=%s ref=%s" % (self.name, self.ref)
-        
+
 class InnerObjectDef(object):
     """
     This class represents an inner object. It is optional whether or not the object
@@ -97,7 +102,7 @@ class InnerObjectDef(object):
     def __init__(self, name, inner_comp):
         self.name = name
         self.inner_comp = inner_comp
-        
+
     def prefetch(self, container):
         self.get_value(container)
 
@@ -149,14 +154,14 @@ class ValueDef(object):
                 return False
             else:
                 return value
-            
+
     def get_value(self, container):
         val = self._replace_refs_with_actuals(self.value, container)
         if val is None:
             return self.value
         else:
             return val
-        
+
     def set_value(self, obj, container):
         setattr(obj, self.name, self.value)
         val = self._replace_refs_with_actuals(obj, container)
@@ -166,7 +171,7 @@ class ValueDef(object):
         the various containers, like lists, set, dictionaries, etc., to handle iterating
         through and pre-fetching items."""
         pass
-        
+
     def __str__(self):
         return "name=%s value=%s" % (self.name, self.value)
 
@@ -181,7 +186,7 @@ class DictDef(ValueDef):
                 self.value[key] = container.get_object(self.value[key].ref)
             else:
                 self.value[key] = self.scan_value(container, self.value[key])
-    
+
 class ListDef(ValueDef):
     """Handles behavior for a list-based value."""
     def __init__(self, name, value):
@@ -292,7 +297,7 @@ class FrozenSetDef(ValueDef):
         except TypeError:
             pass
         return new_frozen_set
- 
+
 class Config(object):
     """
     Config is an interface that defines how to read object definitions from an input source.
@@ -305,7 +310,7 @@ class PyContainerConfig(Config):
     """
     PyContainerConfig supports the legacy XML dialect (PyContainer) of reading object definitions.
     """
- 
+
     NS = "{http://www.springframework.org/springpython/schema/pycontainer-components}"
 
     def __init__(self, config_location):
@@ -365,7 +370,7 @@ class SpringJavaConfig(Config):
         else:
             self.config_location = [config_location]
         self.logger = logging.getLogger("springpython.config.SpringJavaConfig")
-        
+
         # By making this an instance-based property (instead of function local), inner object
         # definitions can add themselves to the list in the midst of parsing an input.
         self.objects = []
@@ -388,16 +393,16 @@ class SpringJavaConfig(Config):
                 bean.set("id", prefix + bean.get("id"))
             else:
                 bean.set("id", prefix + "<anonymous>")
-                
+
         c = ObjectDef(bean.get("id"), factory=ReflectiveObjectFactory(bean.get("class")))
-        
+
         if "scope" in bean.attrib:
             c.scope = scope.convert(bean.get("scope"))
         self.logger.debug("bean: %s" % bean)
         c.pos_constr = [self._convert_prop_def(bean, constr, bean.get("id") + ".constr") for constr in bean.findall(self.NS+"constructor-arg")]
         self.logger.debug("Constructors = %s" % c.pos_constr)
         c.props = [self._convert_prop_def(bean, p, p.get("name")) for p in bean.findall(self.NS+"property")]
-            
+
         return c
 
     def _convert_prop_def(self, bean, p, name):
@@ -468,7 +473,7 @@ class XMLConfig(Config):
         else:
             self.config_location = [config_location]
         self.logger = logging.getLogger("springpython.config.XMLConfig")
-        
+
         # By making this an instance-based property (instead of function local), inner object
         # definitions can add themselves to the list in the midst of parsing an input.
         self.objects = []
@@ -479,23 +484,43 @@ class XMLConfig(Config):
         self.objects = []
         for config in self.config_location:
             self.logger.debug("* Parsing %s" % config)
+
+            # A flat list of objects, as found in the XML document.
             objects = etree.parse(config).getroot()
-            
+
             # We need to handle both 1.0 and 1.1 XSD schemata *and* we may be
             # passed a list of config locations of different XSD versions so we
             # must find out here which one is used in the current config file
             # and pass the correct namespace down to other parts of XMLConfig.
             ns = objects.tag[:objects.tag.find("}") + 1]
-            
+
+            # A dictionary of abstract objects, keyed by their IDs, used in
+            # traversing the hierarchies of parents; built upfront here for
+            # convenience.
+            abstract_objects = {}
             for obj in objects:
-                if obj.get("class") is None:
+                if obj.get("abstract"):
+                    abstract_objects[obj.get("id")] = obj
+
+            for obj in objects:
+                if obj.get("class") is None and not obj.get("parent"):
                     self._map_custom_class(obj, xml_mappings, ns)
+
+                elif obj.get("parent"):
+                    # Children are added to self.objects during the children->abstract parents traversal.
+                    pos_constr = self._get_pos_constr(obj, ns)
+                    named_constr = self._get_named_constr(obj, ns)
+                    props = self._get_props(obj, ns)
+                    self._traverse_parents(obj, obj, ns, pos_constr, named_constr, props, abstract_objects)
+                    continue
+
                 self.objects.append(self._convert_object(obj, ns=ns))
+
         self.logger.debug("==============================================================")
         for object in self.objects:
             self.logger.debug("Parsed %s" % object)
         return self.objects
-        
+
     def _map_custom_class(self, obj, mappings, ns):
         """ Fill in the missing attributes of Python objects and make it look
         to the rest of XMLConfig as if they already were in the XML config file.
@@ -511,38 +536,139 @@ class XMLConfig(Config):
                 obj.append(constructor_arg)
                 constructor_arg.append(value)
                 obj.text = ""
-                
+
                 break
 
         else:
             self.logger.warning("No matching type found for object %s" % obj)
 
+    def _traverse_parents(self, leaf, child, ns, pos_constr,
+                            named_constr, props, abstract_objects):
+
+        parent = abstract_objects[child.get("parent")]
+
+        # At this point we only build up the lists of parameters but we don't create
+        # the object yet because the current parent object may still have its
+        # own parent.
+
+        # Positional constructors
+
+        parent_pos_constrs = self._get_pos_constr(parent, ns)
+
+        # Make sure there are as many child positional parameters as there
+        # are in the parent's list.
+
+        len_pos_constr = len(pos_constr)
+        len_parent_pos_constrs = len(parent_pos_constrs)
+
+        if len_pos_constr < len_parent_pos_constrs:
+            pos_constr.extend([None] * (len_parent_pos_constrs - len_pos_constr))
+
+        for idx, parent_pos_constr in enumerate(parent_pos_constrs):
+            if not pos_constr[idx]:
+                pos_constr[idx] = parent_pos_constr
+
+        # Named constructors
+        child_named_constrs = named_constr
+        parent_named_constrs = self._get_named_constr(parent, ns)
+
+        for parent_named_constr in parent_named_constrs:
+            if parent_named_constr not in child_named_constrs:
+                named_constr[parent_named_constr] = parent_named_constrs[parent_named_constr]
+
+        # Properties
+        child_props = [prop.name for prop in props]
+        parent_props = self._get_props(parent, ns)
+
+        for parent_prop in parent_props:
+            if parent_prop.name not in child_props:
+                props.append(parent_prop)
+
+        if parent.get("parent"):
+            self._traverse_parents(leaf, parent, ns, pos_constr, named_constr, props, abstract_objects)
+        else:
+            # Now we know we can create an object out of all the accumulated values.
+
+            # The object's class is its topmost parent's class.
+            class_ = parent.get("class")
+            id, factory, lazy_init, abstract, parent, scope_ = self._get_basic_object_data(leaf, class_)
+
+            c = self._create_object(id, factory, lazy_init, abstract, parent,
+                           scope_, pos_constr, named_constr, props)
+
+            self.objects.append(c)
+
+        return parent
+
+    def _get_pos_constr(self, object, ns):
+        """ Returns a list of all positional constructor arguments of an object.
+        """
+        return [self._convert_prop_def(object, constr, object.get("id") + ".constr", ns) for constr in object.findall(ns+"constructor-arg")
+                if not "name" in constr.attrib]
+
+    def _get_named_constr(self, object, ns):
+        """ Returns a dictionary of all named constructor arguments of an object.
+        """
+        return dict([(str(constr.get("name")), self._convert_prop_def(object, constr, object.get("id") + ".constr", ns))
+                    for constr in object.findall(ns+"constructor-arg")  if "name" in constr.attrib])
+
+    def _get_props(self, object, ns):
+        """ Returns a list of all properties defined by an object.
+        """
+        return [self._convert_prop_def(object, p, p.get("name"), ns) for p in object.findall(ns+"property")]
+
+    def _create_object(self, id, factory, lazy_init, abstract, parent,
+                           scope, pos_constr, named_constr, props):
+        """ A helper function which creates an object out of the supplied
+        arguments.
+        """
+
+        c = ObjectDef(id=id, factory=factory, lazy_init=lazy_init,
+            abstract=abstract, parent=parent)
+
+        c.scope = scope
+        c.pos_constr = pos_constr
+        c.named_constr = named_constr
+        c.props = props
+
+        self.logger.debug("object: props = %s" % c.props)
+        self.logger.debug("object: There are %s props" % len(c.props))
+
+        return c
+
+    def _get_basic_object_data(self, object, class_):
+        """ A convenience method which creates basic object's data so that
+        the code is not repeated.
+        """
+
+        if "scope" in object.attrib:
+            scope_ = scope.convert(object.get("scope"))
+        else:
+            scope_ = scope.SINGLETON
+
+        return(object.get("id"),  ReflectiveObjectFactory(class_),
+            object.get("lazy-init", False), object.get("abstract", False),
+               object.get("parent"), scope_)
+
     def _convert_object(self, object, prefix="", ns=None):
-        "This function generates a object definition, then converts scope and property elements."
+        """ This function collects all parameters required for an object creation
+        and then calls a helper function which creates it.
+        """
         if prefix != "":
             if "id" in object.attrib:
                 object.set("id", prefix + "." + object.get("id"))
             else:
                 object.set("id", prefix + ".<anonymous>")
-                
-        if "lazy-init" in object.attrib:
-            c = ObjectDef(object.get("id"), factory=ReflectiveObjectFactory(object.get("class")), lazy_init=object.get("lazy-init"))
-        else:
-            c = ObjectDef(object.get("id"), factory=ReflectiveObjectFactory(object.get("class")), lazy_init=False)
-        
-        if "scope" in object.attrib:
-            c.scope = scope.convert(object.get("scope"))
 
-        c.pos_constr = [self._convert_prop_def(object, constr, object.get("id") + ".constr", ns) for constr in object.findall(ns+"constructor-arg")
-                        if not "name" in constr.attrib]
-        c.named_constr = dict([(str(constr.get("name")), self._convert_prop_def(object, constr, object.get("id") + ".constr", ns)) for constr in object.findall(ns+"constructor-arg")
-                           if "name" in constr.attrib])
-        c.props = [self._convert_prop_def(object, p, p.get("name"), ns) for p in object.findall(ns+"property")]
-        self.logger.debug("object: props = %s" % c.props)
-        self.logger.debug("object: There are %s props" % len(c.props))
-            
-        return c
-    
+        id, factory, lazy_init, abstract, parent, scope_ = self._get_basic_object_data(object, object.get("class"))
+
+        pos_constr = self._get_pos_constr(object, ns)
+        named_constr = self._get_named_constr(object, ns)
+        props = self._get_props(object, ns)
+
+        return self._create_object(id, factory, lazy_init, abstract, parent,
+            scope_, pos_constr, named_constr, props)
+
     def _convert_ref(self, ref_node, name):
         if hasattr(ref_node, "attrib"):
             results = ReferenceDef(name, ref_node.get("object"))
@@ -552,7 +678,7 @@ class XMLConfig(Config):
             results = ReferenceDef(name, ref_node)
             self.logger.debug("ref: Returning %s" % results)
             return results
- 
+
     def _convert_value(self, value, id, name, ns):
         if value.text is not None and value.text.strip() != "":
             self.logger.debug("value: Converting a direct value <%s>" % value.text)
@@ -580,7 +706,7 @@ class XMLConfig(Config):
                 return self._convert_frozen_set(value, id, name, ns).value
             else:
                 self.logger.debug("value: %s.%s Don't know how to handle %s" % (id, name, value.tag))
-    
+
     def _convert_dict(self, dict_node, id, name, ns):
         dict = {}
         for entry in dict_node.findall(ns+"entry"):
@@ -669,7 +795,7 @@ class XMLConfig(Config):
                 s.add(self._convert_inner_object(element, id, "%s.set(%s)" % (name, len(s)), ns))
             elif element.tag in [ns+token for token in ["dict", "tuple", "set", "frozenset", "list"]]:
                 self.logger.debug("set: This set has child elements of type %s." % element.tag)
-                s.add(self._convert_value(element, id, "%s.set(%s)" % (name,len(s)), ns)) 
+                s.add(self._convert_value(element, id, "%s.set(%s)" % (name,len(s)), ns))
             else:
                 self.logger.debug("set: Don't know how to handle %s" % element.tag)
         self.logger.debug("Set is now %s" % s)
@@ -758,7 +884,7 @@ class YamlConfig(Config):
         else:
             self.config_location = [config_location]
         self.logger = logging.getLogger("springpython.config.YamlConfig")
-        
+
         # By making this an instance-based property (instead of function local), inner object
         # definitions can add themselves to the list in the midst of parsing an input.
         self.objects = []
@@ -774,15 +900,34 @@ class YamlConfig(Config):
             stream = file(config)
             doc = yaml.load(stream)
             self.logger.debug(doc)
+
+            # A dictionary of abstract objects, keyed by their IDs, used in
+            # traversing the hierarchies of parents; built upfront here for
+            # convenience.
+            abstract_objects = {}
             for object in doc["objects"]:
-                if not "class" in object:
+                if "abstract" in object:
+                    abstract_objects[object["object"]] = object
+
+            for object in doc["objects"]:
+                if not "class" in object and not "parent" in object:
                     self._map_custom_class(object, yaml_mappings)
+
+                elif "parent" in object:
+                    # Children are added to self.objects during the children->abstract parents traversal.
+                    pos_constr = self._get_pos_constr(object)
+                    named_constr = self._get_named_constr(object)
+                    props = self._get_props(object)
+                    self._traverse_parents(object, object, pos_constr, named_constr, props, abstract_objects)
+                    continue
+
                 self._print_obj(object)
-            self.objects.extend([self._convert_object(object) for object in doc["objects"]])
+                self.objects.append(self._convert_object(object))
+
         self.logger.debug("==============================================================")
         self.logger.debug("objects = %s" % self.objects)
         return self.objects
-        
+
     def _map_custom_class(self, obj, mappings):
         """ Enrich the object's attributes and make it look to the rest of
         YamlConfig as if the object had all of them right in the definition.
@@ -791,12 +936,142 @@ class YamlConfig(Config):
             if class_name in obj:
                 self.logger.debug("Found a matching type: %s -> %s" % (obj["object"],
                     class_name))
-                
+
                 obj["class"] = mappings[class_name]
                 obj["constructor-args"] = [obj[class_name]]
                 break
         else:
-            self.logger.warning("No matching type found for object %s" % obj) 
+            self.logger.warning("No matching type found for object %s" % obj)
+
+    def _traverse_parents(self, leaf, child, pos_constr,
+                            named_constr, props, abstract_objects):
+
+        parent = abstract_objects[child["parent"]]
+
+        # At this point we only build up the lists of parameters but we don't create
+        # the object yet because the current parent object may still have its
+        # own parent.
+
+        # Positional constructors
+
+        parent_pos_constrs = self._get_pos_constr(parent)
+
+        # Make sure there are as many child positional parameters as there
+        # are in the parent's list.
+
+        len_pos_constr = len(pos_constr)
+        len_parent_pos_constrs = len(parent_pos_constrs)
+
+        if len_pos_constr < len_parent_pos_constrs:
+            pos_constr.extend([None] * (len_parent_pos_constrs - len_pos_constr))
+
+        for idx, parent_pos_constr in enumerate(parent_pos_constrs):
+            if not pos_constr[idx]:
+                pos_constr[idx] = parent_pos_constr
+
+        # Named constructors
+        child_named_constrs = named_constr
+        parent_named_constrs = self._get_named_constr(parent)
+
+        for parent_named_constr in parent_named_constrs:
+            if parent_named_constr not in child_named_constrs:
+                named_constr[parent_named_constr] = parent_named_constrs[parent_named_constr]
+
+        # Properties
+        child_props = [prop.name for prop in props]
+        parent_props = self._get_props(parent)
+
+        for parent_prop in parent_props:
+            if parent_prop.name not in child_props:
+                props.append(parent_prop)
+
+        if "parent" in parent:
+            self._traverse_parents(leaf, parent, pos_constr, named_constr, props, abstract_objects)
+        else:
+            # Now we know we can create an object out of all the accumulated values.
+
+            # The object's class is its topmost parent's class.
+            class_ = parent["class"]
+            id, factory, lazy_init, abstract, parent, scope_ = self._get_basic_object_data(leaf, class_)
+
+            c = self._create_object(id, factory, lazy_init, abstract, parent,
+                           scope_, pos_constr, named_constr, props)
+
+            self.objects.append(c)
+
+        return parent
+
+    def _get_pos_constr(self, object):
+        """ Returns a list of all positional constructor arguments of an object.
+        """
+        if "constructor-args" in object and isinstance(object["constructor-args"], list):
+            return [self._convert_prop_def(object, constr, object["object"]) for constr in object["constructor-args"]]
+        return []
+
+    def _get_named_constr(self, object):
+        """ Returns a dictionary of all named constructor arguments of an object.
+        """
+        if "constructor-args" in object and isinstance(object["constructor-args"], dict):
+            return dict([(name, self._convert_prop_def(object, constr, object["object"]))
+                            for (name, constr) in object["constructor-args"].items()])
+        return {}
+
+    def _get_props(self, object):
+        """ Returns a list of all properties defined by an object.
+        """
+        if "properties" in object:
+            return [self._convert_prop_def(object, p, name) for (name, p) in object["properties"].items()]
+        return []
+
+    def _create_object(self, id, factory, lazy_init, abstract, parent,
+                           scope, pos_constr, named_constr, props):
+        """ A helper function which creates an object out of the supplied
+        arguments.
+        """
+
+        c = ObjectDef(id=id, factory=factory, lazy_init=lazy_init,
+            abstract=abstract, parent=parent)
+
+        c.scope = scope
+        c.pos_constr = pos_constr
+        c.named_constr = named_constr
+        c.props = props
+
+        self.logger.debug("object: props = %s" % c.props)
+        self.logger.debug("object: There are %s props" % len(c.props))
+
+        return c
+
+    def _get_basic_object_data(self, object, class_):
+        """ A convenience method which creates basic object's data so that
+        the code is not repeated.
+        """
+
+        if "scope" in object:
+            scope_ = scope.convert(object["scope"])
+        else:
+            scope_ = scope.SINGLETON
+
+        return(object["object"],  ReflectiveObjectFactory(class_),
+            object.get("lazy-init", False), object.get("abstract", False),
+               object.get("parent"), scope_)
+
+    def _convert_object(self, object, prefix=""):
+        "This function generates a object definition, then converts scope and property elements."
+        if prefix != "":
+            if "object" in object and object["object"] is not None:
+                object["object"] = prefix + "." + object["object"]
+            else:
+                object["object"] = prefix + ".<anonymous>"
+
+        id, factory, lazy_init, abstract, parent, scope_ = self._get_basic_object_data(object, object.get("class"))
+
+        pos_constr = self._get_pos_constr(object)
+        named_constr = self._get_named_constr(object)
+        props = self._get_props(object)
+
+        return self._create_object(id, factory, lazy_init, abstract, parent,
+            scope_, pos_constr, named_constr, props)
 
     def _print_obj(self, obj, level=0):
         self.logger.debug("%sobject = %s" % ("\t"*level, obj["object"]))
@@ -818,38 +1093,13 @@ class YamlConfig(Config):
                     self.logger.debug("%s%s = %s" % ("\t"*(level+2), prop, obj["properties"][prop]))
         self.logger.debug("")
 
-    def _convert_object(self, object, prefix=""):
-        "This function generates a object definition, then converts scope and property elements."
-        if prefix != "":
-            if "object" in object and object["object"] is not None:
-                object["object"] = prefix + "." + object["object"]
-            else:
-                object["object"] = prefix + ".<anonymous>"
-                
-        if "lazy-init" in object:
-            c = ObjectDef(object["object"], factory=ReflectiveObjectFactory(object["class"]), lazy_init=object["lazy-init"])
-        else:
-            c = ObjectDef(object["object"], factory=ReflectiveObjectFactory(object["class"]), lazy_init=False)
-        
-        if "scope" in object:
-            c.scope = scope.convert(object["scope"])
-        if "constructor-args" in object:
-             if isinstance(object["constructor-args"], list):
-                 c.pos_constr = [self._convert_prop_def(object, constr, object["object"]) for constr in object["constructor-args"]]
-             if isinstance(object["constructor-args"], dict):
-                 c.named_constr = dict([(name, self._convert_prop_def(object, constr, object["object"])) for (name, constr) in object["constructor-args"].items()])
-        if "properties" in object:
-            c.props = [self._convert_prop_def(object, p, name) for (name, p) in object["properties"].items()]
-            
-        return c
-
     def _convert_ref(self, ref_node, name):
         self.logger.debug("ref: Parsing %s, %s" % (ref_node, name))
         if "object" in ref_node:
             return ReferenceDef(name, ref_node["object"])
         else:
             return ReferenceDef(name, ref_node)
- 
+
     def _convert_value(self, value, id, name):
         results = []
 
@@ -874,7 +1124,7 @@ class YamlConfig(Config):
             return value
 
         return results
-    
+
     def _convert_dict(self, dict_node, id, name):
         d = {}
         for (k, v) in dict_node.items():
@@ -1017,7 +1267,7 @@ class PythonConfig(Config, ApplicationContextAware):
     """
     PythonConfig supports using pure python code to define objects.
     """
-    
+
     def __init__(self):
         self.logger = logging.getLogger("springpython.config.PythonConfig")
         super(PythonConfig, self).__init__()
@@ -1030,12 +1280,11 @@ class PythonConfig(Config, ApplicationContextAware):
             if name not in _pythonConfigMethods:
                 try:
                     wrapper = method.im_func.func_globals["_call_"]
-                    
+
                     if wrapper.func_name.startswith("object"):
-                        if wrapper.func_name == "objectPrototype":
-                            c = ObjectDef(id=name, factory=PythonObjectFactory(method, wrapper), scope=scope.PROTOTYPE, lazy_init=wrapper.lazy_init)
-                        else:
-                            c = ObjectDef(id=name, factory=PythonObjectFactory(method, wrapper), lazy_init=wrapper.lazy_init)
+                        c = ObjectDef(id=name, factory=PythonObjectFactory(method, wrapper),
+                                scope=wrapper.scope, lazy_init=wrapper.lazy_init,
+                                abstract=wrapper.abstract, parent=wrapper.parent)
                         objects.append(c)
                 except KeyError, e:
                     pass
@@ -1048,68 +1297,81 @@ class PythonConfig(Config, ApplicationContextAware):
             _object_context[(self,)]["container"] = app_context
         except KeyError, e:
             _object_context[(self,)] = {"container": app_context}
-        
+
 
 _pythonConfigMethods = [name for (name, method) in inspect.getmembers(PythonConfig, inspect.ismethod)]
 
 _object_context = {}
 
-def Object(theScope = scope.SINGLETON, lazy_init = False):
+def _object_wrapper(f, scope, parent, log_func_name, *args, **kwargs):
     """
-    This function is a wrapper around the real decorator. It decides, based on scope
-    and lazy-init, which decorator to return.
+    This function checks if the object already exists in the container. If so,
+    it will retrieve its results. Otherwise, it calls the function.
+
+    For prototype objects, the function is basically a pass through,
+    because everytime a prototype function is called, there should be no
+    caching of results.
+
+    Using the @decorator library greatly simplifies the implementation of this.
+    """
+
+    def _deco(f, scope, parent, log_func_name, *args, **kwargs):
+        log = logging.getLogger("springpython.config.%s%s - %s%s" % (log_func_name,
+                                    f, str(args), scope))
+        if f.func_name != top_func:
+            log.debug("This is NOT the top-level object %s, deferring to container." % top_func)
+            container = _object_context[args]["container"]
+            log.debug("Container = %s" % container)
+
+            if parent:
+                parent_result = container.get_object(parent, ignore_abstract=True)
+                log.debug("This IS the top-level object, calling %s(%s)" \
+                           % (f.func_name, parent_result))
+                results = container.get_object(f.func_name)(parent_result)
+            else:
+                results = container.get_object(f.func_name)
+
+            log.debug("Found %s inside the container" % results)
+            return results
+        else:
+            if parent:
+                container = _object_context[(args[0],)]["container"]
+                parent_result = container.get_object(parent, ignore_abstract=True)
+                log.debug("This IS the top-level object, calling %s(%s)" \
+                           % (f.func_name, parent_result))
+                results = f(container, parent_result)
+            else:
+                log.debug("This IS the top-level object, calling %s()." % f.func_name)
+                results = f(*args, **kwargs)
+
+            log.debug("Found %s" % results)
+            return results
+
+    return _deco(f, scope, parent, log_func_name, *args, **kwargs)
+
+def Object(theScope=scope.SINGLETON, lazy_init=False, abstract=False, parent=None):
+    """
+    This function is a wrapper around the function which returns the real decorator.
+    It decides, based on scope and lazy-init, which decorator to return.
     """
     if type(theScope) == types.FunctionType:
         return Object()(theScope)
-    elif theScope == scope.SINGLETON:
-        def objectSingleton(f, *args, **kwargs):
-            """
-            This function checks if the object already exists in the container. If so, it will retrieve its results.
-            Otherwise, it calls the function.
 
-            Using the @decorator library greatly simplifies the implementation of this.
-            """
-            log = logging.getLogger("springpython.config.objectSingleton%s - %s%s" % (f, str(args), theScope))
-            if f.func_name != top_func:
-                log.debug("This is NOT the top-level object %s, deferring to container." % top_func)
-                container = _object_context[args]["container"]
-                log.debug("Container = %s" % container)
-                results = container.get_object(f.func_name)
-                log.debug("Found %s inside the container" % results)
-                return results
-            else:
-                log.debug("This IS the top-level object, calling %s()." % f.func_name)
-                results = f(*args, **kwargs)
-                log.debug("Found %s" % results)
-                return results
-        objectSingleton.lazy_init = lazy_init
-        return decorator(objectSingleton)
+    elif theScope == scope.SINGLETON:
+        log_func_name = "objectSingleton"
+
     elif theScope == scope.PROTOTYPE:
-        def objectPrototype(f, *args, **kwargs):
-            """
-            This is basically a pass through, because everytime a prototype function
-            is called, there should be no caching of results.
-            
-            Using the @decorator library greatly simplifies the implementation of this.
-            """
-            
-            log = logging.getLogger("springpython.config.objectPrototype%s - %s%s" % (f, str(args), theScope))
-            if f.func_name != top_func:
-                log.debug("This is NOT the top-level object %s, deferring to container." % top_func)
-                container = _object_context[args]["container"]
-                log.debug("Container = %s" % container)
-                results = container.get_object(f.func_name)
-                log.debug("Found %s inside the container" % results)
-                return results
-            else:
-                log.debug("This IS the top-level object, calling %s()." % f.func_name)
-                results = f(*args, **kwargs)
-                log.debug("Found %s" % results)
-                return results
-        objectPrototype.lazy_init = lazy_init
-        return decorator(objectPrototype)
+        log_func_name = "objectPrototype"
+
     else:
         raise InvalidObjectScope("Don't know how to handle scope %s" % theScope)
-        
-class InvalidObjectScope(Exception):
-    pass
+
+    def object_wrapper(f, *args, **kwargs):
+        return _object_wrapper(f, theScope, parent, log_func_name, *args, **kwargs)
+
+    object_wrapper.lazy_init = lazy_init
+    object_wrapper.abstract = abstract
+    object_wrapper.parent = parent
+    object_wrapper.scope = theScope
+
+    return decorator(object_wrapper)

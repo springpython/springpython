@@ -1,0 +1,30 @@
+objects: 
+    - object: my_str
+      str: MyString
+      
+    - object: foo_root_yaml3
+      class: springpythontest.support.testSupportClasses.Foo
+      abstract: True
+      scope: singleton
+      constructor-args:
+        - aaaaaa
+        - {ref: my_str}
+      properties:
+        d: dddddd
+        
+    - object: foo_root_yaml4
+      abstract: True
+      parent: foo_root_yaml3
+      constructor-args:
+        - aaaaaa_foo_root_yaml4
+        - bbbbbb
+        - {ref: my_str}
+      properties:
+        e: eeeeee_foo_root_yaml4
+        
+    - object: foo_child5
+      class: springpythontest.support.testSupportClasses.Foo
+      abstract: True
+      parent: foo_root_yaml4
+      properties:
+        e: eeeeee_foo_child5

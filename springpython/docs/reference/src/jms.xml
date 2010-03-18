@@ -45,10 +45,20 @@
 		<para>
         JMS messaging with Spring Python revolves around the idea of using
         a connection factory for obtaining a connection to a JMS provider and 
-        <classname>springpython.jms.core.JmsTemplate</classname> as a means for
+        <classname>
+            <link linkend="jms-jms-template">springpython.jms.core.JmsTemplate</link>
+        </classname> as a means for
         sending and receiving messages. A JmsTemplate instance is tied
         to a connection factory however a single connection factory may be safely
         reused across multiple JmsTemplates.
+        </para>
+        <para>
+        In addition to that,
+        <classname>
+            <link linkend="jms-simple-message-listener-container">springpython.jms.listener.SimpleMessageListenerContainer</link>
+        </classname>
+        allows for a purely configuration-driven way to set up background JMS
+        listeners to receive messages from JMS providers.
         </para>
 	</section>
     
@@ -56,11 +66,17 @@
 		<title>Dependencies</title>
         <para>
             Support for JMS messaging with WebSphere MQ is built on top of
-            the CPython-only <ulink url="http://pymqi.sf.net">PyMQI</ulink> library which provides
+            the CPython-only <ulink url="https://launchpad.net/pymqi">PyMQI</ulink> library which provides
             Python applications an access to WebSphere MQ queue managers. You need to separately install 
             PyMQI in order to use <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>.
             PyMQI, in turn, needs a <emphasis>WebSphere MQ client</emphasis>, a runtime library
             which may be freely downloaded from IBM's site.
+        </para>
+        <para>
+            <classname>SimpleMessageListenerContainer</classname>, a Spring Python component which
+            helps with running background JMS listeners, requires the installation
+            of <ulink url="http://code.google.com/p/circuits/">Circuits 1.2+</ulink>
+            and <ulink url="http://pypi.python.org/pypi/threadpool">threadpool 1.2.7 or newer.</ulink>
         </para>
     </section>
     
@@ -112,7 +128,7 @@ objects:
           queue_manager: QM.1
           channel: SVRCONN.1
           host: 192.168.1.121
-          listener_port: 1434
+          listener_port: "1434"
           
     - object: MyTemplate
       class: springpython.jms.core.JmsTemplate
@@ -197,7 +213,7 @@ objects:
           queue_manager: QM.1
           channel: SVRCONN.1
           host: 192.168.1.121
-          listener_port: 1434
+          listener_port: "1434"
           
     - object: MyTemplate
       class: springpython.jms.core.JmsTemplate
@@ -230,6 +246,54 @@ jms_template.receive(queue1)
 # care of shutting down the factory. No need for manually destroying it.
 ]]></programlisting>
 
+            <para>
+                Here's a sample YAML context utilizing the SimpleMessageListenerContainer
+                component and an accompanying Python code using it. As you can see,
+                a mere fact of providing the configuration allows for receiving
+                the messages.
+            </para>
+<programlisting><![CDATA[
+objects:
+    - object: connection_factory
+      class: springpython.jms.factory.WebSphereMQConnectionFactory
+      properties:
+          queue_manager: QM.1
+          channel: SVRCONN.1
+          host: 192.168.1.121
+          listener_port: "1434"
+          
+    - object: message_handler
+      class: app.MyMessageHandler
+          
+    - object: listener_container
+      class: springpython.jms.listener.SimpleMessageListenerContainer
+      properties:
+          factory: {ref: connection_factory}
+          handler: {ref: message_handler}
+          destination: TEST.1
+]]></programlisting>
+
+<programlisting><![CDATA[
+
+# app.py
+
+from springpython.config import YamlConfig
+from springpython.context import ApplicationContext
+
+class MyMessageHandler(object):
+    def handle(self, message):
+        print "Got message!", message
+
+if __name__ == "__main__":
+
+    # Obtaining a context will automatically start the SimpleMessageListenerContainer and its listeners in background.
+    container = ApplicationContext(YamlConfig("./context.yml"))
+
+    while True:
+        # Here goes the application's logic. Any JMS messages, as configured
+        # in ./context.yml, will be passed in to a singleton MyMessageHandler instance.
+        pass
+]]></programlisting>
         </section>
     </section>
     
@@ -444,7 +508,7 @@ objects:
           queue_manager: QM.1
           channel: SVRCONN.1
           host: 192.168.1.121
-          listener_port: 1434
+          listener_port: "1434"
 ]]></programlisting>
 
             <para>
@@ -483,7 +547,8 @@ objects:
         <title>springpython.jms.core.JmsTemplate</title>
         
         <para>
-            JmsTemplate is the class to use for sending and receiving JMS messages.
+            JmsTemplate is the class to use for sending JMS messages; along
+            with SimpleMessageListenerContainer it may also be used in order to receive them.
             A template must be associated with a connection factory and once
             configured, may be used for communicating in both directions. It's
             up to you to decide whether in your circumstances it makes sense
@@ -533,7 +598,7 @@ objects:
           queue_manager: QM.1
           channel: SVRCONN.1
           host: 192.168.1.121
-          listener_port: 1434
+          listener_port: "1434"
           
     - object: jms_template
       class: springpython.jms.core.JmsTemplate
@@ -876,6 +941,12 @@ print jms_template.receive(queue2, 2000)
 # We're not using an IoC so we need to shut down the connection factory ourselves.
 factory.destroy()
 ]]></programlisting>
+
+        <para>
+            Note that <link linkend="jms-simple-message-listener-container">SimpleMessageListenerContainer</link>
+            provides a complementary way for receiving the messages, particularly
+            well suited for long-running processes, such as servers.
+        </para>
             
         </section>
         
@@ -1088,6 +1159,170 @@ factory.destroy()
 ]]></programlisting>
             
         </section>
+    </section>
+    
+    <section id="jms-simple-message-listener-container">
+        <title>springpython.jms.listener.SimpleMessageListenerContainer and background JMS listeners</title>
+        
+        <para>
+            SimpleMessageListenerContainer is a configuration-driven component
+            which is used to receive messages from JMS destinations. Once configured,
+            the container starts as many background listeners as requested and
+            each listener gets assigned a pool of threads to handle the incoming
+            requests. The number of listeners started and threads in a pool is
+            fixed upon the configuration is read and the container is started,
+            they cannot be dynamically altered in runtime.
+        </para>
+        <para>
+            The advantage of using SimpleMessageListenerContainer comes from
+            the fact that all you need to do in order to receive the messages
+            is to create your own handler class and to configure the container,
+            no JMS coding is required so you're focusing on creating the business
+            logic, not on the JMS boilerplate.
+        </para>
+        
+        <para>
+            <table id="jms-simple-message-listener-container-properties">
+            
+            <title><classname>SimpleMessageListenerContainer</classname> properties</title>
+            
+				<tgroup cols="2">
+					<tbody>
+						<row>
+							<entry>factory</entry>
+							<entry>A reference to a JMS connection factory;
+                            defaults to None and must be set manually.
+                            </entry>
+                        </row>
+						<row>
+							<entry>destination</entry>
+							<entry>Name of a JMS destination to read the messages
+                            off. Defaults to None and must be set manually.
+                            </entry>
+                        </row>
+						<row>
+							<entry>handler</entry>
+							<entry>A reference to an object which will be receiving
+                            messages read from the JMS destination. A handler must
+                            implement <emphasis>handle(self, message)</emphasis>
+                            method, of which the <emphasis>message</emphasis> argument
+                            is a <link linkend="jms-text-message">TextMessage</link>
+                            instance. There is a convenience class,
+                            <classname>springpython.jms.listener.MessageHandler</classname>,
+                            which exposes such a method. The exact number of handlers
+                            available for message processing is controlled via
+                            the <emphasis>handlers_per_listener</emphasis>
+                            property. The <emphasis>handler</emphasis> parameter
+                            defaults to None and must be set manually.
+                            </entry>
+                        </row>
+						<row>
+							<entry>concurrent_listeners</entry>
+							<entry>Sets a number of background processes that
+                            connect to a JMS provider and read messages off
+                            the destination. Default value is 1.
+                            </entry>
+                        </row>
+						<row>
+							<entry>handlers_per_listener</entry>
+							<entry>Each concurrent listener is assigned a thread pool
+                            of a fixed size, given by the <emphasis>handlers_per_listener</emphasis>
+                            parameter. Upon receiving a message, it will be dispatched
+                            to a thread which will in turn invoke the message
+                            handler's <emphasis>handle</emphasis> method.
+                            The pool's size defaults to 2.
+                            </entry>
+                        </row>
+						<row>
+							<entry>wait_interval</entry>
+							<entry>A value in milliseconds expressing how often
+                            each of the listeners will check for the arrival
+                            of a new message. Defaults to 1000 (1 second).
+                            </entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </para>
+        
+        <para>
+            Here's an example showing SimpleMessageListenerContainer in action
+            together with YamlConfig's abstract objects definitions.
+            customer_queue, credit_account_queue and deposit_account_queue
+            subclass the listener_container object which holds the information
+            common to all definitions of JMS destinations. 4 listeners will
+            be assigned to each of the JMS destination, every listener will be
+            assigned a pool of 5 threads for handling the messages read;
+            a wait interval of 700 milliseconds has been set.
+        
+<programlisting><![CDATA[        
+objects:
+    - object: connection_factory
+      class: springpython.jms.factory.WebSphereMQConnectionFactory
+      properties:
+          queue_manager: QM.1
+          channel: SVRCONN.1
+          host: 192.168.1.121
+          listener_port: "1434"
+          
+    - object: message_handler
+      class: app.MyMessageHandler
+          
+    - object: listener_container
+      abstract: True
+      class: springpython.jms.listener.SimpleMessageListenerContainer
+      concurrent_listeners: "4"
+      handlers_per_listener: "5"
+      wait_interval: "700"
+      properties:
+          factory: {ref: connection_factory}
+          handler: {ref: message_handler}
+          
+    - object: customer_queue
+      parent: listener_container
+      properties:
+          destination: CUST.QUEUE.1
+          
+    - object: credit_account_queue
+      parent: listener_container
+      properties:
+          destination: CREDACCT.QUEUE.1
+          
+    - object: deposit_account_queue
+      parent: listener_container
+      properties:
+          destination: DEPACCT.QUEUE.1
+]]></programlisting>
+
+    Here's a Python code using the above IoC configuration. Note that the fact
+    of reading a configuration alone suffices for JMS listeners to be started and
+    run in the background of the main application.
+
+<programlisting><![CDATA[
+# app.py
+
+from springpython.config import YamlConfig
+from springpython.context import ApplicationContext
+
+class MyMessageHandler(object):
+    def handle(self, message):
+        print "Got message!", message
+
+if __name__ == "__main__":
+
+    # Obtaining a context will automatically start the SimpleMessageListenerContainer
+    # and its listeners in background.
+    container = ApplicationContext(YamlConfig("./context.yml"))
+
+    while True:
+        # Here goes the main application's logic, which does nothing in this case.
+        # However, the listeners have been already started and incoming messages
+        # will be passed in to MyMessageHandler instance (as configured in YamlConfig).
+        pass
+]]></programlisting>
+
+    </para>
+
     </section>
     
     <section id="jms-text-message">
@@ -1530,10 +1765,15 @@ Hello!
         </para>
         
         <para>
-            The only JMS logger currently employed by Spring Python is
-            <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
-            and here's how it can be configured to work at the 
-            <classname>INFO</classname> level:
+            JMS loggers currently employed by Spring Python are
+            <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>,
+            <classname>springpython.jms.listener.SimpleMessageListenerContainer</classname> and
+            <classname>springpython.jms.listener.WebSphereMQListener(<emphasis>LISTENER_INSTANCE_ID</emphasis>)</classname>.
+        </para>
+            
+        <para>
+            Here's how the WebSphere MQ connection factory's logger can be
+            configured to work at the  <classname>INFO</classname> level:
         </para>
         
 <programlisting><![CDATA[
@@ -1577,6 +1817,24 @@ jms_logger = logging.getLogger("springpython.jms.factory.WebSphereMQConnectionFa
 jms_logger.setLevel(level=TRACE1)
 jms_logger.addHandler(handler)
 ]]></programlisting>
+
+        <para>
+            <classname>springpython.jms.listener.SimpleMessageListenerContainer</classname>
+            is the logger used by the JMS listener container itself.
+        </para>
+        
+        <para>
+            Each WebSphere MQ listener is assigned a 
+            <classname>springpython.jms.listener.WebSphereMQListener(<emphasis>LISTENER_INSTANCE_ID</emphasis>)</classname>
+            logger, where <emphasis>LISTENER_INSTANCE_ID</emphasis> is an identifier
+            uniquely associated with a listener to form a full name of a logger,
+            such as
+            <classname>springpython.jms.listener.WebSphereMQListener(0xc7f5e0)</classname>.
+            To be precise, its value is obtained by invoking hex(id(self)) on the listener's
+            instance. Note that the value is not guaranteed to be globally unique,
+            it's just an identifier of the Python object so its value may be
+            very well reused across application's restarts.
+        </para>
 
         <para>
             How much information is being logged depends on the logging level, the 

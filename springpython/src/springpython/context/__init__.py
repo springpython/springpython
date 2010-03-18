@@ -42,7 +42,7 @@ class ApplicationContext(ObjectContainer):
         for object_def in self.object_defs.values():
             if not object_def.lazy_init and object_def.id not in self.objects:
                 self.logger.debug("Eagerly fetching %s" % object_def.id)
-                self.get_object(object_def.id)
+                self.get_object(object_def.id, ignore_abstract=True)
 
         post_processors = [object for object in self.objects.values() if isinstance(object, ObjectPostProcessor)]
 

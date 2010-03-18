@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects/1.1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects/1.1
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.1.xsd">
+    
+    <str id="my_str">MyString</str>
+            
+    <object id="foo_root3" class="springpythontest.support.testSupportClasses.Foo" scope="singleton" abstract="True">
+        <constructor-arg><value>first_pos_arg_in_foo_root3</value></constructor-arg>
+        <constructor-arg name="c"><value>cccccc_foo_root3</value></constructor-arg>
+        <property name="d"><value>dddddd</value></property>
+	</object>
+    
+    <object id="foo_root4" abstract="True" parent="foo_root3">
+        <constructor-arg ref="my_str"/>
+        <constructor-arg name="c"><value>cccccc_foo_root4</value></constructor-arg>
+        <constructor-arg name="f"><value>ffffff</value></constructor-arg>
+        <constructor-arg name="g" ref="my_str"/>
+    </object>
+    
+    <object id="foo_child5" parent="foo_root4">
+        <constructor-arg name="c"><value>cccccc_foo_child5</value></constructor-arg>
+        <property name="d"><value>dddddd_foo_child5</value></property>
+        <property name="g"><value>gggggg_foo_child5</value></property>
+    </object>
+    
+</objects>
