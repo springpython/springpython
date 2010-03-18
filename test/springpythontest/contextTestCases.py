@@ -21,6 +21,7 @@ from pmock import *
 
 import sys
 import atexit
+import random
 import unittest
 from decimal import Decimal
 from StringIO import StringIO
@@ -40,6 +41,7 @@ from springpython.remoting.pyro import PyroProxyFactory
 from springpython.security.userdetails import InMemoryUserDetailsService
 from springpythontest.support import testSupportClasses
 from springpython.context.scope import SINGLETON, PROTOTYPE
+from springpython.container import AbstractObjectException, InvalidObjectScope
 
 class PyContainerTestCase(unittest.TestCase):        
     def testCreatingAnApplicationContext(self):
@@ -1570,3 +1572,433 @@ class AppContextObjectsObjectsDefsTestCase(MockTestCase):
         
         obj = ctx.objects[ctx.objects.keys()[0]]
         self.assertTrue(obj is bar_instance)
+        
+class AbstractObjectsTestCase(MockTestCase):
+    """Test cases related to handling of abstract container managed objects.
+    """
+    
+    def _get_python_config(self):
+        
+        class Request(object):
+            def __init__(self, nounce=None, user=None, password=None):
+                self.nounce = nounce
+                self.user = user
+                self.password = password
+        
+            def __str__(self):
+                return "<id=%s %s %s %s>" % (hex(id(self)), self.nounce, self.user, self.password)
+                
+        class CRMService(object):
+            def __init__(self, ip=None, port=None, path=None):
+                self.ip = ip
+                self.port = port
+                
+            def invoke(self, request):
+                return "CRM OK %s" % request.nounce
+                
+            def __str__(self):
+                return "<id=%s %s %s>" % (hex(id(self)), self.ip, self.port)
+                
+        class IVRService(object):
+            def __init__(self, instance=None):
+                self.instance = instance
+                
+            def invoke(self, request):
+                return "IVR OK %s" % request.nounce
+                
+            def __str__(self):
+                return "<id=%s %s>" % (hex(id(self)), self.instance)
+        
+        class TestAbstractContext(PythonConfig):
+        
+            @Object(PROTOTYPE, lazy_init=True, abstract=True)
+            def request(self):
+                request = Request()
+                request.nounce = "".join([random.choice("1234567890") for x in range(16)])
+        
+                return request
+        
+            @Object(PROTOTYPE, parent="request")
+            def crm_request(self, request=None):
+                request.user = "foo"
+                request.password = "bar"
+        
+                return request
+        
+            @Object(PROTOTYPE, parent="request")
+            def ivr_request(self, request=None):
+                request.user = "baz"
+                request.password = "frobble"
+        
+                return request
+                
+            @Object(abstract=True)
+            def crm_service(self):
+                service = CRMService()
+                service.ip = "192.168.1.145"
+                service.port = 2627
+                
+                return service
+                
+            @Object(parent="crm_service")
+            def get_customer_id(self, service=None):
+                request = self.get_object("crm_request")
+                
+                return service.invoke(request)
+                
+            @Object(PROTOTYPE, parent="crm_service")
+            def get_customer_profile(self, service=None):
+                request = self.get_object("crm_request")
+                
+                return service.invoke(request)
+                
+            @Object(PROTOTYPE, abstract=True)
+            def ivr_service(self):
+                service = CRMService()
+                service.ip = "192.168.1.145"
+                service.port = 2627
+                
+                return service
+                
+            @Object(PROTOTYPE, parent="ivr_service")
+            def get_customer_location(self, service=None):
+                request = self.get_object("ivr_request")
+                
+                return service.invoke(request)
+                
+            @Object(parent="ivr_service")
+            def get_customer_complaints(self, service=None):
+                request = self.get_object("ivr_request")
+                
+                return service.invoke(request)
+                
+        return TestAbstractContext
+    
+    def testPythonConfigAbstractObjects(self):
+        ctx_class = self._get_python_config()
+        container = ApplicationContext(ctx_class())
+        
+        # Use a variety of scopes to ensure the proper handling of abstract
+        # objects doesn't depend on their scopes.
+        
+        # request => PROTOTYPE
+        # crm_request => PROTOTYPE
+        # ivr_request => PROTOTYPE
+        
+        # crm_service => SINGLETON
+        # get_customer_id => SINGLETON
+        # get_customer_profile => PROTOTYPE
+        
+        # ivr_service => PROTOTYPE
+        # get_customer_location => PROTOTYPE
+        # get_customer_complaints => SINGLETON
+        
+        # get_object's 'ignore_abstract' is False by default.
+        self.assertRaises(AbstractObjectException, container.get_object, "request")
+        self.assertRaises(AbstractObjectException, container.get_object, "crm_service")
+        self.assertRaises(AbstractObjectException, container.get_object, "ivr_service")
+        
+        # Won't raise AbstractObjectException because the 'ignore_abstract' flag is True.
+        request = container.get_object("request", True)
+        crm_service = container.get_object("crm_service", True)
+        ivr_service = container.get_object("ivr_service", True)
+        
+        self.assertEquals(16, len(request.nounce))
+        self.assertTrue(str.isdigit(request.nounce))
+        self.assertEquals(None, request.user)
+        self.assertEquals(None, request.password)
+        
+        crm_request = container.get_object("crm_request")
+        ivr_request = container.get_object("ivr_request")
+        
+        self.assertEquals(16, len(crm_request.nounce))
+        self.assertTrue(str.isdigit(crm_request.nounce))
+        self.assertEquals("foo", crm_request.user)
+        self.assertEquals("bar", crm_request.password)
+        
+        self.assertEquals(16, len(ivr_request.nounce))
+        self.assertTrue(str.isdigit(ivr_request.nounce))
+        self.assertEquals("baz", ivr_request.user)
+        self.assertEquals("frobble", ivr_request.password)
+        
+        self.assertNotEquals(crm_request.nounce, ivr_request.nounce)
+
+        # Abstract objects may be lazily-initialized or not, and that shouldn't
+        # get in the way of how they're handled, AbstractObjectException shouldn't
+        # be raised in either case.
+        
+        get_customer_id = container.get_object("get_customer_id")
+        get_customer_profile = container.get_object("get_customer_profile")
+        
+        get_customer_location = container.get_object("get_customer_location")
+        get_customer_complaints = container.get_object("get_customer_complaints")
+        
+    def testXMLAndYamlConfigAbstractObjects(self):
+        
+        #
+        # There are various combinations and corner cases that need be tested
+        # here, depending on whether an application context uses properties only,
+        # properties and constructor arguments or constructor args solely. What
+        # also needs be taken into account is if there are any abstract objects
+        # and if so, how many levels of inheritance are there.
+        #
+        # 1 - uses properties only
+        #
+        # 2 - uses properties and named constructor arguments
+        #
+        # 3 - uses properties, named and positional arguments
+        #
+        # 4 - used for testing of how positional arguments are being handled
+        #     (doesn't use properties nor named arguments)
+        #
+        # Note that some assertions are identical for both XML and Yaml config
+        # modes. From the user's standpoint, the only difference is that XMLConfig
+        # allows for defining both positional and named arguments whereas with
+        # Yaml config one needs to choose either positional or named constructor
+        # parameters.
+        #
+        
+        #
+        # Properties only
+        #
+        
+        xml_ctx1 = ApplicationContext(XMLConfig("support/contextXMLConfigAbstract1.xml"))
+        yaml_ctx1 = ApplicationContext(YamlConfig("support/contextYamlAbstract1.yaml"))
+        
+        for ctx in(xml_ctx1, yaml_ctx1):
+        
+            # There should be only two objects defined, the abstract one which
+            # is also lazily-initialized shouldn't have been added
+            # to the container.
+            self.assertEquals(2, len(ctx.objects))
+            
+            # All object definitions, no matter abstract or concrete ones,
+            # should have been added though.
+            self.assertEquals(4, len(ctx.object_defs))
+            self.assertEquals(["crm_service", "get_customer_id1", "get_customer_id2", "service"], 
+                                sorted(ctx.object_defs.keys()))
+            
+            get_customer_id1 = ctx.get_object("get_customer_id1")
+            self.assertEquals("192.168.1.153", get_customer_id1.ip)
+            self.assertEquals("3392", get_customer_id1.port)
+            self.assertEquals("/soap/invoke/get-customer-id1", get_customer_id1.path)
+            
+            get_customer_id2 = ctx.get_object("get_customer_id2")
+            self.assertEquals("192.168.1.153", get_customer_id2.ip)
+            self.assertEquals("3392", get_customer_id2.port)
+            self.assertEquals("/soap/invoke/get-customer-id2", get_customer_id2.path)
+            
+            get_customer_id1_def = ctx.object_defs["get_customer_id1"]
+            self.assertEquals(False, get_customer_id1_def.abstract)
+            self.assertEquals(SINGLETON, get_customer_id1_def.scope)
+            self.assertEquals("crm_service", get_customer_id1_def.parent)
+            
+            get_customer_id2_def = ctx.object_defs["get_customer_id2"]
+            self.assertEquals(False, get_customer_id2_def.abstract)
+            self.assertEquals(PROTOTYPE, get_customer_id2_def.scope)
+            self.assertEquals("crm_service", get_customer_id2_def.parent)
+            
+            # Abstract objects must not be added to the container.
+            self.assertRaises(KeyError, ctx.get_object, "foo_root1")
+            self.assertRaises(KeyError, ctx.get_object, "foo_root2")
+        
+        #
+        # Properties and named constructor arguments
+        #
+        
+        xml_ctx2 = ApplicationContext(XMLConfig("support/contextXMLConfigAbstract2.xml"))
+        yaml_ctx2 = ApplicationContext(YamlConfig("support/contextYamlAbstract2.yaml"))
+        
+        for ctx in(xml_ctx2, yaml_ctx2):
+        
+            foo_child1 = ctx.get_object("foo_child1")
+            self.assertEquals("aaa", foo_child1.a)
+            self.assertEquals("bbb", foo_child1.b)
+            self.assertEquals(None, foo_child1.c)
+            self.assertEquals(None, foo_child1.d)
+            self.assertEquals(None, foo_child1.e)
+            self.assertEquals(None, foo_child1.f)
+            self.assertEquals(None, foo_child1.g)
+            
+            foo_child2 = ctx.get_object("foo_child2")
+            self.assertEquals("aaa", foo_child2.a)
+            self.assertEquals("bbb", foo_child2.b)
+            self.assertEquals("ccc", foo_child2.c)
+            self.assertEquals(None, foo_child2.d)
+            self.assertEquals(None, foo_child2.e)
+            self.assertEquals(None, foo_child2.f)
+            self.assertEquals(None, foo_child2.g)
+            
+            foo_child3 = ctx.get_object("foo_child3")
+            self.assertEquals("aaa", foo_child3.a)
+            self.assertEquals("bbbb", foo_child3.b)
+            self.assertEquals("cccc", foo_child3.c)
+            self.assertEquals("dddd", foo_child3.d)
+            self.assertEquals("eeee", foo_child3.e)
+            self.assertEquals(None, foo_child3.f)
+            self.assertEquals(None, foo_child3.g)
+            
+            foo_child4 = ctx.get_object("foo_child4")
+            self.assertEquals("aaa", foo_child4.a)
+            self.assertEquals("bbbb", foo_child4.b)
+            self.assertEquals("cccc", foo_child4.c)
+            self.assertEquals("dddd", foo_child4.d)
+            self.assertEquals(None, foo_child4.e)
+            self.assertEquals("ffff", foo_child4.f)
+            self.assertEquals("MyString", foo_child4.g)
+         
+        # 
+        # Properties, named and positional arguments
+        #
+
+        xml_ctx3 = ApplicationContext(XMLConfig("support/contextXMLConfigAbstract3.xml"))
+        
+        foo_root3 = xml_ctx3.get_object("foo_root3", True)
+        self.assertEquals("first_pos_arg_in_foo_root3", foo_root3.a)
+        self.assertEquals(None, foo_root3.b)
+        self.assertEquals("cccccc_foo_root3", foo_root3.c)
+        self.assertEquals("dddddd", foo_root3.d)
+        self.assertEquals(None, foo_root3.e)
+        self.assertEquals(None, foo_root3.f)
+        self.assertEquals(None, foo_root3.g)
+        
+        foo_root4 = xml_ctx3.get_object("foo_root4", True)
+        self.assertEquals("MyString", foo_root4.a)
+        self.assertEquals(None, foo_root4.b)
+        self.assertEquals("cccccc_foo_root4", foo_root4.c)
+        self.assertEquals("dddddd", foo_root4.d)
+        self.assertEquals(None, foo_root4.e)
+        self.assertEquals("ffffff", foo_root4.f)
+        self.assertEquals("MyString", foo_root4.g)
+        
+        foo_child5 = xml_ctx3.get_object("foo_child5")
+        self.assertEquals("MyString", foo_child5.a)
+        self.assertEquals(None, foo_child5.b)
+        self.assertEquals("cccccc_foo_child5", foo_child5.c)
+        self.assertEquals("dddddd_foo_child5", foo_child5.d)
+        self.assertEquals(None, foo_child5.e)
+        self.assertEquals("ffffff", foo_child5.f)
+        self.assertEquals("gggggg_foo_child5", foo_child5.g)
+        
+        #
+        # Properties, named and positional arguments
+        #
+        
+        yaml_ctx3 = ApplicationContext(YamlConfig("support/contextYamlAbstract3.yaml"))
+        
+        foo_root_yaml3 = yaml_ctx3.get_object("foo_root_yaml3", True)
+        self.assertEquals("aaaaaa", foo_root_yaml3.a)
+        self.assertEquals("MyString", foo_root_yaml3.b)
+        self.assertEquals(None, foo_root_yaml3.c)
+        self.assertEquals("dddddd", foo_root_yaml3.d)
+        self.assertEquals(None, foo_root_yaml3.e)
+        self.assertEquals(None, foo_root_yaml3.f)
+        self.assertEquals(None, foo_root_yaml3.g)
+        
+        foo_root_yaml4 = yaml_ctx3.get_object("foo_root_yaml4", True)
+        self.assertEquals("aaaaaa_foo_root_yaml4", foo_root_yaml4.a)
+        self.assertEquals("bbbbbb", foo_root_yaml4.b)
+        self.assertEquals("MyString", foo_root_yaml4.c)
+        self.assertEquals("dddddd", foo_root_yaml4.d)
+        self.assertEquals("eeeeee_foo_root_yaml4", foo_root_yaml4.e)
+        self.assertEquals(None, foo_root_yaml4.f)
+        self.assertEquals(None, foo_root_yaml4.g)
+        
+        #
+        # Positional arguments only
+        #
+        
+        xml_ctx4 = ApplicationContext(XMLConfig("support/contextXMLConfigAbstract4.xml"))
+        yaml_ctx4 = ApplicationContext(YamlConfig("support/contextYamlAbstract4.yaml"))
+        
+        for ctx in(xml_ctx4, yaml_ctx4):
+            
+            foo_root_pos1 = ctx.get_object("foo_root_pos1", True)
+            self.assertEquals("a_foo_root_pos1", foo_root_pos1.a)
+            self.assertEquals("b_foo_root_pos1", foo_root_pos1.b)
+            self.assertEquals("MyString", foo_root_pos1.c)
+            self.assertEquals("d_foo_root_pos1", foo_root_pos1.d)
+            self.assertEquals("e_foo_root_pos1", foo_root_pos1.e)
+            self.assertEquals("f_foo_root_pos1", foo_root_pos1.f)
+            self.assertEquals("g_foo_root_pos1", foo_root_pos1.g)
+            
+            foo_parent_pos2 = ctx.get_object("foo_parent_pos2", True)
+            self.assertEquals("a_foo_parent_pos2", foo_parent_pos2.a)
+            self.assertEquals("b_foo_parent_pos2", foo_parent_pos2.b)
+            self.assertEquals("c_foo_parent_pos2", foo_parent_pos2.c)
+            self.assertEquals("d_foo_parent_pos2", foo_parent_pos2.d)
+            self.assertEquals("e_foo_parent_pos2", foo_parent_pos2.e)
+            self.assertEquals("f_foo_root_pos1", foo_parent_pos2.f)
+            self.assertEquals("g_foo_root_pos1", foo_parent_pos2.g)
+            
+            foo_parent_pos3 = ctx.get_object("foo_parent_pos3", True)
+            self.assertEquals("a_foo_parent_pos3", foo_parent_pos3.a)
+            self.assertEquals("MyString", foo_parent_pos3.b)
+            self.assertEquals("c_foo_parent_pos2", foo_parent_pos3.c)
+            self.assertEquals("d_foo_parent_pos2", foo_parent_pos3.d)
+            self.assertEquals("e_foo_parent_pos2", foo_parent_pos3.e)
+            self.assertEquals("f_foo_root_pos1", foo_parent_pos3.f)
+            self.assertEquals("g_foo_root_pos1", foo_parent_pos3.g)
+            
+            foo_parent_pos4 = ctx.get_object("foo_parent_pos4", True)
+            self.assertEquals("a_foo_parent_pos4", foo_parent_pos4.a)
+            self.assertEquals("b_foo_parent_pos4", foo_parent_pos4.b)
+            self.assertEquals("c_foo_parent_pos4", foo_parent_pos4.c)
+            self.assertEquals("d_foo_parent_pos2", foo_parent_pos4.d)
+            self.assertEquals("e_foo_parent_pos2", foo_parent_pos4.e)
+            self.assertEquals("f_foo_root_pos1", foo_parent_pos4.f)
+            self.assertEquals("g_foo_root_pos1", foo_parent_pos4.g)
+            
+            foo_child_pos5 = ctx.get_object("foo_child_pos5", True)
+            self.assertEquals("a_foo_child_pos5", foo_child_pos5.a)
+            self.assertEquals("b_foo_child_pos5", foo_child_pos5.b)
+            self.assertEquals("c_foo_parent_pos4", foo_child_pos5.c)
+            self.assertEquals("d_foo_parent_pos2", foo_child_pos5.d)
+            self.assertEquals("e_foo_parent_pos2", foo_child_pos5.e)
+            self.assertEquals("f_foo_root_pos1", foo_child_pos5.f)
+            self.assertEquals("g_foo_root_pos1", foo_child_pos5.g)
+        
+        
+class ScopesTestCase(MockTestCase):
+    """Test cases related to proper handling of scopes of objects.
+    """
+    
+    def test_scope(self):
+        
+        class TestContext(PythonConfig):
+            
+            @Object(PROTOTYPE)
+            def prototype(self):
+                pass
+            
+            @Object(SINGLETON)
+            def singleton(self):
+                pass
+            
+        invalid = """
+class InvalidScopeContainingContext(PythonConfig):
+    @Object("FOOBAR")
+    def invalid(self):
+        pass"""
+          
+        # If we pass this line then only correct scopes will have been used
+        # in TestContext.
+        container = ApplicationContext(TestContext())
+        
+        for object_def in container.object_defs:
+            if object_def == "singleton":
+                self.assertEquals(SINGLETON, container.object_defs[object_def].scope)
+            elif object_def == "prototype":
+                self.assertEquals(PROTOTYPE, container.object_defs[object_def].scope)
+            else:
+                self.fail("Unexpected object_def [%s]" % object_def)
+        
+        _globals, _locals = {}, {}
+        
+        _globals["PythonConfig"] = PythonConfig
+        _globals["Object"] = Object
+        
+        def should_raise_invalid_object_scope():
+            exec invalid in _globals, _locals
+            
+        self.assertRaises(InvalidObjectScope, should_raise_invalid_object_scope)

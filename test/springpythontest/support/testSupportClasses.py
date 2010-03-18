@@ -499,3 +499,25 @@ class SamplePostProcessor2(ObjectPostProcessor):
         setattr(obj, "processedBefore", obj_name)
         return obj
 
+class Service(object):
+    def __init__(self, ip=None, port=None, path=None):
+        self.ip = ip
+        self.port = port
+        self.path = path
+        
+    def __str__(self):
+        return "<id=%s %s %s %s>" % (hex(id(self)), self.ip, self.port, self.path)
+        
+class Foo(object):
+    def __init__(self, a=None, b=None, c=None, d=None, e=None, f=None, g=None):
+        self.a = a
+        self.b = b
+        self.c = c
+        self.d = d
+        self.e = e
+        self.f = f
+        self.g = g
+        
+    def __str__(self):
+        return "<id=%s %s %s %s %s %s %s %s>" % (hex(id(self)), self.a, self.b,
+            self.c, self.d, self.e, self.f, self.g)

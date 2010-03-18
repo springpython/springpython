@@ -103,7 +103,8 @@
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="lazy-init" default="default" type="defaultable-boolean">
+		<xsd:attribute name="lazy-init" default="default"
+			type="defaultable-boolean">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 	Indicates whether or not this object is to be lazily initialized.
@@ -139,6 +140,25 @@
 							]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
+		<xsd:attribute name="abstract" type="defaultable-boolean">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	Indicates that an object is an abstract one; if True, it will not be stored
+    in the container's singleton storage and its attributes will be merged
+    with attributes of any child that an object is a parent of. An object may
+    be both abstract and have a parent.
+							]]></xsd:documentation>
+			</xsd:annotation>
+        </xsd:attribute>
+		<xsd:attribute name="parent" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+	Indicates that an object has an abstract parent, attributes of which will
+    be merged with the object's attributes list. An object may be both abstract
+    and have a parent.
+							]]></xsd:documentation>
+			</xsd:annotation>
+        </xsd:attribute>
 	</xsd:attributeGroup>
 
 	<xsd:simpleType name="scopeType">
