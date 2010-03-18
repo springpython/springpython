@@ -1,0 +1,48 @@
+objects: 
+    - object: my_str
+      str: MyString
+      
+    - object: foo_root_pos1
+      class: springpythontest.support.testSupportClasses.Foo
+      abstract: True
+      scope: singleton
+      constructor-args:
+        - a_foo_root_pos1 
+        - b_foo_root_pos1
+        - {ref: my_str}
+        - d_foo_root_pos1
+        - e_foo_root_pos1
+        - f_foo_root_pos1
+        - g_foo_root_pos1
+        
+    - object: foo_parent_pos2
+      abstract: True
+      parent: foo_root_pos1
+      constructor-args:
+        - a_foo_parent_pos2 
+        - b_foo_parent_pos2
+        - c_foo_parent_pos2
+        - d_foo_parent_pos2
+        - e_foo_parent_pos2
+        
+    - object: foo_parent_pos3
+      abstract: True
+      parent: foo_parent_pos2
+      constructor-args:
+        - a_foo_parent_pos3 
+        - {ref: my_str}
+        
+    - object: foo_parent_pos4
+      abstract: True
+      parent: foo_parent_pos3
+      constructor-args:
+        - a_foo_parent_pos4
+        - b_foo_parent_pos4
+        - c_foo_parent_pos4
+        
+    - object: foo_child_pos5
+      abstract: True
+      parent: foo_parent_pos4
+      constructor-args:
+        - a_foo_child_pos5
+        - b_foo_child_pos5
