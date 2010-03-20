@@ -1543,7 +1543,7 @@ class WebSphereMQTestCase(MockTestCase):
         try:
             listener.run()
         except WebSphereMQJMSException, e:
-            sleep(0.1) # Allows the handler thread to process the message
+            sleep(0.5) # Allows the handler thread to process the message
             self.assertEquals(e.message, exception_reason)
             self.assertEquals(3, factory.call_count)
             self.assertEquals(1, len(handler.data))
