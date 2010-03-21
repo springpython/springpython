@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter id="jms">
 	<title>JMS Messaging</title>
-	
+
 	<para>Java Message Service has been a well known means for decoupling the Java application's
     parts or to provide an integration service for otherwise disconnected Java applications.
     Thanks to JMS being purely an API, Spring Python offers a way for connecting to JMS providers and to participate
@@ -9,17 +9,17 @@
     application are no different than messages produced and consumed by Java applications,
     in fact, <emphasis>you can use Spring Python and JMS with no Java applications participating
     in message exchanging at all</emphasis>.</para>
-	
+
     <para>Spring Python works as a JMS client, you still need a JMS provider,
         the server part, for message brokering.
         The only JMS provider currently supported by Spring Python is IBM's
         WebSphere MQ, formerly known as MQSeries.
     </para>
-    
+
     <para>Although Spring Python's JMS API is loosely based on Spring Java's, it's not a direct port
     and features a highly Pythonic look and feel.
     </para>
-    
+
 	<para><mediaobject>
 		<imageobject role="fo">
 			<imagedata align="center" fileref="images/jms-map.png"
@@ -30,7 +30,7 @@
 				format="PNG"/>
 		</imageobject>
 	</mediaobject></para>
-		
+
 	<section id="jms-intro">
 		<title>Introduction</title>
 		<sidebar id="jms-intro-syntax">
@@ -44,7 +44,7 @@
 		</sidebar>
 		<para>
         JMS messaging with Spring Python revolves around the idea of using
-        a connection factory for obtaining a connection to a JMS provider and 
+        a connection factory for obtaining a connection to a JMS provider and
         <classname>
             <link linkend="jms-jms-template">springpython.jms.core.JmsTemplate</link>
         </classname> as a means for
@@ -61,13 +61,13 @@
         listeners to receive messages from JMS providers.
         </para>
 	</section>
-    
+
 	<section id="jms-dependencies">
 		<title>Dependencies</title>
         <para>
             Support for JMS messaging with WebSphere MQ is built on top of
             the CPython-only <ulink url="https://launchpad.net/pymqi">PyMQI</ulink> library which provides
-            Python applications an access to WebSphere MQ queue managers. You need to separately install 
+            Python applications an access to WebSphere MQ queue managers. You need to separately install
             PyMQI in order to use <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>.
             PyMQI, in turn, needs a <emphasis>WebSphere MQ client</emphasis>, a runtime library
             which may be freely downloaded from IBM's site.
@@ -79,7 +79,7 @@
             and <ulink url="http://pypi.python.org/pypi/threadpool">threadpool 1.2.7 or newer.</ulink>
         </para>
     </section>
-    
+
 	<section id="jms-quick-start">
 		<title>Quick start</title>
         <para>
@@ -129,15 +129,15 @@ objects:
           channel: SVRCONN.1
           host: 192.168.1.121
           listener_port: "1434"
-          
+
     - object: MyTemplate
       class: springpython.jms.core.JmsTemplate
       properties:
           factory: {ref: MyConnectionFactory}
-          
+
     - object: MyQueue
       str: TEST.1
-          
+
 ]]></programlisting>
 
             <para>
@@ -169,7 +169,7 @@ jms_template.send("Hello world", queue1)
                 will be shutting down.
             </para>
         </section>
-        
+
         <section id="jms-quick-start-receiving">
             <title>Receiving</title>
             <para>The very same connection factory and JmsTemplate can be used for both sending and receiving.
@@ -214,12 +214,12 @@ objects:
           channel: SVRCONN.1
           host: 192.168.1.121
           listener_port: "1434"
-          
+
     - object: MyTemplate
       class: springpython.jms.core.JmsTemplate
       properties:
           factory: {ref: MyConnectionFactory}
-          
+
     - object: MyQueue
       str: TEST.1
 ]]></programlisting>
@@ -261,10 +261,10 @@ objects:
           channel: SVRCONN.1
           host: 192.168.1.121
           listener_port: "1434"
-          
+
     - object: message_handler
       class: app.MyMessageHandler
-          
+
     - object: listener_container
       class: springpython.jms.listener.SimpleMessageListenerContainer
       properties:
@@ -296,20 +296,20 @@ if __name__ == "__main__":
 ]]></programlisting>
         </section>
     </section>
-    
+
     <section id="jms-connection-factories">
 		<title>Connection factories</title>
         <section id="websphere-mq-connection-factory">
             <title>springpython.jms.factory.WebSphereMQConnectionFactory</title>
-            <para> 
-            
+            <para>
+
             <classname>WebSphereMQConnectionFactory</classname>
-            implements access to WebSphere MQ JMS provider. Along with 
+            implements access to WebSphere MQ JMS provider. Along with
             <classname>JmsTemplate</classname> it's the
             class you'll be most frequently using for sending and receiving
             of messages.
             </para>
-            
+
             <para>
             Each <classname>WebSphereMQConnectionFactory</classname>
             object will hold at most one connection to WebSphere MQ, which will
@@ -318,7 +318,7 @@ if __name__ == "__main__":
             will always be started in WebSphere MQ's client mode, there's no support
             for connecting in the bindings mode.
             </para>
-            
+
             <para>
             Like all Spring Python's classes <classname>WebSphereMQConnectionFactory</classname>
             can be configured using pure Python or you can use Spring Python's IoC to separate your
@@ -334,7 +334,7 @@ if __name__ == "__main__":
             must provide (like, the queue manager's host) all other options have
             sensible defaults which you'll rarely need to change, if at all.
             </para>
-            
+
             <para>
             Here's a full initializer method reproduced for convenience
             and the explanation of default values used:
@@ -350,9 +350,9 @@ if __name__ == "__main__":
 
 				<title><classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
                 customizable options</title>
-				
+
 				<tgroup cols="2">
-				
+
 					<tbody>
 						<row>
 							<entry>queue_manager</entry>
@@ -362,7 +362,7 @@ if __name__ == "__main__":
                                 <para>Name of the queue manager, e.g. EAI.QM.1</para>
                             </entry>
  						</row>
-                        
+
 						<row>
 							<entry>channel</entry>
 							<entry>
@@ -373,7 +373,7 @@ if __name__ == "__main__":
                                 e.g. EAI.SVRCONN.1</para>
                             </entry>
  						</row>
-                        
+
 						<row>
 							<entry>host</entry>
 							<entry>
@@ -383,7 +383,7 @@ if __name__ == "__main__":
                                 running, e.g. 192.168.1.103</para>
                             </entry>
  						</row>
-                        
+
 						<row>
 							<entry>listener_port</entry>
 							<entry>
@@ -393,14 +393,14 @@ if __name__ == "__main__":
                                 accepting TCP connections, e.g. 1434</para>
                             </entry>
  						</row>
-                        
+
 						<row>
 							<entry>cache_open_send_queues</entry>
 							<entry>
                                 <para>default: True</para>
                                 <para></para>
                                 <para>
-                                    By default, 
+                                    By default,
                                     <classname>WebSphereMQConnectionFactory</classname>
                                     will keep references to open queues in a cache
                                     for later re-use. This speeds-up most operations
@@ -414,7 +414,7 @@ if __name__ == "__main__":
                                 </para>
                             </entry>
  						</row>
-                        
+
 						<row>
 							<entry>cache_open_receive_queues</entry>
 							<entry>
@@ -429,7 +429,7 @@ if __name__ == "__main__":
                                 </para>
                             </entry>
  						</row>
-                        
+
 						<row>
 							<entry>use_shared_connections</entry>
 							<entry>
@@ -452,7 +452,7 @@ if __name__ == "__main__":
                                 </para>
                             </entry>
  						</row>
-                        
+
 						<row>
 							<entry>dynamic_queue_template</entry>
 							<entry>
@@ -470,10 +470,59 @@ if __name__ == "__main__":
                                 </para>
                             </entry>
  						</row>
+
+						<row>
+							<entry>ssl</entry>
+							<entry>
+                                <para>default: False</para>
+                                <para></para>
+                                <para>
+                                A boolean value which indicates whether connections
+								to the queue manager should use a client SSL/TLS
+								certificate. <emphasis>ssl_cipher_spec</emphasis>
+								and <emphasis>ssl_key_repository</emphasis>
+								must also be provided if <emphasis>ssl</emphasis>
+								is True.
+                                </para>
+                            </entry>
+ 						</row>
+
+						<row>
+							<entry>ssl_cipher_spec</entry>
+							<entry>
+                                <para>default: None</para>
+                                <para></para>
+                                <para>
+                                An SSL/TLS cipher spec to use for encrypted connections,
+								its value must be equal to that of
+								the MQ SVRCONN channel's SSLCIPH attribute.
+                                </para>
+                            </entry>
+						</row>
+
+						<row>
+							<entry>ssl_key_repository</entry>
+							<entry>
+                                <para>default: None</para>
+                                <para></para>
+                                <para>
+                                On-disk location of an SSL/TLS client certificates
+								repository. The repository must be of type CMS,
+								such a repository can be created using gsk6cmd/gsk7cmd
+								command line tools. Note that the value of this
+								attribute must not contain a suffix; for instance,
+								if there are following files in /var/mqm/security:
+								client-repo.crl, client-repo.kdb, client-repo.rdb
+								and client-repo.sth, then ssl_key_repository must be
+								set to "/var/mqm/security/client-repo".
+
+                                </para>
+                            </entry>
+ 						</row>
  					</tbody>
  				</tgroup>
  			</table>
-            
+
             <para>
                 Here's an example of programatically creating a
                 <classname>WebSphereMQConnectionFactory</classname>
@@ -519,18 +568,18 @@ objects:
                 code. A call to .destroy also closes the factory's connection
                 to a queue manager.
             </para>
-            
+
             <para>
                 <classname>WebSphereMQConnectionFactory</classname>
                 objects are thread-safe and may be shared between multiple threads
                 if the queue manager supports sharing a single connection
                 which is the case on all platforms except for z/OS.
             </para>
-            
+
             <note>
                 <title>For the curious one</title>
                 <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>
-                and 
+                and
                 <classname>springpython.jms.factory.MQRFH2JMS</classname>
                 wrap the WebSphere MQ's native MQRFH2 wire-level format in a set of Python classes
                 and hide any intricate details of communicating with queue managers.
@@ -538,14 +587,14 @@ objects:
                 is irrelevant, however it might be of interest to anyone willing
                 to improve or expand Spring Python's JMS support.
             </note>
-            
-            
+
+
         </section>
     </section>
-    
+
     <section id="jms-jms-template">
         <title>springpython.jms.core.JmsTemplate</title>
-        
+
         <para>
             JmsTemplate is the class to use for sending JMS messages; along
             with SimpleMessageListenerContainer it may also be used in order to receive them.
@@ -559,14 +608,14 @@ objects:
             instances are not guaranteed to be thread-safe</emphasis> and no
             attempt has been made to make them be so.
         </para>
-        
+
         <para>
             Remember that factories postpone connecting to a queue manager
             and creating a JmsTemplate instance doesn't necessarily mean
             there will be no connection errors when it will be first time used
             for sending or receiving.
         </para>
-        
+
             <para>
                 Here's how a <classname>JmsTemplate</classname>
                 may be instantiated using Python code:
@@ -599,7 +648,7 @@ objects:
           channel: SVRCONN.1
           host: 192.168.1.121
           listener_port: "1434"
-          
+
     - object: jms_template
       class: springpython.jms.core.JmsTemplate
       properties:
@@ -615,7 +664,7 @@ objects:
             </para>
 <programlisting><![CDATA[
     def __init__(self, factory=None, delivery_persistent=None,
-            priority=None, time_to_live=None, message_converter=None, 
+            priority=None, time_to_live=None, message_converter=None,
             default_destination=None):
 ]]></programlisting>
 
@@ -623,9 +672,9 @@ objects:
 
 				<title><classname>springpython.jms.core.JmsTemplate</classname>
                 customizable options</title>
-				
+
 				<tgroup cols="2">
-				
+
 					<tbody>
 						<row>
 							<entry>factory</entry>
@@ -720,10 +769,10 @@ objects:
  				</tgroup>
  			</table>
 
-        
+
         <section id="jms-template-sending">
             <title>Sending</title>
-            
+
             <para>
             The basic approach is to send ASCII strings or unicode objects,
             which must allow for encoding into UTF-8.
@@ -881,25 +930,25 @@ factory.destroy()
 ]]></programlisting>
 
         <para>
-        Take a look 
+        Take a look
         <link linkend="jms-text-message">here</link> for more information
         about how to use TextMessages.
         </para>
-            
+
         </section>
-        
+
         <section id="jms-jms-template-receiving">
             <title>Receiving</title>
-            
+
             <para>
             The same JmsTemplate instance may be used for both sending and receiving
             of messages. When you receive messages you may optionally provide
-            a timeout value in milliseconds after exceeding which a 
+            a timeout value in milliseconds after exceeding which a
             <classname>springpython.jms.NoMessageAvailableException</classname>
             will be raised if no message will have been available for a given
             JMS destination. Default timeout is 1000 milliseconds.
             </para>
-            
+
             <para>
             JmsTemplate may use a default JMS destination for each call to
             .receive or you can explicitly specify the destination's name
@@ -947,12 +996,12 @@ factory.destroy()
             provides a complementary way for receiving the messages, particularly
             well suited for long-running processes, such as servers.
         </para>
-            
+
         </section>
-        
+
         <section id="jms-jms-template-dynamic-queues">
             <title>Dynamic queues</title>
-            
+
             <para>
                 A dynamic queue is a usually short-lived object created on-demand
                 by JMS applications, most often found in request-reply scenarios
@@ -960,20 +1009,20 @@ factory.destroy()
                 An application initiating the communication will create a dynamic
                 temporary queue, send the request to the other side providing the name of
                 the dynamic queue as a destination for the responses to be sent to
-                and wait for a certain amount of time. 
+                and wait for a certain amount of time.
                 <emphasis>With Spring Python and WebSphere MQ,
                 the requesting side must then explicitly close the dynamic queue
                 </emphasis> regardless of whether the response will be received
                 or if the request timeouts.
             </para>
-            
+
             <para>
                 The following example shows two JmsTemplate objects communicating
                 via a dynamic queue and imitating an exchange of messages
                 between two dispersed applications. You can observe than
                 from the responding application's point of view a dynamic queue's
                 name is like any other queue's name, the application doesn't need to be - and indeed isn't -
-                aware that it's responding to a dynamic queue and not to a 
+                aware that it's responding to a dynamic queue and not to a
                 predefined one. For the requesting end a dynamic queue is also like
                 a regular queue in that its name must be provided to the JmsTemplate's
                 .receive method. Note that WebSphere MQ allows only non-persistent
@@ -1011,11 +1060,11 @@ dyn_queue_name = requesting_side.open_dynamic_queue()
 try:
     # Create a request message.
     message = TextMessage("Hey, what's up on the other side?")
-    
+
     # WebSphere MQ messages sent to dynamic temporary queues must not
     # be persistent.
     message.jms_delivery_mode = DELIVERY_MODE_NON_PERSISTENT
-    
+
     # Tell the other side where to send responses.
     message.jms_reply_to = dyn_queue_name
 
@@ -1024,20 +1073,20 @@ try:
 
     # Receive the request ..
     request = responding_side.receive()
-    
+
     # .. prepare the response ..
     response = TextMessage("A bit stormy today!")
     response.jms_delivery_mode = DELIVERY_MODE_NON_PERSISTENT
-    
+
     # .. and send our response to a jms_reply_to destination which as we know
     # is a dynamic queue in this example.
     responding_side.send(response, request.jms_reply_to)
-    
+
     # Receive the response. It's being read as usual, as from any other queue,
     # there's no special JmsTemplate's method for getting messages
     # off dynamic queues.
     print requesting_side.receive(dyn_queue_name)
-    
+
 finally:
     requesting_side.close_dynamic_queue(dyn_queue_name)
 
@@ -1052,10 +1101,10 @@ factory.destroy()
         </para>
 
         </section>
-        
+
         <section id="jms-jms-template-message-converters">
             <title>Message converters</title>
-            
+
             <para>
                 It's quite possible that you'll like to separate the code responsible for
                 core JMS communication with outside systems from the logic needed
@@ -1063,9 +1112,9 @@ factory.destroy()
                 to strings needed for passing into JmsTemplate's methods. You
                 may utilize your own converting classes for it or you can use
                 the Spring Python's converters for such a work. A converter
-                is a subclass of 
+                is a subclass of
                 <classname>springpython.jms.core.MessageConverter</classname>
-                which must implement at least one of the 
+                which must implement at least one of the
                 <emphasis>to_message</emphasis> or <emphasis>from_message</emphasis>
                 methods. There's nothing magical about MessageConverter objects
                 and they won't do any automatic convertions for you, they're just
@@ -1073,7 +1122,7 @@ factory.destroy()
                 of separation between the objects you deal with and the JMS
                 API.
             </para>
-            
+
             <para>
                 There's one difference you must take into account when using
                 message converters - you don't use the standard send and
@@ -1081,14 +1130,14 @@ factory.destroy()
                 and <emphasis>receive_and_convert</emphasis> ones. Other than
                 that, the JMS API and features are exactly the same.
             </para>
-            
+
             <para>
                 The code below shows a sample usage of MessageConverters. Note
                 that you don't need to implement both
                 <emphasis>to_message</emphasis> and <emphasis>from_message</emphasis>
                 if that's not appropriate in your situation however it makes
                 sense for the example below to handle requests and responses using
-                only one converter object. 
+                only one converter object.
             </para>
 <programlisting><![CDATA[
 from springpython.jms.factory import WebSphereMQConnectionFactory
@@ -1108,7 +1157,7 @@ class Invoice(object):
         self.customer_account_id = customer_account_id
         self.month = month
         self.amount = amount
-        
+
     def __str__(self):
         return "<%s at %s, customer_account_id=%s, month=%s, amount=%s>" % (
             self.__class__.__name__, hex(id(self)), self.customer_account_id,
@@ -1116,27 +1165,27 @@ class Invoice(object):
 
 # Let's imagine the other side of a JMS link wants to receive and send CSV data.
 class InvoiceConverter(MessageConverter):
-    
+
     def to_message(self, invoice):
         """ Converts a business object to CSV.
         """
         text = ";".join((invoice.customer_account_id, invoice.month, invoice.amount))
-        
+
         return TextMessage(text)
-        
+
     def from_message(self, message):
         """ Produces a business object out of CSV data.
         """
-        
+
         customer_account_id, month, amount = message.text.split(";")
-        
+
         invoice = Invoice()
         invoice.customer_account_id = customer_account_id
         invoice.month = month
         invoice.amount = amount
-        
+
         return invoice
-        
+
 # The connection factory we're going to use.
 factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
 
@@ -1157,13 +1206,13 @@ print jms_template.receive_and_convert(response_queue)
 # We're not using an IoC so we need to shut down the connection factory ourselves.
 factory.destroy()
 ]]></programlisting>
-            
+
         </section>
     </section>
-    
+
     <section id="jms-simple-message-listener-container">
         <title>springpython.jms.listener.SimpleMessageListenerContainer and background JMS listeners</title>
-        
+
         <para>
             SimpleMessageListenerContainer is a configuration-driven component
             which is used to receive messages from JMS destinations. Once configured,
@@ -1180,12 +1229,12 @@ factory.destroy()
             no JMS coding is required so you're focusing on creating the business
             logic, not on the JMS boilerplate.
         </para>
-        
+
         <para>
             <table id="jms-simple-message-listener-container-properties">
-            
+
             <title><classname>SimpleMessageListenerContainer</classname> properties</title>
-            
+
 				<tgroup cols="2">
 					<tbody>
 						<row>
@@ -1244,7 +1293,7 @@ factory.destroy()
                 </tgroup>
             </table>
         </para>
-        
+
         <para>
             Here's an example showing SimpleMessageListenerContainer in action
             together with YamlConfig's abstract objects definitions.
@@ -1254,8 +1303,8 @@ factory.destroy()
             be assigned to each of the JMS destination, every listener will be
             assigned a pool of 5 threads for handling the messages read;
             a wait interval of 700 milliseconds has been set.
-        
-<programlisting><![CDATA[        
+
+<programlisting><![CDATA[
 objects:
     - object: connection_factory
       class: springpython.jms.factory.WebSphereMQConnectionFactory
@@ -1264,10 +1313,10 @@ objects:
           channel: SVRCONN.1
           host: 192.168.1.121
           listener_port: "1434"
-          
+
     - object: message_handler
       class: app.MyMessageHandler
-          
+
     - object: listener_container
       abstract: True
       class: springpython.jms.listener.SimpleMessageListenerContainer
@@ -1277,17 +1326,17 @@ objects:
       properties:
           factory: {ref: connection_factory}
           handler: {ref: message_handler}
-          
+
     - object: customer_queue
       parent: listener_container
       properties:
           destination: CUST.QUEUE.1
-          
+
     - object: credit_account_queue
       parent: listener_container
       properties:
           destination: CREDACCT.QUEUE.1
-          
+
     - object: deposit_account_queue
       parent: listener_container
       properties:
@@ -1324,39 +1373,39 @@ if __name__ == "__main__":
     </para>
 
     </section>
-    
+
     <section id="jms-text-message">
         <title>springpython.jms.core.TextMessage</title>
-        
+
         <para>
             TextMessage objects encapsulate the data being sent to or received
-            from a JMS provider. Even if you use the plain 
+            from a JMS provider. Even if you use the plain
             <emphasis>jms_template.send("Foobar")</emphasis> to send an ordinary
             text, there's still a TextMessage instance created automatically
             underneath for you.
         </para>
-        
+
         <para>
             If all you need from JMS is simply to send and receive some text
             then you're not likely to be required to use TextMessages. However,
             if you have to set or read JMS attributes or you're interested in setting
             custom JMS properties then TextMessage is what you're looking for.
         </para>
-        
+
         <para>
             In Spring Python there are no clumsy setters and getters as in Java
             JMS. If you need to set the property of a message, you just write
             it, like for instance
             <emphasis>message.jms_correlation_id = "1234567"</emphasis>.
-            
+
             Here's the list of all TextMessage's attributes along with their
             explanation and usage notes.
-            
+
 			<table id="jms-jmstemplate-attributes">
-            
+
 				<title><classname>springpython.jms.core.TextMessage</classname>
                 default attributes</title>
-            
+
 				<tgroup cols="2">
 					<tbody>
 						<row>
@@ -1420,7 +1469,7 @@ message.jms_correlation_id = jms_correlation_id
 							<entry>jms_delivery_mode</entry>
 							<entry>Equivalent to Java's JMSDeliveryMode, can be
                             both read and written to and must be
-                            equal to one of the following values 
+                            equal to one of the following values
                             <classname>springpython.jms.DELIVERY_MODE_NON_PERSISTENT</classname>,
                             <classname>springpython.jms.DELIVERY_MODE_PERSISTENT</classname> or
                             <classname>springpython.jms.DEFAULT_DELIVERY_MODE</classname>.
@@ -1529,11 +1578,11 @@ message.jms_reply_to = "REPLY.TO.QUEUE.1"
                             <para>
                                 Consider the code below, in both cases the message's
                                 content is the same, the messages differ only
-                                by the value of the 
+                                by the value of the
                                 <classname>max_chars_printed</classname>
                                 attribute.
                             </para>
-<programlisting><![CDATA[                            
+<programlisting><![CDATA[
 # Spring Python
 from springpython.jms.core import TextMessage
 
@@ -1544,8 +1593,8 @@ msg.max_chars_printed = 50
 
 print msg
 
-# Will show in the console: 
-                            
+# Will show in the console:
+
 JMS message class: jms_text
   jms_delivery_mode:  2
   jms_expiration:     None
@@ -1571,8 +1620,8 @@ msg.max_chars_printed = 130
 
 print msg
 
-# Will show in the console: 
-                            
+# Will show in the console:
+
 JMS message class: jms_text
   jms_delivery_mode:  2
   jms_expiration:     None
@@ -1591,9 +1640,9 @@ Another 14 character(s) omitted
                     </tbody>
                 </tgroup>
             </table>
-            
+
         </para>
-        
+
         <para>
             Attributes shown in the table above are standard JMS headers, available
             regardless of the JMS provider used. For WebSphereMQ - which is currently
@@ -1618,7 +1667,7 @@ Another 14 character(s) omitted
                 JMSXAppID.
                 Refer to the IBM's Java JMS documentation for info on how to use them.
         </para>
-        
+
         <para>
             Creating custom JMS properties is simply a matter of assigning
             a value to an attribute, there are no special methods such as
@@ -1676,23 +1725,23 @@ Hello!
             your application's message attributes, nevertheless be sure to check
             the list before using custom JMS properties in your code.
         </para>
-        
+
     </section>
-    
+
     <section id="jms-exceptions">
         <title>Exceptions</title>
         <para>
-            <classname>springpython.jms.JMSException</classname> 
+            <classname>springpython.jms.JMSException</classname>
             is the base exception class for all JMS-related issues that may be
             raised by Spring Python's JMS
-            and a pair of 
+            and a pair of
             its specialized subclasses is also available:
             <classname>springpython.jms.NoMessageAvailableException</classname>
             and
             <classname>springpython.jms.WebSphereMQJMSException</classname>.
         </para>
         <para>
-            NoMessageAvailableException is raised when a call to 
+            NoMessageAvailableException is raised when a call to
             <emphasis>receive</emphasis> or <emphasis>receive_and_convert</emphasis>
             timeouts, which indicates that there's no message available for
             a given JMS destination.
@@ -1706,7 +1755,7 @@ Hello!
 				<itemizedlist>
 					<listitem>
 						<emphasis>message</emphasis> -
-                        a descriptive information of what has happened; 
+                        a descriptive information of what has happened;
                         taken either from an exception raised deeper in a call stack
                         or an explanation from Spring Python itself,
 					</listitem>
@@ -1717,7 +1766,7 @@ Hello!
                         as an MQCC in WebSphere MQ,
 					</listitem>
 					<listitem>
-						<emphasis>reason_code</emphasis> - 
+						<emphasis>reason_code</emphasis> -
                         an integer code, as returned by the queue manager,
                         giving a reason for the failure, known as MQRC in
                         WebSphere MQ lingo. The meaning may be looked up
@@ -1735,25 +1784,25 @@ Hello!
             </para>
         </para>
     </section>
-    
+
     <section id="jms-logging-and-troubleshooting">
         <title>Logging and troubleshooting</title>
-        
+
         <para>
-            Spring Python's JMS uses standard Python's 
+            Spring Python's JMS uses standard Python's
             <classname>logging</classname> module for emitting
             the messages. In general, you can expect JMS to behave sane, it won't
             overflow your logs with meaningless entries, e.g. if you configure it
             to log the messages at the <classname>ERROR</classname> level then
-            you'll be notified of only truly erratic situtations. 
+            you'll be notified of only truly erratic situtations.
         </para>
-        
+
         <para>
             In addition to <classname>logging</classname>'s builtin levels,
-            JMS uses one custom level - 
-            <classname>springpython.util.TRACE1</classname>, 
+            JMS uses one custom level -
+            <classname>springpython.util.TRACE1</classname>,
             <emphasis>enabling TRACE1 will degrade the performance considerably</emphasis>
-            and will result in a huge number of messages written to the logs. 
+            and will result in a huge number of messages written to the logs.
             Use it sparingly at troubleshooting times when you'd like to see
             the exact flow of messages, raw bytes and JMS headers passing by
             the Spring Python's JMS classes involved. Do not ever enable it in production
@@ -1763,19 +1812,19 @@ Hello!
             level instead of <classname>TRACE1</classname> if all you're after
             is simply seeing the messages' payload.
         </para>
-        
+
         <para>
             JMS loggers currently employed by Spring Python are
             <classname>springpython.jms.factory.WebSphereMQConnectionFactory</classname>,
             <classname>springpython.jms.listener.SimpleMessageListenerContainer</classname> and
             <classname>springpython.jms.listener.WebSphereMQListener(<emphasis>LISTENER_INSTANCE_ID</emphasis>)</classname>.
         </para>
-            
+
         <para>
             Here's how the WebSphere MQ connection factory's logger can be
             configured to work at the  <classname>INFO</classname> level:
         </para>
-        
+
 <programlisting><![CDATA[
 
 # stdlib
@@ -1797,7 +1846,7 @@ jms_logger.addHandler(handler)
             Here's how to configure it to log messages at the
             <classname>TRACE1</classname> level:
         </para>
-        
+
 <programlisting><![CDATA[
 
 # stdlib
@@ -1822,9 +1871,9 @@ jms_logger.addHandler(handler)
             <classname>springpython.jms.listener.SimpleMessageListenerContainer</classname>
             is the logger used by the JMS listener container itself.
         </para>
-        
+
         <para>
-            Each WebSphere MQ listener is assigned a 
+            Each WebSphere MQ listener is assigned a
             <classname>springpython.jms.listener.WebSphereMQListener(<emphasis>LISTENER_INSTANCE_ID</emphasis>)</classname>
             logger, where <emphasis>LISTENER_INSTANCE_ID</emphasis> is an identifier
             uniquely associated with a listener to form a full name of a logger,
@@ -1837,7 +1886,7 @@ jms_logger.addHandler(handler)
         </para>
 
         <para>
-            How much information is being logged depends on the logging level, the 
+            How much information is being logged depends on the logging level, the
             average message size, the messages'
             <classname>max_chars_printed</classname> attribute value and the
             message rate.
@@ -1852,32 +1901,32 @@ jms_logger.addHandler(handler)
         <para>
             <itemizedlist>
                 <listitem>
-                    <classname>ERROR</classname> - 0KB, no errors were 
+                    <classname>ERROR</classname> - 0KB, no errors were
                         encountered thus no entries were written to the log file,
                 </listitem>
-                    
+
                 <listitem>
                     <classname>INFO</classname> - 0.9KB, only very basic info was
                     logged, such as events of connecting to and disconnecting
                     from a JMS provider,
                 </listitem>
-                
+
                 <listitem>
-                    <classname>DEBUG</classname> - 7,3MB, up to the 
-                    <classname>max_chars_printed</classname> characters of 
+                    <classname>DEBUG</classname> - 7,3MB, up to the
+                    <classname>max_chars_printed</classname> characters of
                     each message were written to the file plus all of JMS headers
                     and some additional info as well,
                 </listitem>
-                
+
                 <listitem>
                     <classname>TRACE1</classname> - 79MB, full trace was taken
                     which resulted in the log file's growing
-                    <emphasis>tenfold</emphasis> as compared to the 
+                    <emphasis>tenfold</emphasis> as compared to the
                     <classname>DEBUG</classname> level.
                 </listitem>
             </itemizedlist>
         </para>
-        
+
     </section>
-	
+
 </chapter>
