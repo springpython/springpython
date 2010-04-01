@@ -46,9 +46,7 @@ setup(name='springpython',
                 'springpython.security',
                 'springpython.security.context',
                 'springpython.security.providers',
-                'springpython.security.userdetails',
-                'springpython.security.web',
-                'springpython.security.cherrypy3'
+                'springpython.security.userdetails'
                 ],
       package_data={'springpython': ["README", "COPYRIGHT", "LICENSE.txt"]},
       download_url="${download_url}",
