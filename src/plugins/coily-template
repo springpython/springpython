@@ -62,18 +62,89 @@ def list_installed_plugins():
             print "\t%s is not a valid plugin" % plugin
 
 def list_available_plugins():
-    print "S3 is no longer browsable. Available plugins are only available in your current working directory."
-  
+    modules = get_modules_from_s3()
+    print "S3 from SpringSource has..."
+    for key in modules:
+        for rev in modules[key]:
+            if __version__ in rev[1]:
+                print "\t%s\t%s" % (key, rev[1])
+
 def install_plugin(name):
     """Go through a series of options to look for Spring Python modules to download."""
     if not os.path.exists(plugin_path(name)):
         print "Installing plugin %s to %s" % (name, p["plugindir"])
+        if fetch_from_s3(name):
+            print "Found %s online. Installing." % name
+            return
         if fetch_locally(name):
             print "Found %s locally. Installing." % name
             return
         print "Couldn't find %s anywhere!" % name
     else:
         print "%s is already installed. We do NOT support automated upgrades." % name
+
+def get_modules_from_s3():
+    """Read the S3 site for information about existing modules."""
+    info = ""
+    for bucket in ["milestone", "release"]:
+        url = "http://s3browse.springsource.com/browse/dist.springframework.org/%s/EXTPY" % bucket
+        info += urllib.urlopen(url).read()
+    #print info
+    #return []
+    #choicesR = re.compile('<a href="/getObject/(.*?)">(.*?)</a>.*?<td align="right">(.*?)</td>.*?<td align="right">(.*?)</td>', re.DOTALL)
+    choicesR = re.compile(r'<td class="name-column"><a href="(.*?)">(.*?)</a>', re.DOTALL)
+    match = choicesR.findall(info)
+    converted = []
+    for item in match:
+        #print "Checking out %s" % str(item)
+        if "springpython-plugin" not in item[0]: continue
+        if item[0].endswith(".sha1"): continue 
+        #print "Parsing %s" % item[0]
+        converted.append(item)
+        #t = time.strptime(item[3], "%Y-%m-%d %H:%M")
+        #d = datetime(year=t.tm_year, month=t.tm_mon, day=t.tm_mday, hour=t.tm_hour, minute=t.tm_min)
+        #converted.append(("http://s3.amazonaws.com/" + item[0], item[1], item[2]+"K", item[3], d))
+    modules = {}
+    baseR = re.compile("springpython-plugin-([a-zA-Z-]*)[-.]([0-9a-zA-Z]+.*).tar.gz")
+    for item in converted:
+        try:
+            modules[baseR.match(item[1]).group(1)].append(item)
+        except KeyError:
+            modules[baseR.match(item[1]).group(1)] = [item]
+    return modules
+  
+def fetch_from_s3(name):
+    """Download a selected item"""
+    print "Can we find %s online? " % name
+    selected = None
+    try:
+        s3 = get_modules_from_s3()
+        print "Looking at %s" % s3
+        print "Ah ha! I can see %s" % str(s3[name])
+        for item in s3[name]:
+            print "Is %s the version we want?" % str(item[1])
+            if __version__ in item[1]:
+                selected = item
+    except KeyError, e:
+        print "KeyError! %s" % e
+        pass
+
+    if selected is None:
+        print "Couldn't find %s online!" % name
+        return None
+    else:
+        print "Fetching %s as %s" % (selected[0], selected[1])
+        urllib.urlretrieve(selected[0], selected[1])
+        t = tarfile.open(selected[1], "r:gz")
+        top = t.getmembers()[0]
+        if os.path.exists(name):
+            shutil.rmtree(name)
+        for member in t.getmembers():
+            t.extract(member)
+        fetch_locally(name)
+        shutil.rmtree(name)
+        os.remove(selected[1])
+        return True
 
 def fetch_locally(name):
     """Scan the local directory for Spring Python modules to install."""
