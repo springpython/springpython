@@ -86,4 +86,14 @@
 		</property>
 	</object>
 
+	<object id="sampleService6" class="springpython.aop.ProxyFactoryObject">
+		<property name="target">
+			<value>springpythontest.support.testSupportClasses.SampleService</value>
+		</property>
+		<property name="interceptors">
+				<!-- Note that it isn't wrapped in a list -->
+				<ref object="wrappingInterceptor"/>
+		</property>
+	</object>
+
 </objects>
