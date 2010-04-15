@@ -11,7 +11,7 @@
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
-   limitations under the License.       
+   limitations under the License.
 """
 import copy
 import logging
@@ -45,7 +45,7 @@ class MethodInvocation(object):
         self.args = args
         self.kwargs = kwargs
         self.intercept_stack = copy.copy(interceptors)
-        self.intercept_stack.append(FinalInterceptor()) 
+        self.intercept_stack.append(FinalInterceptor())
         self.logger = logging.getLogger("springpython.aop.MethodInvocation")
 
     def getInterceptor(self):
@@ -139,7 +139,7 @@ class RegexpMethodPointcutAdvisor(Pointcut, MethodMatcher, MethodInterceptor):
 
     def __setattr__(self, name, value):
         """If "advice", make sure it is a list. Anything else, pass through to simple assignment.
-        Also, if "patterns", initialize the regular expression parsers. 
+        Also, if "patterns", initialize the regular expression parsers.
         """
         if name == "advice" and type(value) != list:
             self.__dict__[name] = [value]
@@ -165,7 +165,7 @@ class AopProxy(object):
     """AopProxy acts like the target object by dispatching all method calls to the target through a MethodInvocation.
     The MethodInvocation object actually deals with potential "around" advice, referred to as interceptors. Attribute
     lookups are not intercepted, but instead fetched from the actual target object."""
-    
+
     def __init__(self, target, interceptors):
         if type(target).__name__ != "instance":
             raise Exception("Target attribute must be an instance.")
@@ -186,9 +186,9 @@ class AopProxy(object):
             attr = getattr(self.target, name)
             if not callable(attr):
                 return attr
-            
+
             def dispatch(*args, **kwargs):
-                """This method is returned to the caller emulating the function call being sent to the 
+                """This method is returned to the caller emulating the function call being sent to the
                 target object. This services as a proxying agent for the target object."""
                 invocation = MethodInvocation(self.target, name, args, kwargs, self.interceptors)
                 ##############################################################################
@@ -196,14 +196,14 @@ class AopProxy(object):
                 # getattr(invocation, name) doesn't work here, because __str__ will print
                 # the MethodInvocation's string, instead of trigger the interceptor stack.
                 ##############################################################################
-                return invocation.__getattr__(name)(*args, **kwargs)  
+                return invocation.__getattr__(name)(*args, **kwargs)
 
             return dispatch
-        
+
 class ProxyFactory(object):
     """This object helps to build AopProxy objects programmatically. It allows configuring advice and target objects.
     Then it will produce an AopProxy when needed. To use similar behavior in an IoC environment, see ProxyFactoryObject."""
-    
+
     def __init__(self, target = None, interceptors = None):
         self.logger = logging.getLogger("springpython.aop.ProxyFactory")
         self.target = target
@@ -218,12 +218,14 @@ class ProxyFactory(object):
         """Generate an AopProxy given the current target and list of interceptors. Any changes to the factory after
         proxy creation do NOT propagate to the proxies."""
         return AopProxy(self.target, self.interceptors)
-    
+
     def __setattr__(self, name, value):
         if name == "target" and type(value) == types.StringType:
-            self.__dict__[name] = utils.getClass(value)()
-        else:
-            self.__dict__[name] = value
+            value = utils.getClass(value)()
+        elif name == "interceptors" and not isinstance(value, list):
+            value = [value]
+
+        self.__dict__[name] = value
 
 class ProxyFactoryObject(ProxyFactory, AopProxy):
     """This class acts as both a ProxyFactory to build and an AopProxy. It makes itself look like the target object.
@@ -231,7 +233,7 @@ class ProxyFactoryObject(ProxyFactory, AopProxy):
     def __init__(self, target = None, interceptors = None):
         ProxyFactory.__init__(self, target, interceptors)
         self.logger = logging.getLogger("springpython.aop.ProxyFactoryObject")
-        
+
     def __str__(self):
         return self.__getattr__("__str__")()
 
