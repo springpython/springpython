@@ -11,7 +11,7 @@
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
-   limitations under the License.       
+   limitations under the License.
 """
 import logging
 import unittest
@@ -33,11 +33,11 @@ class AopInterfaceTestCase(unittest.TestCase):
         pointcut = Pointcut()
         self.assertRaises(NotImplementedError, pointcut.class_filter)
         self.assertRaises(NotImplementedError, pointcut.method_matcher)
-        
+
     def testMethodMatcherInterface(self):
         methodMatcher = MethodMatcher()
         self.assertRaises(NotImplementedError, methodMatcher.matches_method_and_target, None, None, None)
-        
+
     def testMethodInterceptorInterface(self):
         methodInterceptor = MethodInterceptor()
         self.assertRaises(NotImplementedError, methodInterceptor.invoke, None)
@@ -55,7 +55,7 @@ class AopProxyTestCase(unittest.TestCase):
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
-        
+
     def testCreatingAProxyFactoryAndAddingAnInterceptorIoC(self):
         factory = self.appContext.get_object("factory")
         service = factory.getProxy()
@@ -71,7 +71,7 @@ class AopProxyTestCase(unittest.TestCase):
         self.assertEquals("This is a sample service.", str(service.target))
         self.assertEquals("<Wrapped>This is a sample service.</Wrapped>", str(service))
         self.assertEquals("<Wrapped>This is a sample service.</Wrapped>", service.__str__())
-    
+
     def testCreatingAProxyFactoryObjectAndAddingAnInterceptorProgrammatically(self):
         service = ProxyFactoryObject()
         service.target = SampleService()
@@ -95,7 +95,7 @@ class AopProxyTestCase(unittest.TestCase):
         sampleService = self.appContext.get_object("sampleService2")
         self.assertEquals(sampleService.doSomething(), "BEFORE => <Wrapped>Alright!</Wrapped> <= AFTER")
         self.assertEquals(sampleService.method("testdata"), "You made it! => testdata")
-        
+
     def testApplyingASingleConditionalPointcutProgrammatically(self):
         wrappingAdvice = WrappingInterceptor()
         pointcutAdvisor = RegexpMethodPointcutAdvisor()
@@ -118,13 +118,32 @@ class AopProxyTestCase(unittest.TestCase):
         sampleService.target = targetService
         self.assertEquals(sampleService.doSomething(), "BEFORE => <Wrapped>Alright!</Wrapped> <= AFTER")
         self.assertEquals(sampleService.method("testdata"), "You made it! => testdata")
-        
+
     def testCreatingAProxyFactoryObjectWithAnInterceptorByClassNameInsteadOfInstanceIoC(self):
         service = self.appContext.get_object("sampleService5")
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
-        
+
+    def testProxyFactoryObjectInterceptorsNotWrappedInAList(self):
+        service = ProxyFactoryObject()
+        service.target = SampleService()
+
+        # Note that it isn't wrapped in a list.
+        service.interceptors = WrappingInterceptor()
+
+        self.assertEquals("This is a sample service.", service.target.__str__())
+        self.assertEquals("This is a sample service.", str(service.target))
+        self.assertEquals("<Wrapped>This is a sample service.</Wrapped>", str(service))
+        self.assertEquals("<Wrapped>This is a sample service.</Wrapped>", service.__str__())
+
+        # sampleService6 has an interceptor which isn't wrapped in a list
+        # inside its XMLConfig.
+        service = self.appContext.get_object("sampleService6")
+        self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
+        self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
+        self.assertEquals("sample", service.attribute)
+
 #class AopProxyFactoryCombinedWithPyroTestCase(unittest.TestCase):
 #    """Tests mixing AOP proxies and Pyro with the point cut on either the client or the server side."""
 #    def __init__(self, methodName='runTest'):
@@ -143,7 +162,7 @@ class AopProxyTestCase(unittest.TestCase):
 #
 #    # TODO: There is some issue with running this and the previous test at the same time. It is some type of unforseeable
 #    # dependency. Each test works fine when the other is commented out. Must resolve.
-#    
+#
 #    #def testWrappingPyroProxyOnServerSideIoC(self):
 #    #    remoteService = self.appContext.get_object("remoteService2")
 #    #    clientService = self.appContext.get_object("service2")
@@ -154,9 +173,9 @@ class AopProxyTestCase(unittest.TestCase):
 class AopProxiedArgumentsTest(unittest.TestCase):
     def testCallingProxiedMethodWithProxiedPositionalArguments(self):
         targetService = SampleService()
-        
+
         service = ProxyFactoryObject(target = targetService, interceptors = WrappingInterceptor())
-        
+
         self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it! => Alright!</Wrapped>",
@@ -167,7 +186,7 @@ class AopProxiedArgumentsTest(unittest.TestCase):
     def testCallingProxiedMethodWithProxiedNamedArguments(self):
         targetService = SampleService()
         service = ProxyFactoryObject(target = targetService, interceptors = WrappingInterceptor())
-        
+
         self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method(data="test"))
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it! => Alright!</Wrapped>",
@@ -179,17 +198,17 @@ class AopProxiedArgumentsTest(unittest.TestCase):
         pointcutAdvisor = RegexpMethodPointcutAdvisor(advice = WrappingInterceptor(),
                                                       patterns = ["SampleService.method"])
         service = ProxyFactoryObject(target = SampleService(), interceptors = pointcutAdvisor)
-        
+
         self.assertEquals("Alright!", service.doSomething())
         self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
         self.assertEquals("<Wrapped>You made it! => Alright!</Wrapped>",
                           service.method(service.doSomething()))
-        
+
     def testCallingRegExpProxiedMethodThatHasArgumentsWithProxiedNamedArguments(self):
         pointcutAdvisor = RegexpMethodPointcutAdvisor(advice = WrappingInterceptor(),
                                                       patterns = ["SampleService.method"])
         service = ProxyFactoryObject(target = SampleService(), interceptors = pointcutAdvisor)
-        
+
         self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method(data="test"))
         self.assertEquals("<Wrapped>You made it! => Alright!</Wrapped>",
                           service.method(data=service.doSomething()))
@@ -203,7 +222,7 @@ class AopProxiedArgumentsTest(unittest.TestCase):
         self.assertEquals("You made it! => test", service.method("test"))
         self.assertEquals("You made it! => <Wrapped>Alright!</Wrapped>",
                           service.method(service.doSomething()))
-        
+
     def testCallingRegExpProxiedMethodThatHasNoArgumentsWithProxiedNamedArguments(self):
         pointcutAdvisor = RegexpMethodPointcutAdvisor(advice = WrappingInterceptor(),
                                                       patterns = ["SampleService.doSomething"])
@@ -219,7 +238,7 @@ if __name__ == "__main__":
     logger.setLevel(loggingLevel)
     ch = logging.StreamHandler()
     ch.setLevel(loggingLevel)
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s") 
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
