@@ -52,7 +52,7 @@ setup(name='springpython',
       download_url="${download_url}",
       classifiers=["License :: OSI Approved :: Apache Software License",
                    "Intended Audience :: Developers",
-                   "Development Status :: 4 - Beta",
+                   "Development Status :: 5 - Production/Stable",
                    "Topic :: Software Development :: Libraries :: Python Modules",
                    "Programming Language :: Python",
                    "Operating System :: OS Independent"
