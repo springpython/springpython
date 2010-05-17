@@ -13,7 +13,7 @@
 				web server object.</para>
 			</listitem>
 			<listitem>
-				<para>A <ulink url="https://fisheye.springframework.org/browse/se-springpython-py/trunk/springpython/samples/petclinic/cherrypy/html/petclinic.html">
+				<para>A <ulink url="https://fisheye.springsource.org/browse/se-springpython-py/trunk/springpython/samples/petclinic/cherrypy/html/petclinic.html">
 				detailed design document</ulink> (NOTE: find latest version, and click on
 				<emphasis>raw</emphasis>) is part of the source code. You can read it from here
 				or by clicking on a hyperlink while running the application.</para>

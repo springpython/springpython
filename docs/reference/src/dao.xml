@@ -248,8 +248,8 @@ results = dt.query("select title, air_date, episode_number, writer from tv_shows
 		<section id="dao-databasetemplate-jdbctemplate">
 			<title>Have you used Spring Framework's JdbcTemplate?</title>
 			
-			<para>If you are a user of Java's <ulink url="http://www.springframework.org">Spring framework</ulink>
-			and have used the <ulink url="http://static.springframework.org/spring/docs/1.2.x/api/org/springframework/jdbc/core/JdbcTemplate.html">
+			<para>If you are a user of Java's <ulink url="http://www.springsource.org">Spring framework</ulink>
+			and have used the <ulink url="http://static.springsource.org/spring/docs/1.2.x/api/org/springframework/jdbc/core/JdbcTemplate.html">
 			JdbcTemplate</ulink>, then you will find this template has a familiar feel.</para>
 			
 			<table id="dao-databasetemplate-jdbctemplate-ops">
