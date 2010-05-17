@@ -151,9 +151,7 @@
 		
 		<section id="overview-support-irc">
 			<title>IRC</title>
-				<para>Sorry, I can't seem to get a long-term running IRC bot working
-				for me. You'll have to resort to email to reach me for questions or
-				issues. -- Greg</para>
+			<para>Join us on the #springpython IRC channel at <ulink url="http://freenode.net">Freenode</ulink>.</para>
 		</section>
   	</section>
   	
