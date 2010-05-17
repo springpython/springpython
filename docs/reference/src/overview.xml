@@ -139,7 +139,7 @@
                 </imageobject>
         </inlinemediaobject></para>
 
-			<para>You can order either a printed or electronic version of the <ulink url="https://www.packtpub.com/create-powerful-versatile-spring-python-1-1-applications/book">Spring Python 1.1 book</ulink> written by project creator Greg Turnquist. This contains a lot of code samples, diagrams, and descriptions of the concepts behind Spring Python.</para>
+			<para>You can order either a printed or electronic version of the <ulink url="https://www.packtpub.com/create-powerful-versatile-spring-python-1-1-applications/book">Spring Python 1.1 book</ulink> written by project creator Greg Turnquist. This contains a lot of code samples, diagrams, and descriptions of the concepts behind Spring Python. This book was completed right as Spring Python 1.1 was released, and 1.2.x was started, so it contains up-to-date information on the project.</para>
 
 
 		</section>
@@ -210,9 +210,8 @@ git clone git://git.springsource.org/spring-python/spring-python.git
 
 		<itemizedlist>
 			<listitem><para>Project Lead: Greg L. Turnquist</para></listitem>
-			<listitem><para>SpringSource Sponsor: Mark Pollack</para></listitem>
-			<listitem><para>Project Contributor: Russ Miles</para></listitem>
-            <listitem><para>Project Contributor: Dariusz Suchojad</para></listitem>
+            		<listitem><para>Project Contributor: Dariusz Suchojad</para></listitem>
+            		<listitem><para>Project Contributor: Sven Wilhelm</para></listitem>
 		</itemizedlist>
 		
 		<para>Many others have also contributed through reporting issues, raising questions, and even
@@ -228,11 +227,11 @@ git clone git://git.springsource.org/spring-python/spring-python.git
 			granting you any committer rights. You can checkout a copy of the code anonymously,
 			and then work on your patch. Email your patch to one of the official team members, and we
 			will inspect things. From there we will consider committing your patch, or send you feedback.</para>
+
+			<para>Before sending us a patch, we ask you to sign the <ulink url="https://support.springsource.com/spring_committer_signup">
+			SpringSource Individual Contributor Agreement</ulink>.</para>
 			
-			<para>If we decide to commit your changes, we may choose to create a new branch for your
-			feature, based on the scope of the work, or simply commit it to the trunk. After testing,
-			evaluation, and prioritization, we may eventually merge your patch to the trunk. After a few
-			patches, if	things are looking good, we will evaluate giving you committer rights.</para>
+			<para>After a few patches, if things are looking good, we may evaluate giving you committer rights.</para>
 			
 			<para>Spring Python is a <ulink url="http://en.wikipedia.org/wiki/Test-driven_development">
 			TDD-based</ulink> project, meaning if you are working on code, be sure to write an automated
