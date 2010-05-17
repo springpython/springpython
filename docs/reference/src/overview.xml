@@ -123,6 +123,26 @@
   	
    	<section id="overview-support">
   		<title>Support</title>
+
+		<section id="overview-support-book">
+			<title>Spring Python 1.1 book</title>
+
+
+        <para><inlinemediaobject>
+                <imageobject role="fo">
+                        <imagedata align="right" fileref="images/0660_small.jpg"
+                                format="JPG" scale="10%" width="10%"/>
+                </imageobject>
+                <imageobject role="html">
+                        <imagedata align="center" fileref="images/0660_small.jpg"
+                                format="10" scale="10%" width="25%"/>
+                </imageobject>
+        </inlinemediaobject></para>
+
+			<para>You can order either a printed or electronic version of the <ulink url="https://www.packtpub.com/create-powerful-versatile-spring-python-1-1-applications/book">Spring Python 1.1 book</ulink> written by project creator Greg Turnquist. This contains a lot of code samples, diagrams, and descriptions of the concepts behind Spring Python.</para>
+
+
+		</section>
   		
 		<section id="overview-support-forums">
 			<title>Forums and Email</title>
@@ -167,13 +187,11 @@
 git clone git://git.springsource.org/spring-python/spring-python.git
 ]]></programlisting>
 
-		This will download the whole repository, and put you on the master branch. From there, you can switch to various branches the team
-		is working on.
-		
 		</para>
 		
-		<para>That will create a new <emphasis>springpython</emphasis> folder. This includes both the source code and
-		the demo applications (PetClinic and SpringWiki).</para>
+		<para>That will create a new <emphasis>spring-python</emphasis> folder containing the entire repository. This includes both the source code and
+		the demo applications (PetClinic and SpringWiki). You will be on the master branch. From there, you can switch to various branches the
+		team is working on, or create your own branch to experiment and develop patches.</para>
 		
 		<para>You can browse the code at <ulink url="https://fisheye.springsource.org/browse/se-springpython-py"/>.</para>
   	</section>
