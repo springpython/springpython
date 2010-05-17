@@ -188,7 +188,7 @@ service = container.get_object("sampleService")
 		format any further. Any new schema developments will be happening with <classname>XMLConfig</classname>
 		and <classname>YamlConfig</classname>.</para>
 		
-		<para>In the spirit of <ulink url="http://www.springframework.org/javaconfig">Spring JavaConfig</ulink>
+		<para>In the spirit of <ulink url="http://www.springsource.org/javaconfig">Spring JavaConfig</ulink>
 		and <ulink url="http://blog.springsource.com/2006/11/28/a-java-configuration-option-for-spring/">a blog
 		posting</ulink> by Rod Johnson, another format has been defined. By extending
 		<classname>PythonConfig</classname> and using the <methodname>@Object</methodname> python
@@ -1719,7 +1719,7 @@ service = container.get_object("MovieLister")
 				their feature set.</para>
 				
 				<para>How much of Spring Java will be supported? That is an open question, best discussed on
-				<ulink url="http://forum.springframework.org/forumdisplay.php?f=45">Spring Python's community forum</ulink>.
+				<ulink url="http://forum.springsource.org/forumdisplay.php?f=45">Spring Python's community forum</ulink>.
 				Basically, this is meant to ease current Java developers into Spring Python and/or provide
 				a means to split up objects to support porting parts of your application into Python. There
 				isn't any current intention of providing full blown support.</para>
