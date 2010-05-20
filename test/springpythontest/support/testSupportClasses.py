@@ -149,6 +149,16 @@ class SampleService:
     def __str__(self):
         return "This is a sample service."
 
+class NewStyleSampleService(object):
+    def __init__(self):
+        self.attribute = "new_sample"
+    def method(self, data):
+        return "You made it to a new style class! => %s" % data
+    def doSomething(self):
+        return "Even better!"
+    def __str__(self):
+        return "This is a new style sample service."
+
 class RemoteService1(object):
     def getData(self, param):
         return "You got remote data => %s" % param
