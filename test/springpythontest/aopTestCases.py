@@ -25,7 +25,7 @@ from springpython.config import XMLConfig
 from springpython.context import ApplicationContext
 from springpython.remoting.pyro import PyroDaemonHolder
 from springpythontest.support.testSupportClasses import BeforeAndAfterInterceptor
-from springpythontest.support.testSupportClasses import SampleService
+from springpythontest.support.testSupportClasses import SampleService, NewStyleSampleService
 from springpythontest.support.testSupportClasses import WrappingInterceptor
 
 class AopInterfaceTestCase(unittest.TestCase):
@@ -55,6 +55,15 @@ class AopProxyTestCase(unittest.TestCase):
         self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
         self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
         self.assertEquals("sample", service.attribute)
+
+    def testCreatingAopProxyFactoryAndAddingInterceptorToNewStyleClassProgammatically(self):
+        factory = ProxyFactory()
+        factory.target = NewStyleSampleService()
+        factory.interceptors.append(WrappingInterceptor())
+        service = factory.getProxy()
+        self.assertEquals("<Wrapped>Even better!</Wrapped>", service.doSomething())
+        self.assertEquals("<Wrapped>You made it to a new style class! => test</Wrapped>", service.method("test"))
+        self.assertEquals("new_sample", service.attribute)
 
     def testCreatingAProxyFactoryAndAddingAnInterceptorIoC(self):
         factory = self.appContext.get_object("factory")

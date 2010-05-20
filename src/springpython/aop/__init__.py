@@ -167,8 +167,6 @@ class AopProxy(object):
     lookups are not intercepted, but instead fetched from the actual target object."""
 
     def __init__(self, target, interceptors):
-        if type(target).__name__ != "instance":
-            raise Exception("Target attribute must be an instance.")
         self.target = target
         if type(interceptors) == list:
             self.interceptors = interceptors
