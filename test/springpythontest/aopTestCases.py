@@ -61,9 +61,9 @@ class AopProxyTestCase(unittest.TestCase):
         factory.target = NewStyleSampleService()
         factory.interceptors.append(WrappingInterceptor())
         service = factory.getProxy()
-        self.assertEquals("<Wrapped>Alright!</Wrapped>", service.doSomething())
-        self.assertEquals("<Wrapped>You made it! => test</Wrapped>", service.method("test"))
-        self.assertEquals("sample", service.attribute)
+        self.assertEquals("<Wrapped>Even better!</Wrapped>", service.doSomething())
+        self.assertEquals("<Wrapped>You made it to a new style class! => test</Wrapped>", service.method("test"))
+        self.assertEquals("new_sample", service.attribute)
 
     def testCreatingAProxyFactoryAndAddingAnInterceptorIoC(self):
         factory = self.appContext.get_object("factory")
