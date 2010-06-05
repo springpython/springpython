@@ -210,7 +210,7 @@ as well. The following configuration shows usage of *dict*, *list*, *props*, *se
     For this reason, the code fragment shows a "dict" entry, which is
     one-to-one with Spring Java's "map" definition.
 
-    Java also has a Property class. Spring Python translates this into a Python
+    Java also has a *Property* class. Spring Python translates this into a Python
     dictionary, making it more like an alternative to the configuring mechanism
     of dict.
 
@@ -442,6 +442,7 @@ shorthand syntax which allows for a following XMLConfig file::
 
     </objects>
 
+_objects-xmlconfig-inheritance
 
 Object definition inheritance
 -----------------------------
