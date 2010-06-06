@@ -117,7 +117,7 @@ Forums and Email
 * You can also read the
   `old archives of the retired spring-developer mailing list <http://sourceforge.net/mailarchive/forum.php?forum=springpython-developer>`_.
 
-* If you want to join this project, see `how to become a team member <how-to-become-a-team-member>`_
+* If you want to join this project, see :ref:`how to become a team member <how-to-become-a-team-member>`
 
 IRC
 ---
