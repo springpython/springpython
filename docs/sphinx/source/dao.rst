@@ -9,6 +9,8 @@ and over. The DatabaseTemplate resolves that by handling the plumbing of these
 operations while leaving you in control of the part that matters the most,
 the SQL.
 
+.. _dao-external-dependencies:
+
 External dependencies
 +++++++++++++++++++++
 
