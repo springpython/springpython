@@ -214,6 +214,8 @@ as well. The following configuration shows usage of *dict*, *list*, *props*, *se
     dictionary, making it more like an alternative to the configuring mechanism
     of dict.
 
+.. _objects-xmlconfig-constructors:
+
 Constructors
 ------------
 
