@@ -10,7 +10,7 @@ others. Spring Python offers a key level of abstraction that can remove that
 burden and allow you to focus on the business logic.
 
 External dependencies
-=====================
+---------------------
 
 If you choose to use DatabaseTemplate along with Spring Python's support for
 transaction management you need to install :doc:`an appropriate SQL database driver <dao>`
@@ -18,7 +18,7 @@ module. Depending on the IoC configuration format you're going to use you may
 also need to install one of its :ref:`documented dependencies <dao-external-dependencies>`.
 
 Solutions requiring transactions
-================================
+--------------------------------
 
 For simple transactions, you can embed them programmatically.
 
@@ -85,7 +85,7 @@ the *DatabaseTemplate* to clean up my database code::
   order to handle transactions.
 
 TransactionTemplate
-===================
+-------------------
 
 We still have to deal with exceptions. What if another part of the code raised
 another exception that we didn't trap? It might escape our try-except block of
@@ -127,7 +127,7 @@ the work for us, and lets us focus on business logic, while encouraging us to
 continue to define meaningful business logic errors.
 
 @transactional
-==============
+--------------
 
 Another option is to use the @transactional decorator, and mark which methods
 should be wrapped in a transaction when called::
