@@ -391,6 +391,8 @@ and will in turn, generate a run-time error.
 
 It is also valuable to know that you can mix this up and use both.
 
+.. _objects-yamlconfig-object-definition-inheritance:
+
 Object definition inheritance
 -----------------------------
 
