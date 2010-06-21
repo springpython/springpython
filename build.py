@@ -84,6 +84,7 @@ def usage():
     print "\t--docs-html-multi\tgenerate HTML documentation, split up into separate sections"
     print "\t--docs-html-single\tgenerate HTML documentation in a single file"
     print "\t--docs-pdf\t\tgenerate PDF documentation"
+    print "\t--docs-sphinx\t\tgenerate Sphinx documentation"
     print "\t--docs-all\t\tgenerate all documents"
     print "\t--pydoc\t\t\tgenerate pydoc information"
     print
@@ -93,7 +94,7 @@ try:
                                   "hct",
                                   ["help", "clean", "test", "suite=", "debug-level=", "coverage", "package", "build-stamp=", \
                                    "publish", "register", \
-                                   "site", "docs-html-multi", "docs-html-single", "docs-pdf", "docs-all", "pydoc"])
+                                   "site", "docs-html-multi", "docs-html-single", "docs-pdf", "docs-sphinx", "docs-all", "pydoc"])
 except getopt.GetoptError:
     # print help information and exit:
     print "Invalid command found in %s" % sys.argv
@@ -328,7 +329,8 @@ def docs_all(version):
 
     docs_multi(version)
     docs_pdf(version)
-    
+    docs_sphinx()
+
 def docs_multi(version):
     root = p["targetDir"] + "/" + p["dist.ref.dir"] + "/html"
     print root
@@ -379,6 +381,13 @@ def docs_pdf(version):
     os.remove("docbook_fop.tmp")
     os.remove(ref+"/src/mangled.xml")
     os.chdir(cur)
+
+def docs_sphinx():
+    cur = os.getcwd()
+    os.chdir("docs/sphinx")
+    os.system("make html")
+    os.chdir(cur)
+    shutil.copytree("docs/sphinx/build/html", "target/docs/sphinx")
 
 def create_pydocs():
     sys.path.append(os.getcwd() + "/src")
@@ -539,6 +548,9 @@ for option in optlist:
 
     if option[0] in ("--docs-pdf"):
         docs_pdf(complete_version)
+
+    if option[0] in ("--docs-sphinx"):
+        docs_sphinx()
 
     if option[0] in ("--pydoc"):
         create_pydocs()
