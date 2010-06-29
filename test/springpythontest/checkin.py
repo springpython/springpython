@@ -12,3 +12,4 @@ from springpythontest.securityUserDetailsTestCases import *
 from springpythontest.securityVoteTestCases import *
 from springpythontest.securityWebTestCases import *
 from springpythontest.util_test_cases import *
+from springpythontest.unicodeTestCases import *
