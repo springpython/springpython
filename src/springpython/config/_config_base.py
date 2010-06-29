@@ -223,7 +223,7 @@ class SetDef(ValueDef):
                 self.logger.debug("Item !!!%s!!! was removed, and newly fetched value !!!%s!!! was added." % (item, newly_fetched_value))
                 #new_set.add(container.get_object(item.ref))
             else:
-                self.logger.debug("Item !!!%s!!! is NOT a ref, trying to replace with scanned value" % str(item))
+                self.logger.debug("Item !!!%s!!! is NOT a ref, trying to replace with scanned value" % get_string(item))
                 #self.value.remove(item)
                 #self.value.add(self.scan_value(container, item))
                 newly_scanned_value = self.scan_value(container, item)
@@ -260,7 +260,7 @@ class FrozenSetDef(ValueDef):
                 #debug end
                 #new_set.add(container.get_object(item.ref))
             else:
-                self.logger.debug("Item <<<%s>>> is NOT a ref, trying to replace with scanned value" % str(item))
+                self.logger.debug("Item <<<%s>>> is NOT a ref, trying to replace with scanned value" % get_string(item))
                 #new_set.remove(item)
                 #debug begin
                 newly_scanned_value = self.scan_value(container, item)

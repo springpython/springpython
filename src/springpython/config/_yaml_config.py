@@ -297,7 +297,7 @@ class YamlConfig(Config):
                     self.logger.debug("dict: Stored %s => %s" % (k, d[k]))
                 elif "tuple" in v:
                     self.logger.debug("dict: Converting a tuple...")
-                    d[k] = self._convert_tuple(v["tuple"], "%s.dict['%s']" % ( name, k))
+                    d[k] = self._convert_tuple(v["tuple"], id, "%s.dict['%s']" % (name, k))
                 else:
                     self.logger.debug("dict: Don't know how to handle type %s" % v)
             else:
