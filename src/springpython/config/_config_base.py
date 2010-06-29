@@ -25,6 +25,13 @@ from springpython.factory import PythonObjectFactory
 from springpython.factory import ReflectiveObjectFactory
 from springpython.container import InvalidObjectScope
 
+def get_string(value):
+    """This function is used to parse text that could either be ASCII or unicode."""
+    try:
+        return str(value)
+    except UnicodeEncodeError:
+        return unicode(value)
+        
 class ObjectDef(object):
     """
     ObjectDef is a format-neutral way of storing object definition information. It includes
@@ -171,7 +178,7 @@ class ListDef(ValueDef):
 
     def _replace_refs_with_actuals(self, obj, container):
         for i in range(0, len(self.value)):
-            self.logger.debug("Checking out %s, wondering if I need to do any replacement..." % str(self.value[i]))
+            self.logger.debug("Checking out %s, wondering if I need to do any replacement..." % get_string(self.value[i]))
             if hasattr(self.value[i], "ref"):
                 self.value[i] = container.get_object(self.value[i].ref)
             else:

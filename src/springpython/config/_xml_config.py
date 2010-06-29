@@ -480,7 +480,7 @@ class XMLConfig(Config):
         self.logger.debug("list: Parsing %s" % list_node)
         for element in list_node:
             if element.tag == ns+"value":
-                list.append(str(element.text))
+                list.append(get_string(element.text))
             elif element.tag == ns+"ref":
                 list.append(self._convert_ref(element, "%s.list[%s]" % (name, len(list))))
             elif element.tag == ns+"object":
@@ -502,7 +502,7 @@ class XMLConfig(Config):
             self.logger.debug("tuple: Looking at %s" % element)
             if element.tag == ns+"value":
                 self.logger.debug("tuple: Appending %s" % element.text)
-                list.append(str(element.text))
+                list.append(get_string(element.text))
             elif element.tag == ns+"ref":
                 list.append(self._convert_ref(element, "%s.tuple(%s}" % (name, len(list))))
             elif element.tag == ns+"object":
@@ -523,7 +523,7 @@ class XMLConfig(Config):
         for element in set_node:
             self.logger.debug("Looking at element %s" % element)
             if element.tag == ns+"value":
-                s.add(str(element.text))
+                s.add(get_string(element.text))
             elif element.tag == ns+"ref":
                 s.add(self._convert_ref(element, name + ".set"))
             elif element.tag == ns+"object":
@@ -566,14 +566,9 @@ class XMLConfig(Config):
                 return self._convert_ref(p.find(ns+"ref"), name)
         elif "value" in p.attrib or p.find(ns+"value") is not None:
             if "value" in p.attrib:
-                return ValueDef(name, str(p.get("value")))
+                return ValueDef(name, get_string(p.get("value")))
             else:
-                text = p.find(ns+"value").text
-                try:
-                    text = str(text)
-                except UnicodeEncodeError, e:
-                    text = unicode(text)
-                return ValueDef(name, text)
+                return ValueDef(name, get_string(p.find(ns+"value").text))
         elif "dict" in p.attrib or p.find(ns+"dict") is not None:
             if "dict" in p.attrib:
                 return self._convert_dict(p.get("dict"), comp.get("id"), name, ns)
