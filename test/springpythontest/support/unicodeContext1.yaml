@@ -1,0 +1,5 @@
+objects:
+    - object: string_holder_1
+      class: springpythontest.support.testSupportClasses.StringHolder
+      properties:
+          str: العربية
