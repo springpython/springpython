@@ -1,0 +1,9 @@
+objects:
+    - object: user_details_service
+      class: springpython.security.userdetails.InMemoryUserDetailsService
+      properties:
+          user_dict:
+              foo: 
+                  tuple:
+                      - العربية
+              
