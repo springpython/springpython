@@ -45,7 +45,7 @@ if __name__ == '__main__':
     
     conf = {'/': 	{"tools.staticdir.root": os.getcwd(),
                          "tools.sessions.on": True,
-                         "tools.filterChainProxy.on": True},
+                         "tools.securityFilterChain.on": True},
             "/images": 	{"tools.staticdir.on": True,
                          "tools.staticdir.dir": "images"}
             }
