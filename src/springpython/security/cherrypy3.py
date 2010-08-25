@@ -26,27 +26,22 @@ from springpython.security.web import FilterChainProxy, SessionStrategy,RegExpBa
 class CP3FilterChainProxy(FilterChainProxy):
     def __init__(self, filterInvocationDefinitionSource=None):
         FilterChainProxy.__init__(self, filterInvocationDefinitionSource)
-        self.logger = logging.getLogger("springpython.security.cherrypy3.CP3FilterChainProxy")
-        cherrypy.tools.filterChainProxy = cherrypy._cptools.HandlerTool(self)
+        self.logger = logging.getLogger("springpython.security.cherrypy3.Another")
+        cherrypy.tools.securityFilterChain = cherrypy._cptools.HandlerTool(self)
 
     def __call__(self, environ=None, start_response=None):
-        innerfunc = cherrypy.request.handler
-        def mini_app(*args, **kwargs):
-            def cherrypy_wrapper(nexthandler, *args, **kwargs):
-                results = nexthandler(*args, **kwargs)
-                self.logger.debug("Results = %s" % results)
-                return results
-            return cherrypy_wrapper(innerfunc, *args, **kwargs)
+        if cherrypy.request.handler is None:
+            return False
 
-        self.application = (self.invoke, (mini_app,))
+        def cherrypy_handler(*args, **kwargs):
+            return cherrypy.request.handler(*args, **kwargs)
 
-        # Store the final results...
+        def func(args):
+           return args[0]() 
+
+        self.application = (func, (cherrypy_handler,))
         cherrypy.response.body = FilterChainProxy.__call__(self, cherrypy.request.wsgi_environ, None)
-        #...and then signal there is no more handling for CherryPy to do.
         return True
-
-    def invoke(self, args):
-        return args[0]()
 
 class CP3SessionStrategy(SessionStrategy):
     def __init__(self):
