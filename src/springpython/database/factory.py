@@ -92,20 +92,21 @@ class PgdbConnectionFactory(ConnectionFactory):
         return types.LongType
 
 class Sqlite3ConnectionFactory(ConnectionFactory):
-    def __init__(self, db = None):
+    def __init__(self, db = None, check_same_thread=True):
         ConnectionFactory.__init__(self, [types.TupleType])
         self.db = db
+        self.check_same_thread = check_same_thread
         self.using_sqlite3 = True
 
     def connect(self):
         """The import statement is delayed so the library is loaded ONLY if this factory is really used."""
         try:
             import sqlite3
-            return sqlite3.connect(self.db)               
+            return sqlite3.connect(self.db, check_same_thread=self.check_same_thread)               
         except:
             import sqlite
             self.using_sqlite3 = False
-            return sqlite.connect(self.db)
+            return sqlite.connect(self.db, check_same_thread=self.check_same_thread)
 
     def in_transaction(self):
         return True
