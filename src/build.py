@@ -12,11 +12,15 @@
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
-   limitations under the License.       
+   limitations under the License.
 """
 import re
 import sys
-from distutils.core import setup
+
+try:
+    from distribute.core import setup
+except ImportError:
+    from setuptools import setup
 
 if sys.version_info < (2, 4):
     print "Spring Python only supports Python 2.4 and higher"
@@ -32,17 +36,17 @@ setup(name='springpython',
       platforms = ["Python >= 2.4"],
       license='Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
       scripts=['plugins/coily'],
-      packages=['springpython', 
+      packages=['springpython',
                 'springpython.aop',
-                'springpython.jms', 
+                'springpython.jms',
                 'springpython.config',
                 'springpython.container',
                 'springpython.context',
-                'springpython.database', 
-                'springpython.factory', 
-                'springpython.remoting', 
-                'springpython.remoting.hessian', 
-                'springpython.remoting.pyro', 
+                'springpython.database',
+                'springpython.factory',
+                'springpython.remoting',
+                'springpython.remoting.hessian',
+                'springpython.remoting.pyro',
                 'springpython.security',
                 'springpython.security.context',
                 'springpython.security.providers',
@@ -57,6 +61,6 @@ setup(name='springpython',
                    "Programming Language :: Python",
                    "Operating System :: OS Independent"
                    ]
-      
+
      )
 
