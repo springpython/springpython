@@ -62,6 +62,14 @@ class ConnectionFactoryTestCase(MockTestCase):
 
         del(sys.modules["sqlite3"])
 
+    def testConnectingToSqliteWithSpecialCheck(self):
+        sys.modules["sqlite3"] = self.mock()
+        sys.modules["sqlite3"].expects(once()).method("connect")
+
+        connection_factory = factory.Sqlite3ConnectionFactory(db="/tmp/foobar", check_same_thread=False)
+        connection = connection_factory.connect()
+
+        del(sys.modules["sqlite3"])
 
     def testConnectingToOracle(self):
         sys.modules["cx_Oracle"] = self.mock()
