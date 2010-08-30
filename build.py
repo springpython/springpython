@@ -209,7 +209,8 @@ def build(dir, version, s3bucket, filepath):
         shutil.move(old_location, new_location)
         
     os.rmdir(dist_dir)
-    os.remove(os.path.join(dir, "MANIFEST"))
+    if os.path.exists(os.path.join(dir, "MANIFEST")):
+        os.remove(os.path.join(dir, "MANIFEST"))
     
 def package(dir, version, s3bucket, src_filename, sample_filename):
     if not os.path.exists(dir):
