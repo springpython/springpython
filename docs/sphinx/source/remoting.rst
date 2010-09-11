@@ -451,3 +451,196 @@ it is deleted from the list and attempted again. A little more sophisticated
 error handling should be added in case there are no services available. And
 there needs to be a way to grow the services. But this gets us off to a good
 start.
+
+Secure XML-RPC
+--------------
+
+.. highlight:: python
+
+Spring Python extends Python’s built-in XML-RPC mechanims by adding the
+support for securing the communications path. You can choose whether to:
+
+* simply encrypt the link,
+* have server require a client certificate signed off by a given CA or a chain of CAs,
+* validate the client certificate’s fields, for instance you can configure the server
+  to only allow requests if a commonName is equal to an upon agreed value
+
+Encrypted connection only
++++++++++++++++++++++++++
+
+.. image:: gfx/sslxmlrpc-01.png
+   :align: center
+
+The most basic setup which requires the server to have a private key and
+a certificate and the client to have a list (possibly consisting of one
+element only) of Certificate Authorities it is allowed to trust. Client will
+connect to server only if the server’s certificate has been signed off by given
+CAs. This is the most common way of performing SSL akin to what browsers do when
+connecting to secure online sites that don’t require a client certificate such
+as the majority of online banking sites.
+
+In the code below the server exposes a Python’s built-in pow function over
+encrypted XML-RPC link and the client invokes it to get the result. Server
+uses its private key and a certificate which must have been signed off by
+one of CAs the client is aware of::
+
+  # -*- coding: utf-8 -*-
+
+  # Spring Python
+  from springpython.remoting.xmlrpc import SSLXMLRPCServer
+
+  class MySSLServer(SSLXMLRPCServer):
+      def __init__(self, *args, **kwargs):
+          super(MySSLServer, self).__init__(*args, **kwargs)
+
+      def register_functions(self):
+          self.register_function(pow)
+
+  host = "localhost"
+  port = 8000
+  key = "./server-key.pem"
+  cert = "./server-cert.pem"
+
+  server = MySSLServer(host, port, key, cert)
+  server.serve_forever()
+
+::
+
+  # -*- coding: utf-8 -*-
+
+  # Spring Python
+  from springpython.remoting.xmlrpc import SSLXMLRPCClient
+
+  server_location = "https://localhost:8000/RPC2"
+  ca_certs = "./cacert.pem"
+
+  client = SSLXMLRPCClient(server_location, ca_certs=ca_certs)
+
+  print client.pow(41, 3)
+
+Server requires the client to have a certificate
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+.. image:: gfx/sslxmlrpc-02.png
+   :align: center
+
+Same as above but this time the client must authenticate itself using its
+own certificate which must have been signed off by one of CAs known to the server.
+Server is still required to have a certificate whose signing CAs need to be
+known to the client::
+
+  # -*- coding: utf-8 -*-
+
+  # Spring Python
+  from springpython.remoting.xmlrpc import SSLXMLRPCServer
+
+  # PyOpenSSL
+  from OpenSSL import SSL
+
+  class MySSLServer(SSLXMLRPCServer):
+      def __init__(self, *args, **kwargs):
+          super(MySSLServer, self).__init__(*args, **kwargs)
+
+      def register_functions(self):
+          self.register_function(pow)
+
+  host = "localhost"
+  port = 8000
+  key = "./server-key.pem"
+  cert = "./server-cert.pem"
+  ca_certs = "./cacert.pem"
+
+  server = MySSLServer(host, port, key, cert, ca_certs, verify_options=SSL.VERIFY_PEER|SSL.VERIFY_FAIL_IF_NO_PEER_CERT)
+  server.serve_forever()
+
+::
+
+  # -*- coding: utf-8 -*-
+
+  # Spring Python
+  from springpython.remoting.xmlrpc import SSLXMLRPCClient
+
+  server_location = "https://localhost:8000/RPC2"
+  key = "./client-key.pem"
+  cert = "./client-cert.pem"
+  ca_certs = "./cacert.pem"
+
+  client = SSLXMLRPCClient(server_location, key_file=key, cert_file=cert, ca_certs=ca_certs)
+
+  print client.pow(41, 3)
+
+Server requires the client to have a certificate and checks its fields
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+.. image:: gfx/sslxmlrpc-03.png
+   :align: center
+
+Same as above (both sides need to have certificates signed off by trusted CAs)
+but this time the server inspects the client certificate’s fields and lets it
+in only they match the configuration it was fed with. In the example below
+*commonName* must be *Client*, *Organization* must be *The Sample Company* and the
+*State* must be *New York*. Server checks for both their existance and value and
+if there’s any mismatch the connection won’t be established in which case the
+error reason will be logged on the server side but no details of the error
+will be leaked to the client::
+
+  # -*- coding: utf-8 -*-
+
+  # Spring Python
+  from springpython.remoting.xmlrpc import SSLXMLRPCServer
+
+  # PyOpenSSL
+  from OpenSSL import SSL
+
+  class MySSLServer(SSLXMLRPCServer):
+      def __init__(self, *args, **kwargs):
+          super(MySSLServer, self).__init__(*args, **kwargs)
+
+      def register_functions(self):
+          self.register_function(pow)
+
+  host = "localhost"
+  port = 8000
+  key = "./server-key.pem"
+  cert = "./server-cert.pem"
+  ca = "./chain.pem"
+
+  verify_fields = {"CN": "Client", "O":"The Sample Company", "ST":"New York"}
+
+  server = MySSLServer(host, port, key, cert, ca, verify_options=SSL.VERIFY_PEER|SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
+                       verify_fields=verify_fields)
+  server.serve_forever()
+
+::
+
+  # -*- coding: utf-8 -*-
+
+  # Spring Python
+  from springpython.remoting.xmlrpc import SSLXMLRPCClient
+
+  server_location = "https://localhost:8000/RPC2"
+  key = "./client-key.pem"
+
+  # Make sure the commonName is set to what the server requires.
+  cert = "./client-cert.pem"
+
+  ca_certs = "./cacert.pem"
+
+  client = SSLXMLRPCClient(server_location, key_file=key, cert_file=cert, ca_certs=ca_certs)
+
+  print client.pow(41, 3)
+
+More options
+++++++++++++
+
+**ZzzzzZzz** All the config options go here..
+
+Note that you can use both the client and the server with other XML-RPC
+implementations, there’s nothing preventing you from exposing secure XML-RPC to
+Java or .NET clients or from connecting with the secure client to XML-RPC servers
+implemented in other languages and technologies.
+
+Logging
++++++++
+
+**ZzzzzZzz** Describe loggers used..
