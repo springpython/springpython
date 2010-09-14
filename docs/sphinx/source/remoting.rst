@@ -34,6 +34,9 @@ Spring Python currently supports and requires the installation of at least one o
 * `Hessian <http://hessian.caucho.com/>`_ - support for Hessian has just started. So far, you can call
   Python-to-Java based on libraries released from Caucho.
 
+* :ref:`Secure XML-RPC <remoting-secure-xml-rpc>` needs the installation of
+  `PyOpenSSL <http://pypi.python.org/pypi/pyOpenSSL>`_
+
 Remoting with PYRO (Python Remote Objects)
 ------------------------------------------
 
@@ -452,6 +455,8 @@ error handling should be added in case there are no services available. And
 there needs to be a way to grow the services. But this gets us off to a good
 start.
 
+.. _remoting-secure-xml-rpc:
+
 Secure XML-RPC
 --------------
 
@@ -464,6 +469,19 @@ support for securing the communications path. You can choose whether to:
 * have server require a client certificate signed off by a given CA or a chain of CAs,
 * validate the client certificate’s fields, for instance you can configure the server
   to only allow requests if a commonName is equal to an upon agreed value
+
+Note that you can use both the client and the server with other XML-RPC
+implementations, there’s nothing preventing you from exposing secure XML-RPC to
+Java or .NET clients or from connecting with the secure client to XML-RPC servers
+implemented in other languages and technologies.
+
+To aid with better understanding of how the components work out of the box,
+you can download :ref:`sample keys and certificates <remoting-secure-xml-rpc-sample-keys-and-certificates>`
+prepared by the Spring Python team.
+Be sure **not** to ever use it for anything serious outside your testing environment,
+they are working and functional but because of private keys being available for
+download they should **only** be used for learning of how Spring Python's
+secure XML-RPC works.
 
 Encrypted connection only
 +++++++++++++++++++++++++
@@ -501,7 +519,7 @@ one of CAs the client is aware of::
   key = "./server-key.pem"
   cert = "./server-cert.pem"
 
-  server = MySSLServer(host, port, key, cert)
+  server = MySSLServer(host, port, key, cert, verify_depth=2)
   server.serve_forever()
 
 ::
@@ -512,7 +530,7 @@ one of CAs the client is aware of::
   from springpython.remoting.xmlrpc import SSLXMLRPCClient
 
   server_location = "https://localhost:8000/RPC2"
-  ca_certs = "./cacert.pem"
+  ca_certs = "./ca-chain.pem"
 
   client = SSLXMLRPCClient(server_location, ca_certs=ca_certs)
 
@@ -548,9 +566,10 @@ known to the client::
   port = 8000
   key = "./server-key.pem"
   cert = "./server-cert.pem"
-  ca_certs = "./cacert.pem"
+  ca_certs = "./ca-chain.pem"
 
-  server = MySSLServer(host, port, key, cert, ca_certs, verify_options=SSL.VERIFY_PEER|SSL.VERIFY_FAIL_IF_NO_PEER_CERT)
+  server = MySSLServer(host, port, key, cert, ca_certs, verify_options=SSL.VERIFY_PEER|SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
+                        verify_depth=2)
   server.serve_forever()
 
 ::
@@ -563,7 +582,7 @@ known to the client::
   server_location = "https://localhost:8000/RPC2"
   key = "./client-key.pem"
   cert = "./client-cert.pem"
-  ca_certs = "./cacert.pem"
+  ca_certs = "./ca-chain.pem"
 
   client = SSLXMLRPCClient(server_location, key_file=key, cert_file=cert, ca_certs=ca_certs)
 
@@ -603,12 +622,12 @@ will be leaked to the client::
   port = 8000
   key = "./server-key.pem"
   cert = "./server-cert.pem"
-  ca = "./chain.pem"
+  ca = "./ca-chain.pem"
 
   verify_fields = {"CN": "Client", "O":"The Sample Company", "ST":"New York"}
 
   server = MySSLServer(host, port, key, cert, ca, verify_options=SSL.VERIFY_PEER|SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
-                       verify_fields=verify_fields)
+                       verify_fields=verify_fields, verify_depth=2)
   server.serve_forever()
 
 ::
@@ -624,21 +643,44 @@ will be leaked to the client::
   # Make sure the commonName is set to what the server requires.
   cert = "./client-cert.pem"
 
-  ca_certs = "./cacert.pem"
+  ca_certs = "./ca-chain.pem"
 
   client = SSLXMLRPCClient(server_location, key_file=key, cert_file=cert, ca_certs=ca_certs)
 
   print client.pow(41, 3)
 
-More options
-++++++++++++
+.. _remoting-secure-xml-rpc-sample-keys-and-certificates:
+
+Sample keys and certificates
+++++++++++++++++++++++++++++
+
+`The downloadable package <./_static/pki.zip>`_ contains the keys and certificates of CAs, client and
+the server shown in the examples. It's crucial to remember that these are only
+samples with known private keys and they should **only** be used for playing around
+with SSL XML-RPC's API.
+
+.. image:: gfx/pki.png
+   :align: center
+
+*client-key.pem* and *client-cert.pem* are the client's private key and its
+certificate while *server-key.pem* and *server-cert.pem* are their counterparts
+as used by the server. Both certificates have been signed off by the *SAMPLE Signing CA*
+whose certificate has been in turn signed off by the *SAMPLE Root CA*. SAMPLE Root
+CA's certificate is self-signed. Private keys of CAs are in files *ca-root-key.pem* and
+*ca-signing-key.pem*. Certificates of both CAs - *ca-root-cert.pem* & *ca-signing-cert.pem*
+have been concatenated into a *ca-chain.pem* file so that they form a chain of the
+Certificate Authorities both sides may trust. All certificates are valid until
+2020 so there's a lot of time for experimenting. Type **1234** if asked for any
+password, it's the same one for each private key.
+
+.. _remoting-secure-xml-rpc-configuration:
+
+Configuration
++++++++++++++
 
 **ZzzzzZzz** All the config options go here..
 
-Note that you can use both the client and the server with other XML-RPC
-implementations, there’s nothing preventing you from exposing secure XML-RPC to
-Java or .NET clients or from connecting with the secure client to XML-RPC servers
-implemented in other languages and technologies.
+.. _remoting-secure-xml-rpc-logging:
 
 Logging
 +++++++
