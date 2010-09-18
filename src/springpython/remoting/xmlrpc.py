@@ -5,17 +5,16 @@ import httplib
 import logging
 import socket
 import ssl
+import sys
+import traceback
 
 from SimpleXMLRPCServer import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
 from xmlrpclib import ServerProxy, Error, Transport
 
-# PyOpenSSL
-from OpenSSL import SSL
-
 # Spring Python
-from springpython.util import TRACE1
+from springpython.remoting.http import CAValidatingHTTPS
 
-__all__ = ["VerificationException", "SSLXMLRPCServer", "SSLXMLRPCClient"]
+__all__ = ["VerificationException", "SSLServer", "SSLClient"]
 
 class VerificationException(Exception):
     """ Raised when the verification of a certificate's fields fails.
@@ -25,37 +24,6 @@ class VerificationException(Exception):
 # Server
 # ##############################################################################
 
-# A slightly modified version of the public-domain code from
-# http://skvidal.fedorapeople.org/SecureXMLRPCServer.py
-class SSLSocketWrapper(object):
-    """ This whole class exists just to filter out a parameter
-    passed in to the shutdown() method in SimpleXMLRPC.doPOST()
-    """
-    def __init__(self, conn):
-        """ Connection is not yet a new-style class, so I'm making a proxy
-        instead of subclassing."""
-        self.__dict__["conn"] = conn
-
-    def __getattr__(self,name):
-        return getattr(self.__dict__["conn"], name)
-
-    def __setattr__(self,name, value):
-        setattr(self.__dict__["conn"], name, value)
-
-    def shutdown(self, how=1):
-        """ SimpleXMLRpcServer.doPOST calls shutdown(1), and Connection.shutdown()
-        doesn't take an argument. So we just discard the argument.
-        """
-        self.__dict__["conn"].shutdown()
-
-    def accept(self):
-        """ This is the other part of the shutdown() workaround. Since servers
-        create new sockets, we have to infect them with our magic.
-        """
-        c, a = self.__dict__["conn"].accept()
-        return (SSLSocketWrapper(c), a)
-
-
 class RequestHandler(SimpleXMLRPCRequestHandler):
     rpc_paths = ("/", "/RPC2",)
 
@@ -64,75 +32,115 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
         self.rfile = socket._fileobject(self.request, "rb", self.rbufsize)
         self.wfile = socket._fileobject(self.request, "wb", self.wbufsize)
 
-class SSLXMLRPCServer(object, SimpleXMLRPCServer):
-    def __init__(self, host=None, port=None, key_file=None, cert_file=None,
-                 ca_certs=None, cipher_list="DEFAULT", ssl_method=SSL.TLSv1_METHOD,
-                 ctx_options=SSL.OP_NO_SSLv2,
-                 verify_options=SSL.VERIFY_NONE,
-                 ssl_verify_depth=1, verify_fields=None):
+class SSLServer(object, SimpleXMLRPCServer):
+    def __init__(self, host=None, port=None, ca_certs=None, keyfile=None, certfile=None,
+                 cert_reqs=ssl.CERT_OPTIONAL, ssl_version=ssl.PROTOCOL_TLSv1,
+                 do_handshake_on_connect=True, suppress_ragged_eofs=True, ciphers=None, **kwargs):
 
         SimpleXMLRPCServer.__init__(self, (host, port), requestHandler=RequestHandler)
         self.logger = logging.getLogger(self.__class__.__name__)
+
+        self.ca_certs = ca_certs
+        self.keyfile = keyfile
+        self.certfile = certfile
+        self.cert_reqs = cert_reqs
+        self.ssl_version = ssl_version
+        self.do_handshake_on_connect = do_handshake_on_connect
+        self.suppress_ragged_eofs = suppress_ragged_eofs
+        self.ciphers = ciphers
+
+        # 'verify_fields' is taken from kwargs to allow for adding more keywords
+        # in future versions.
+        self.verify_fields = kwargs.get("verify_fields")
+
         self.register_functions()
 
-        ctx = SSL.Context(ssl_method)
-        ctx.set_options(ctx_options)
+    def get_request(self):
+        """ Overridden from Socket.TCPServer.get_request, wraps the socket in
+        an SSL context.
+        """
+        sock, from_addr = self.socket.accept()
 
-        ctx.use_privatekey_file(key_file)
+        # 'ciphers' argument is new in 2.7 and we must support 2.6 so add it
+        # to kwargs conditionally, depending on the Python version.
 
-        if cert_file:
-            ctx.use_certificate_file(cert_file)
+        kwargs = {"keyfile":self.keyfile, "certfile":self.certfile,
+                    "server_side":True, "cert_reqs":self.cert_reqs, "ssl_version":self.ssl_version,
+                    "ca_certs":self.ca_certs, "do_handshake_on_connect":self.do_handshake_on_connect,
+                    "suppress_ragged_eofs":self.suppress_ragged_eofs}
 
-        if ca_certs:
-            ctx.load_verify_locations(ca_certs)
+        if sys.version_info >= (2, 7):
+            kwargs["ciphers"] = self.ciphers
 
-        ctx.set_cipher_list(cipher_list)
+        sock  = ssl.wrap_socket(sock, **kwargs)
+        return sock, from_addr
 
-        ctx.set_verify_depth(ssl_verify_depth)
-        ctx.set_verify(verify_options, self.on_verify_peer)
-        self.verify_fields = verify_fields
+    def verify_request(self, sock, from_addr):
+        """ Overridden from Socket.TCPServer.verify_request, adds validation of the
+        other side's certificate fields.
+        """
+        try:
+            if self.verify_fields:
 
-        self.socket = SSLSocketWrapper(SSL.Connection(ctx,
-                        socket.socket(self.address_family, self.socket_type)))
+                cert = sock.getpeercert()
+                if not cert:
+                    msg = "Couldn't verify fields, peer didn't send the certificate, from_addr='%s'" % (from_addr,)
+                    raise VerificationException(msg)
 
-        self.server_bind()
-        self.server_activate()
+                allow_peer, reason = self.verify_peer(cert)
+                if not allow_peer:
+                    self.logger.error(reason)
+                    sock.close()
+                    return False
 
-    def on_verify_peer(self, conn, x509, error_number, error_depth, return_code):
+        except Exception, e:
+
+            # It was either an error on our side or the client didn't send the
+            # certificate even though self.cert_reqs was CERT_OPTIONAL (it couldn't
+            # have been CERT_REQUIRED because we wouldn't have got so far, the
+            # session would've been terminated much earlier in ssl.wrap_socket call).
+            # Regardless of the reason we cannot accept the client in that case.
+
+            msg = "Verification error='%s', cert='%s', from_addr='%s'" % (
+                traceback.format_exc(e), sock.getpeercert(), from_addr)
+            self.logger.error(msg)
+
+            sock.close()
+            return False
+
+        return True
+
+    def verify_peer(self, cert):
         """ Verifies the other side's certificate. May be overridden in subclasses
         if the verification process needs to be customized.
         """
 
-        if self.logger.isEnabledFor(TRACE1):
-            self.logger.log(TRACE1, "on_verify_peer '%s', '%s', '%s', '%s'" % (
-                error_number, error_depth, return_code))
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("verify_peer cert='%s'" % (cert))
 
-        # error_depth = 0 means we're dealing with the client's certificate
-        # and not that of a CA.
-        if self.verify_fields and error_depth == 0:
+        subject = cert.get("subject")
+        if not subject:
+            msg = "Peer certificate doesn't have the 'subject' field, cert='%s'" % cert
+            raise VerificationException(msg)
 
-            components = x509.get_subject().get_components()
-            components = dict(components)
+        subject = dict(elem[0] for elem in subject)
 
-            if self.logger.isEnabledFor(TRACE1):
-                self.logger.log(TRACE1, "components received '%s'" % components)
+        for verify_field in self.verify_fields:
 
-            for verify_field in self.verify_fields:
+            expected_value = self.verify_fields[verify_field]
+            cert_value = subject.get(verify_field, None)
 
-                expected_value = self.verify_fields[verify_field]
-                cert_value = components.get(verify_field, None)
+            if not cert_value:
+                reason = "Peer didn't send the '%s' field, subject fields received '%s'" % (
+                    verify_field, subject)
+                return False, reason
 
-                if not cert_value:
-                    msg = "Peer didn't send the '%s' field, fields received '%s'" % (
-                        verify_field, components)
-                    raise VerificationException(msg)
+            if expected_value != cert_value:
+                reason = "Expected the subject field '%s' to have value '%s' instead of '%s'" % (
+                    verify_field, expected_value, subject)
+                return False, reason
 
-                if expected_value != cert_value:
-                    msg = "Expected the field '%s' to have value '%s' instead of '%s'" % (
-                        verify_field, expected_value, cert_value)
-                    raise VerificationException(msg)
-
-        return True
+        return True, None
 
     def register_functions(self):
         raise NotImplementedError("Must be overridden by subclasses")
@@ -141,77 +149,37 @@ class SSLXMLRPCServer(object, SimpleXMLRPCServer):
 # Client
 # ##############################################################################
 
-
-class CAValidatingHTTPSConnection(httplib.HTTPConnection):
-    """ This class allows communication via SSL and takes the CAs into account.
-    """
-
-    def __init__(self, host, port=None, key_file=None, cert_file=None,
-                 ca_certs=None, cert_reqs=None, strict=None, ssl_version=None,
-                 timeout=None):
-        httplib.HTTPConnection.__init__(self, host, port, strict, timeout)
-
-        self.key_file = key_file
-        self.cert_file = cert_file
-        self.ca_certs = ca_certs
-        self.cert_reqs = cert_reqs
-        self.ssl_version = ssl_version
-
-    def connect(self):
-        """ Connect to a host on a given (SSL) port.
-        """
-
-        sock = socket.create_connection((self.host, self.port), self.timeout)
-        if self._tunnel_host:
-            self.sock = sock
-            self._tunnel()
-
-        self.sock = self.wrap_socket(sock)
-
-    def wrap_socket(self, sock):
-        """ Gets a socket object and wraps it into an SSL-aware one. May be
-        overridden in subclasses if the wrapping process needs to be customized.
-        """
-        return ssl.wrap_socket(sock, self.key_file, self.cert_file,
-                                    ca_certs=self.ca_certs, cert_reqs=self.cert_reqs,
-                                    ssl_version=self.ssl_version)
-
-class CAHTTPS(httplib.HTTP):
-    _connection_class = CAValidatingHTTPSConnection
-
-    def __init__(self, host=None, port=None, key_file=None, cert_file=None, ca_certs=None,
-                 cert_reqs=None, strict=None, ssl_version=None, timeout=None):
-        self._setup(self._connection_class(host, port, key_file, cert_file, ca_certs,
-                                           cert_reqs, strict, ssl_version, timeout))
-
 class SSLClientTransport(Transport):
     """ Handles an HTTPS transaction to an XML-RPC server.
     """
-    def __init__(self, key_file=None, cert_file=None, ca_certs=None, cert_reqs=None,
-                 ssl_version=None, timeout=None):
-        self.key_file = key_file
-        self.cert_file = cert_file
+    def __init__(self, keyfile=None, certfile=None, ca_certs=None, cert_reqs=None,
+                 ssl_version=None, timeout=None, strict=None):
+        self.keyfile = keyfile
+        self.certfile = certfile
         self.ca_certs = ca_certs
         self.cert_reqs = cert_reqs
         self.ssl_version = ssl_version
         self.timeout = timeout
+        self.strict = strict
 
         Transport.__init__(self)
 
     def make_connection(self, host):
-        return CAHTTPS(host, key_file=self.key_file, cert_file=self.cert_file,
-                       ca_certs=self.ca_certs, cert_reqs=self.cert_reqs,
-                       ssl_version=self.ssl_version, timeout=self.timeout)
+        return CAValidatingHTTPS(host, strict=self.strict, keyfile=self.keyfile,
+                certfile=self.certfile, ca_certs=self.ca_certs, cert_reqs=self.cert_reqs,
+                ssl_version=self.ssl_version, timeout=self.timeout)
 
-class SSLXMLRPCClient(ServerProxy):
-    def __init__(self, uri=None, transport=None, encoding=None, verbose=0,
-                 allow_none=0, use_datetime=0, key_file=None, cert_file=None,
-                 ca_certs=None, cert_reqs=ssl.CERT_OPTIONAL, ssl_version=ssl.PROTOCOL_TLSv1,
-                 timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
+class SSLClient(ServerProxy):
+    def __init__(self, uri=None, ca_certs=None, keyfile=None, certfile=None,
+                 cert_reqs=ssl.CERT_OPTIONAL, ssl_version=ssl.PROTOCOL_TLSv1,
+                 transport=None, encoding=None, verbose=0, allow_none=0, use_datetime=0,
+                 timeout=socket._GLOBAL_DEFAULT_TIMEOUT, strict=None):
 
         if not transport:
-            transport=SSLClientTransport(key_file, cert_file, ca_certs, cert_reqs,
-                                         ssl_version, timeout)
+            transport=SSLClientTransport(keyfile, certfile, ca_certs, cert_reqs,
+                                         ssl_version, timeout, strict)
 
         ServerProxy.__init__(self, uri, transport, encoding, verbose,
                         allow_none, use_datetime)
+
+        self.logger = logging.getLogger(self.__class__.__name__)
