@@ -34,9 +34,6 @@ Spring Python currently supports and requires the installation of at least one o
 * `Hessian <http://hessian.caucho.com/>`_ - support for Hessian has just started. So far, you can call
   Python-to-Java based on libraries released from Caucho.
 
-* :ref:`Secure XML-RPC <remoting-secure-xml-rpc>` needs the installation of
-  `PyOpenSSL <http://pypi.python.org/pypi/pyOpenSSL>`_
-
 Remoting with PYRO (Python Remote Objects)
 ------------------------------------------
 
@@ -478,9 +475,9 @@ implemented in other languages and technologies.
 To aid with better understanding of how the components work out of the box,
 you can download :ref:`sample keys and certificates <remoting-secure-xml-rpc-sample-keys-and-certificates>`
 prepared by the Spring Python team.
-Be sure **not** to ever use it for anything serious outside your testing environment,
-they are working and functional but because of private keys being available for
-download they should **only** be used for learning of how Spring Python's
+Be sure not to ever use the sample keys & certificates for anything serious outside your
+testing environment, they are working and functional but because of private keys being available for
+download they should only be used for learning of how Spring Python's
 secure XML-RPC works.
 
 Encrypted connection only
@@ -505,9 +502,9 @@ one of CAs the client is aware of::
   # -*- coding: utf-8 -*-
 
   # Spring Python
-  from springpython.remoting.xmlrpc import SSLXMLRPCServer
+  from springpython.remoting.xmlrpc import SSLServer
 
-  class MySSLServer(SSLXMLRPCServer):
+  class MySSLServer(SSLServer):
       def __init__(self, *args, **kwargs):
           super(MySSLServer, self).__init__(*args, **kwargs)
 
@@ -516,23 +513,26 @@ one of CAs the client is aware of::
 
   host = "localhost"
   port = 8000
-  key = "./server-key.pem"
-  cert = "./server-cert.pem"
+  keyfile = "./server-key.pem"
+  certfile = "./server-cert.pem"
 
-  server = MySSLServer(host, port, key, cert, verify_depth=2)
+  server = MySSLServer(host, port, keyfile, certfile)
   server.serve_forever()
 
 ::
 
   # -*- coding: utf-8 -*-
 
+  # stdlib
+  import ssl
+
   # Spring Python
-  from springpython.remoting.xmlrpc import SSLXMLRPCClient
+  from springpython.remoting.xmlrpc import SSLClient
 
   server_location = "https://localhost:8000/RPC2"
   ca_certs = "./ca-chain.pem"
 
-  client = SSLXMLRPCClient(server_location, ca_certs=ca_certs)
+  client = SSLClient(server_location, ca_certs)
 
   print client.pow(41, 3)
 
@@ -549,13 +549,13 @@ known to the client::
 
   # -*- coding: utf-8 -*-
 
+  # stdlib
+  import ssl
+
   # Spring Python
-  from springpython.remoting.xmlrpc import SSLXMLRPCServer
+  from springpython.remoting.xmlrpc import SSLServer
 
-  # PyOpenSSL
-  from OpenSSL import SSL
-
-  class MySSLServer(SSLXMLRPCServer):
+  class MySSLServer(SSLServer):
       def __init__(self, *args, **kwargs):
           super(MySSLServer, self).__init__(*args, **kwargs)
 
@@ -564,12 +564,11 @@ known to the client::
 
   host = "localhost"
   port = 8000
-  key = "./server-key.pem"
-  cert = "./server-cert.pem"
+  keyfile = "./server-key.pem"
+  certfile = "./server-cert.pem"
   ca_certs = "./ca-chain.pem"
 
-  server = MySSLServer(host, port, key, cert, ca_certs, verify_options=SSL.VERIFY_PEER|SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
-                        verify_depth=2)
+  server = MySSLServer(host, port, keyfile, certfile, ca_certs, cert_reqs=ssl.CERT_REQUIRED)
   server.serve_forever()
 
 ::
@@ -577,14 +576,14 @@ known to the client::
   # -*- coding: utf-8 -*-
 
   # Spring Python
-  from springpython.remoting.xmlrpc import SSLXMLRPCClient
+  from springpython.remoting.xmlrpc import SSLClient
 
   server_location = "https://localhost:8000/RPC2"
-  key = "./client-key.pem"
-  cert = "./client-cert.pem"
+  keyfile = "./client-key.pem"
+  certfile = "./client-cert.pem"
   ca_certs = "./ca-chain.pem"
 
-  client = SSLXMLRPCClient(server_location, key_file=key, cert_file=cert, ca_certs=ca_certs)
+  client = SSLClient(server_location, ca_certs, keyfile, certfile)
 
   print client.pow(41, 3)
 
@@ -596,22 +595,23 @@ Server requires the client to have a certificate and checks its fields
 
 Same as above (both sides need to have certificates signed off by trusted CAs)
 but this time the server inspects the client certificate’s fields and lets it
-in only they match the configuration it was fed with. In the example below
-*commonName* must be *Client*, *Organization* must be *The Sample Company* and the
-*State* must be *New York*. Server checks for both their existance and value and
-if there’s any mismatch the connection won’t be established in which case the
-error reason will be logged on the server side but no details of the error
+in only if they match the configuration it was fed with. In the example below
+*commonName* must be *My Client*, *organizationName* must be *My Company* and the
+*stateOrProvinceName* must be *My State*. Server checks for both their existance and value and
+if there’s any mismatch the connection will be dropped (client will receive a socket
+error) and the error reason will be logged on the server side but no details of the error
 will be leaked to the client::
 
   # -*- coding: utf-8 -*-
 
+  # stdlib
+  import logging
+  import ssl
+
   # Spring Python
-  from springpython.remoting.xmlrpc import SSLXMLRPCServer
+  from springpython.remoting.xmlrpc import SSLServer
 
-  # PyOpenSSL
-  from OpenSSL import SSL
-
-  class MySSLServer(SSLXMLRPCServer):
+  class MySSLServer(SSLServer):
       def __init__(self, *args, **kwargs):
           super(MySSLServer, self).__init__(*args, **kwargs)
 
@@ -620,14 +620,16 @@ will be leaked to the client::
 
   host = "localhost"
   port = 8000
-  key = "./server-key.pem"
-  cert = "./server-cert.pem"
-  ca = "./ca-chain.pem"
+  keyfile = "./server-key.pem"
+  certfile = "./server-cert.pem"
+  ca_certs = "./ca-chain.pem"
+  verify_fields = {"commonName": "My Client", "organizationName":"My Company",
+                   "stateOrProvinceName":"My State"}
 
-  verify_fields = {"CN": "Client", "O":"The Sample Company", "ST":"New York"}
+  logging.basicConfig(level=logging.ERROR)
 
-  server = MySSLServer(host, port, key, cert, ca, verify_options=SSL.VERIFY_PEER|SSL.VERIFY_FAIL_IF_NO_PEER_CERT,
-                       verify_fields=verify_fields, verify_depth=2)
+  server = MySSLServer(host, port, keyfile, certfile, ca_certs, cert_reqs=ssl.CERT_REQUIRED,
+                       verify_fields=verify_fields)
   server.serve_forever()
 
 ::
@@ -635,17 +637,14 @@ will be leaked to the client::
   # -*- coding: utf-8 -*-
 
   # Spring Python
-  from springpython.remoting.xmlrpc import SSLXMLRPCClient
+  from springpython.remoting.xmlrpc import SSLClient
 
   server_location = "https://localhost:8000/RPC2"
-  key = "./client-key.pem"
-
-  # Make sure the commonName is set to what the server requires.
-  cert = "./client-cert.pem"
-
+  keyfile = "./client-key.pem"
+  certfile = "./client-cert.pem"
   ca_certs = "./ca-chain.pem"
 
-  client = SSLXMLRPCClient(server_location, key_file=key, cert_file=cert, ca_certs=ca_certs)
+  client = SSLClient(server_location, ca_certs, keyfile, certfile)
 
   print client.pow(41, 3)
 

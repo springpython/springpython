@@ -33,16 +33,16 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
         self.wfile = socket._fileobject(self.request, "wb", self.wbufsize)
 
 class SSLServer(object, SimpleXMLRPCServer):
-    def __init__(self, host=None, port=None, ca_certs=None, keyfile=None, certfile=None,
-                 cert_reqs=ssl.CERT_OPTIONAL, ssl_version=ssl.PROTOCOL_TLSv1,
+    def __init__(self, host=None, port=None, keyfile=None, certfile=None,
+                 ca_certs=None, cert_reqs=ssl.CERT_NONE, ssl_version=ssl.PROTOCOL_TLSv1,
                  do_handshake_on_connect=True, suppress_ragged_eofs=True, ciphers=None, **kwargs):
 
         SimpleXMLRPCServer.__init__(self, (host, port), requestHandler=RequestHandler)
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.ca_certs = ca_certs
         self.keyfile = keyfile
         self.certfile = certfile
+        self.ca_certs = ca_certs
         self.cert_reqs = cert_reqs
         self.ssl_version = ssl_version
         self.do_handshake_on_connect = do_handshake_on_connect
@@ -56,7 +56,7 @@ class SSLServer(object, SimpleXMLRPCServer):
         self.register_functions()
 
     def get_request(self):
-        """ Overridden from Socket.TCPServer.get_request, wraps the socket in
+        """ Overridden from SocketServer.TCPServer.get_request, wraps the socket in
         an SSL context.
         """
         sock, from_addr = self.socket.accept()
@@ -76,7 +76,7 @@ class SSLServer(object, SimpleXMLRPCServer):
         return sock, from_addr
 
     def verify_request(self, sock, from_addr):
-        """ Overridden from Socket.TCPServer.verify_request, adds validation of the
+        """ Overridden from SocketServer.TCPServer.verify_request, adds validation of the
         other side's certificate fields.
         """
         try:
@@ -136,8 +136,8 @@ class SSLServer(object, SimpleXMLRPCServer):
                 return False, reason
 
             if expected_value != cert_value:
-                reason = "Expected the subject field '%s' to have value '%s' instead of '%s'" % (
-                    verify_field, expected_value, subject)
+                reason = "Expected the subject field '%s' to have value '%s' instead of '%s', subject='%s'" % (
+                    verify_field, expected_value, cert_value, subject)
                 return False, reason
 
         return True, None
