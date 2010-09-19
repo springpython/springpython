@@ -677,11 +677,258 @@ password, it's the same one for each private key.
 Configuration
 +++++++++++++
 
-**ZzzzzZzz** All the config options go here..
+The two main classes to use in secure XML-RPC communications are
+:ref:`springpython.remoting.xmlrpc.SSLServer <remoting-secure-xml-config-sslserver>`
+and
+:ref:`springpython.remoting.xmlrpc.SSLClient <remoting-secure-xml-config-sslclient>`
+both of which support a number of options discussed below.
+Keep in mind that those classes are thin wrappers around the base objects found
+in Python's standard library and as such they always accept all the default arguments
+of their super-classes along with those specific to Spring Python's secure XML-RPC
+implementation.
+
+.. _remoting-secure-xml-config-sslserver:
+
+SSLServer
+>>>>>>>>>
+
+SSLServer is a subclass of Python's
+`SimpleXMLRPCServer.SimpleXMLRPCServer <http://docs.python.org/library/simplexmlrpcserver.html#module-SimpleXMLRPCServer>`_
+which accepts arguments related to SSL in addition to those inherited from
+the base class. You expose XML-RPC services by extending SSLServer in your
+own subclass which is required to override one method, *register_functions*.
+*register_functions* may in turn use *self.register_function* for exposing those
+methods that should be accessible via XML-RPC, see
+`Python's documentation <http://docs.python.org/library/simplexmlrpcserver.html#SimpleXMLRPCServer.SimpleXMLRPCServer.register_function>`_
+for details of using *self.register_function*.
+
+SSLServer.__init__'s default arguments::
+
+  class SSLServer(object, SimpleXMLRPCServer):
+      def __init__(self, host=None, port=None, keyfile=None, certfile=None,
+                   ca_certs=None, cert_reqs=ssl.CERT_NONE, ssl_version=ssl.PROTOCOL_TLSv1,
+                   do_handshake_on_connect=True, suppress_ragged_eofs=True, ciphers=None, **kwargs):
+
+* *host* - interface to listen on, e.g. "localhost",
+* *port* - port to listen on, e.g. 8000,
+* *keyfile* - path to a PEM-encoded private key of the server, e.g. "./server-key.pem",
+* *certfile* - path to a PEM-encoded certificate of the server, e.g. "./server-cert.pem",
+* *ca_certs* - path to a PEM-encoded list (possibly one element long) of certificates
+  of Certificate Authorities signing the certificates of clients you deal with,
+  e.g. "./ca-chain.pem",
+* *cert_reqs* - whether the client is required to authenticate itself with a certificate,
+  see `Python's documentation <http://docs.python.org/library/ssl.html#ssl.wrap_socket>`_
+  for supported values,
+* *ssl_version* - the SSL/TLS version to use, see
+  `Python's documentation <http://docs.python.org/library/ssl.html#ssl.wrap_socket>`_
+  for supported values, note that the same value **must** be used by the client
+  application,
+* *do_handshake_on_connect* - `same as in Python <http://docs.python.org/library/ssl.html#ssl.wrap_socket>`_,
+* *suppress_ragged_eofs* - `same as in Python <http://docs.python.org/library/ssl.html#ssl.wrap_socket>`_,
+* *ciphers* - `same as in Python <http://docs.python.org/library/ssl.html#ssl.wrap_socket>`_,
+  the value will be silently ignored if not running Python 2.7 or newer,
+* *\**kwargs* - an open-ended list of keyword arguments, currently the only
+  argument being recognized is *verify_fields* which must be a dictionary
+  containing fields and values of the client certificate that must exist when the client's
+  connecting. Fields names should be in the format given in `Appendix A of RFC 3280 <http://tools.ietf.org/html/rfc3280>`_,
+  which means using long names instead of short ones (commonName not CN, organizationName not O, etc.),
+  for instance, setting verify_fields to:
+
+  ::
+
+    {"commonName":"My Client", "localityName":"My Town"}
+
+  will make sure the client certificate's subject has both commonName and localityName
+  set and will also validate their respective values. The connection will not
+  be accepted unless the fields and values match.
+
+.. _remoting-secure-xml-config-sslserver-sample:
+
+Sample SSL XML-RPC server which expects the client to use a certificate whose
+fields must match the configuration. The server exposes one method, *listdir*::
+
+  # -*- coding: utf-8 -*-
+
+  # stdlib
+  import logging
+  import os
+  import ssl
+
+  # Spring Python
+  from springpython.remoting.xmlrpc import SSLServer
+
+  class MySSLServer(SSLServer):
+      def __init__(self, *args, **kwargs):
+          super(MySSLServer, self).__init__(*args, **kwargs)
+
+      def _listdir(self, path):
+          return os.listdir(path)
+
+      def register_functions(self):
+          self.register_function(self._listdir, "listdir")
+
+  host = "localhost"
+  port = 8000
+  keyfile = "./server-key.pem"
+  certfile = "./server-cert.pem"
+  ca_certs = "./ca-chain.pem"
+  verify_fields = {"commonName": "My Client", "organizationName":"My Company",
+                   "stateOrProvinceName":"My State"}
+
+  logging.basicConfig(level=logging.ERROR)
+
+  server = MySSLServer(host, port, keyfile, certfile, ca_certs, cert_reqs=ssl.CERT_REQUIRED,
+                       verify_fields=verify_fields)
+  server.serve_forever()
+
+.. _remoting-secure-xml-config-sslclient:
+
+SSLClient
+>>>>>>>>>
+
+SSLClient extends Python's built-in
+`xmlrpclib.ServerProxy <http://docs.python.org/library/xmlrpclib.html#xmlrpclib.ServerProxy>`_
+class and, unlike :ref:`SSLServer <remoting-secure-xml-config-sslserver>`,
+can be used directly without the need for subclassing. You can simply create
+an instance and start invoking server's methods.
+
+SSLClient.__init__’s default arguments::
+
+  class SSLClient(ServerProxy):
+      def __init__(self, uri=None, ca_certs=None, keyfile=None, certfile=None,
+                   cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_TLSv1,
+                   transport=None, encoding=None, verbose=0, allow_none=0, use_datetime=0,
+                   timeout=socket._GLOBAL_DEFAULT_TIMEOUT, strict=None):
+
+* *uri* - address of the XML-RPC server, e.g. "https://localhost:8000/RPC2",
+* *ca_certs* - path to a PEM-encoded list (possibly one element long) containing certificates
+  of Certificate Authorities the client is to trust; client will be establishing
+  authenticity of the server's certificate against certificates from that file;
+  e.g. "./ca-chain.pem",
+* *keyfile* - path to a PAM-encoded private key of the client, e.g. "./client-key.pem",
+* *certfile* - path to a PAM-encoded certificate of the client, e.g. "./client-key.pem",
+* *cert_reqs* - whether a server is required to have a certificate,
+  see `Python's documentation <http://docs.python.org/library/ssl.html#ssl.wrap_socket>`_
+  for supported values,
+* *ssl_version* - the SSL/TLS version to use, see
+  `Python's documentation <http://docs.python.org/library/ssl.html#ssl.wrap_socket>`_
+  for supported values, note that the same value **must** be used by the server,
+* *transport* - `same as in Python <http://docs.python.org/library/xmlrpclib.html#xmlrpclib.ServerProxy>`_,
+* *encoding* - `same as in Python <http://docs.python.org/library/xmlrpclib.html#xmlrpclib.ServerProxy>`_,
+* *verbose* - `same as in Python <http://docs.python.org/library/xmlrpclib.html#xmlrpclib.ServerProxy>`_,
+* *allow_none* - `same as in Python <http://docs.python.org/library/xmlrpclib.html#xmlrpclib.ServerProxy>`_,
+* *use_datetime* - `same as in Python <http://docs.python.org/library/xmlrpclib.html#xmlrpclib.ServerProxy>`_,
+
+Sample SSL XML-RPC client which uses a private key and a certificate, can be
+used for invoking the :ref:`server <remoting-secure-xml-config-sslserver-sample>`
+shown in previous chapter::
+
+  # -*- coding: utf-8 -*-
+
+  # Spring Python
+  from springpython.remoting.xmlrpc import SSLClient
+
+  server_location = "https://localhost:8000/RPC2"
+  keyfile = "./client-key.pem"
+  certfile = "./client-cert.pem"
+  ca_certs = "./ca-chain.pem"
+
+  client = SSLClient(server_location, ca_certs, keyfile, certfile)
+
+  print client.listdir("/home")
 
 .. _remoting-secure-xml-rpc-logging:
 
 Logging
 +++++++
 
-**ZzzzzZzz** Describe loggers used..
+.. _remoting-secure-xml-logging-sslserver:
+
+SSLServer
+>>>>>>>>>
+
+Your subclass of SSLServer can be configured to use Python's
+standard `logging <http://docs.python.org/library/logging.html>`_ module.
+Currently, logging events are emitted at *DEBUG* and *ERROR* levels.
+
+At ERROR level all failed attempts at validating of client certificates will
+be logged giving the exact reason for the failure. Interal errors (should they ever happen)
+are also logged at the ERROR level.
+
+When told to run at DEBUG level, in addition to information logged at the ERROR level,
+the server will also log details of each client's certificate received along with
+the IP address of a client application connecting.
+
+A sample SSL XML-RPC running with full verbosity turned on::
+
+  # -*- coding: utf-8 -*-
+
+  # stdlib
+  import logging
+  import os
+  import ssl
+
+  # Spring Python
+  from springpython.remoting.xmlrpc import SSLServer
+
+  class MySSLServer(SSLServer):
+      def __init__(self, *args, **kwargs):
+          super(MySSLServer, self).__init__(*args, **kwargs)
+
+      def _listdir(self, path):
+          return os.listdir(path)
+
+      def register_functions(self):
+          self.register_function(self._listdir, "listdir")
+
+  host = "localhost"
+  port = 8000
+  keyfile = "./server-key.pem"
+  certfile = "./server-cert.pem"
+  ca_certs = "./ca-chain.pem"
+  verify_fields = {"commonName": "My Client", "organizationName":"My Company",
+                   "stateOrProvinceName":"My State"}
+
+  log_format = "%(asctime)s - %(levelname)s - %(process)d - %(threadName)s - %(name)s - %(message)s"
+  formatter = logging.Formatter(log_format)
+
+  handler = logging.StreamHandler()
+  handler.setFormatter(formatter)
+
+  logger = logging.getLogger("MySSLServer")
+
+  logger.setLevel(level=logging.DEBUG)
+  logger.addHandler(handler)
+
+
+  server = MySSLServer(host, port, keyfile, certfile, ca_certs, cert_reqs=ssl.CERT_REQUIRED,
+                       verify_fields=verify_fields)
+  server.serve_forever()
+
+.. _remoting-secure-xml-logging-sslclient:
+
+SSLClient
+>>>>>>>>>
+
+Although SSLClient does define a self.logger object it isn't currently used
+internally in any situation (subject to change without notice so you shouldn't
+rely on the current status). On the other hand, as a subclass of
+`xmlrpclib.ServerProxy <http://docs.python.org/library/xmlrpclib.html#xmlrpclib.ServerProxy>`_,
+the client may be configured to run in a *verbose* mode which means all HTTP traffic
+will be printed onto *standard output*.
+
+A sample SSL XML-RPC client configured to use the verbose mode::
+
+  # -*- coding: utf-8 -*-
+
+  # Spring Python
+  from springpython.remoting.xmlrpc import SSLClient
+
+  server_location = "https://localhost:8000/RPC2"
+  keyfile = "./client-key.pem"
+  certfile = "./client-cert.pem"
+  ca_certs = "./ca-chain.pem"
+
+  client = SSLClient(server_location, ca_certs, keyfile, certfile, verbose=1)
+
+  print client.listdir("/home")

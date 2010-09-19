@@ -73,6 +73,10 @@ class SSLServer(object, SimpleXMLRPCServer):
             kwargs["ciphers"] = self.ciphers
 
         sock  = ssl.wrap_socket(sock, **kwargs)
+
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("get_request cert='%s', from_addr='%s'" % (sock.getpeercert(), from_addr))
+
         return sock, from_addr
 
     def verify_request(self, sock, from_addr):
@@ -87,7 +91,7 @@ class SSLServer(object, SimpleXMLRPCServer):
                     msg = "Couldn't verify fields, peer didn't send the certificate, from_addr='%s'" % (from_addr,)
                     raise VerificationException(msg)
 
-                allow_peer, reason = self.verify_peer(cert)
+                allow_peer, reason = self.verify_peer(cert, from_addr)
                 if not allow_peer:
                     self.logger.error(reason)
                     sock.close()
@@ -110,13 +114,10 @@ class SSLServer(object, SimpleXMLRPCServer):
 
         return True
 
-    def verify_peer(self, cert):
+    def verify_peer(self, cert, from_addr):
         """ Verifies the other side's certificate. May be overridden in subclasses
         if the verification process needs to be customized.
         """
-
-        if self.logger.isEnabledFor(logging.DEBUG):
-            self.logger.debug("verify_peer cert='%s'" % (cert))
 
         subject = cert.get("subject")
         if not subject:
@@ -152,6 +153,9 @@ class SSLServer(object, SimpleXMLRPCServer):
 class SSLClientTransport(Transport):
     """ Handles an HTTPS transaction to an XML-RPC server.
     """
+
+    user_agent = "SSL XML-RPC Client (by http://springpython.webfactional.com)"
+
     def __init__(self, keyfile=None, certfile=None, ca_certs=None, cert_reqs=None,
                  ssl_version=None, timeout=None, strict=None):
         self.keyfile = keyfile
@@ -171,7 +175,7 @@ class SSLClientTransport(Transport):
 
 class SSLClient(ServerProxy):
     def __init__(self, uri=None, ca_certs=None, keyfile=None, certfile=None,
-                 cert_reqs=ssl.CERT_OPTIONAL, ssl_version=ssl.PROTOCOL_TLSv1,
+                 cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_TLSv1,
                  transport=None, encoding=None, verbose=0, allow_none=0, use_datetime=0,
                  timeout=socket._GLOBAL_DEFAULT_TIMEOUT, strict=None):
 
