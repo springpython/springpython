@@ -10,14 +10,14 @@ class CAValidatingHTTPSConnection(httplib.HTTPConnection):
     into account.
     """
 
-    def __init__(self, host, port=None, keyfile=None, certfile=None,
-                 ca_certs=None, cert_reqs=None, strict=None, ssl_version=None,
+    def __init__(self, host, port=None, ca_certs=None, keyfile=None, certfile=None,
+                 cert_reqs=None, strict=None, ssl_version=None,
                  timeout=None):
         httplib.HTTPConnection.__init__(self, host, port, strict, timeout)
 
+        self.ca_certs = ca_certs
         self.keyfile = keyfile
         self.certfile = certfile
-        self.ca_certs = ca_certs
         self.cert_reqs = cert_reqs
         self.ssl_version = ssl_version
 
@@ -45,7 +45,7 @@ class CAValidatingHTTPS(httplib.HTTP):
     """
     _connection_class = CAValidatingHTTPSConnection
 
-    def __init__(self, host=None, port=None, strict=None, keyfile=None, certfile=None, ca_certs=None,
+    def __init__(self, host=None, port=None, strict=None, ca_certs=None, keyfile=None, certfile=None,
                  cert_reqs=None, ssl_version=None, timeout=None):
-        self._setup(self._connection_class(host, port, keyfile, certfile, ca_certs,
+        self._setup(self._connection_class(host, port, ca_certs, keyfile, certfile,
                                            cert_reqs, strict, ssl_version, timeout))

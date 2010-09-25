@@ -818,6 +818,8 @@ SSLClient.__init__’s default arguments::
 * *verbose* - `same as in Python <http://docs.python.org/library/xmlrpclib.html#xmlrpclib.ServerProxy>`_,
 * *allow_none* - `same as in Python <http://docs.python.org/library/xmlrpclib.html#xmlrpclib.ServerProxy>`_,
 * *use_datetime* - `same as in Python <http://docs.python.org/library/xmlrpclib.html#xmlrpclib.ServerProxy>`_,
+* *timeout* - `same as in Python <http://docs.python.org/library/httplib.html#httplib.HTTPConnection>`_,
+* *strict* - `same as in Python <http://docs.python.org/library/httplib.html#httplib.HTTPConnection>`_
 
 Sample SSL XML-RPC client which uses a private key and a certificate, can be
 used for invoking the :ref:`server <remoting-secure-xml-config-sslserver-sample>`
@@ -849,7 +851,7 @@ SSLServer
 
 Your subclass of SSLServer can be configured to use Python's
 standard `logging <http://docs.python.org/library/logging.html>`_ module.
-Currently, logging events are emitted at *DEBUG* and *ERROR* levels.
+Currently, logging events are emitted at *logging.DEBUG* and *logging.ERROR* levels.
 
 At ERROR level all failed attempts at validating of client certificates will
 be logged giving the exact reason for the failure. Interal errors (should they ever happen)
@@ -859,7 +861,7 @@ When told to run at DEBUG level, in addition to information logged at the ERROR 
 the server will also log details of each client's certificate received along with
 the IP address of a client application connecting.
 
-A sample SSL XML-RPC running with full verbosity turned on::
+A sample SSL XML-RPC server running with full verbosity turned on::
 
   # -*- coding: utf-8 -*-
 

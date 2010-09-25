@@ -156,11 +156,12 @@ class SSLClientTransport(Transport):
 
     user_agent = "SSL XML-RPC Client (by http://springpython.webfactional.com)"
 
-    def __init__(self, keyfile=None, certfile=None, ca_certs=None, cert_reqs=None,
+    def __init__(self, ca_certs=None, keyfile=None, certfile=None, cert_reqs=None,
                  ssl_version=None, timeout=None, strict=None):
+
+        self.ca_certs = ca_certs
         self.keyfile = keyfile
         self.certfile = certfile
-        self.ca_certs = ca_certs
         self.cert_reqs = cert_reqs
         self.ssl_version = ssl_version
         self.timeout = timeout
@@ -169,8 +170,8 @@ class SSLClientTransport(Transport):
         Transport.__init__(self)
 
     def make_connection(self, host):
-        return CAValidatingHTTPS(host, strict=self.strict, keyfile=self.keyfile,
-                certfile=self.certfile, ca_certs=self.ca_certs, cert_reqs=self.cert_reqs,
+        return CAValidatingHTTPS(host, strict=self.strict, ca_certs=self.ca_certs,
+                keyfile=self.keyfile, certfile=self.certfile, cert_reqs=self.cert_reqs,
                 ssl_version=self.ssl_version, timeout=self.timeout)
 
 class SSLClient(ServerProxy):
@@ -180,10 +181,14 @@ class SSLClient(ServerProxy):
                  timeout=socket._GLOBAL_DEFAULT_TIMEOUT, strict=None):
 
         if not transport:
-            transport=SSLClientTransport(keyfile, certfile, ca_certs, cert_reqs,
+            _transport=SSLClientTransport(ca_certs, keyfile, certfile, cert_reqs,
+                                         ssl_version, timeout, strict)
+        else:
+            _transport=transport(ca_certs, keyfile, certfile, cert_reqs,
                                          ssl_version, timeout, strict)
 
-        ServerProxy.__init__(self, uri, transport, encoding, verbose,
+
+        ServerProxy.__init__(self, uri, _transport, encoding, verbose,
                         allow_none, use_datetime)
 
         self.logger = logging.getLogger(self.__class__.__name__)
