@@ -35,7 +35,8 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
 class SSLServer(object, SimpleXMLRPCServer):
     def __init__(self, host=None, port=None, keyfile=None, certfile=None,
                  ca_certs=None, cert_reqs=ssl.CERT_NONE, ssl_version=ssl.PROTOCOL_TLSv1,
-                 do_handshake_on_connect=True, suppress_ragged_eofs=True, ciphers=None, **kwargs):
+                 do_handshake_on_connect=True, suppress_ragged_eofs=True, ciphers=None,
+                 log_requests=True, **kwargs):
 
         SimpleXMLRPCServer.__init__(self, (host, port), requestHandler=RequestHandler)
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -48,6 +49,10 @@ class SSLServer(object, SimpleXMLRPCServer):
         self.do_handshake_on_connect = do_handshake_on_connect
         self.suppress_ragged_eofs = suppress_ragged_eofs
         self.ciphers = ciphers
+
+        # Looks awkward to use camelCase here but that's what SimpleXMLRPCRequestHandler
+        # expects.
+        self.logRequests = log_requests
 
         # 'verify_fields' is taken from kwargs to allow for adding more keywords
         # in future versions.

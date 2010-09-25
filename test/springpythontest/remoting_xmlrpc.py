@@ -85,6 +85,7 @@ class TestInitDefaultArguments(unittest.TestCase):
         self.assertEqual(server1.do_handshake_on_connect, True)
         self.assertEqual(server1.suppress_ragged_eofs, True)
         self.assertEqual(server1.ciphers, None)
+        self.assertEqual(server1.logRequests, True)
         self.assertEqual(server1.verify_fields, None)
 
         server_host = "127.0.0.1"
@@ -97,12 +98,13 @@ class TestInitDefaultArguments(unittest.TestCase):
         server_do_handshake_on_connect = False
         server_suppress_ragged_eofs = False
         server_ciphers = "ALL"
+        server_log_requests = False
         server_verify_fields = {"commonName": "Foo", "organizationName":"Baz"}
 
         server2 = MySSLServer(server_host, server_port, server_keyfile,
                     server_certfile, server_ca_certs, server_cert_reqs,
                     server_ssl_version, server_do_handshake_on_connect,
-                    server_suppress_ragged_eofs, server_ciphers,
+                    server_suppress_ragged_eofs, server_ciphers, server_log_requests,
                     verify_fields=server_verify_fields)
 
         # inherited from SocketServer.BaseServer
@@ -116,6 +118,7 @@ class TestInitDefaultArguments(unittest.TestCase):
         self.assertEqual(server2.do_handshake_on_connect, server_do_handshake_on_connect)
         self.assertEqual(server2.suppress_ragged_eofs, server_suppress_ragged_eofs)
         self.assertEqual(server2.ciphers, server_ciphers)
+        self.assertEqual(server2.logRequests, server_log_requests)
         self.assertEqual(sorted(server2.verify_fields), sorted(server_verify_fields))
 
         client_uri="https://127.0.0.1:8000/RPC2"
@@ -167,8 +170,14 @@ class TestInitDefaultArguments(unittest.TestCase):
         self.assertEqual(rh.wfile.mode, "wb")
         self.assertEqual(rh.wfile.bufsize, StreamRequestHandler.wbufsize)
 
-    def xtest_imports(self):
-        raise NotImplemented()
+    def test_import_all(self):
+        _locals = {}
+        _globals = {}
+
+        exec "from springpython.remoting.xmlrpc import *" in _locals, _globals
+
+        self.assertEqual(len(_globals), 3)
+        self.assertEqual(sorted(_globals), ["SSLClient", "SSLServer", "VerificationException"])
 
 class TestSSL(unittest.TestCase):
 
@@ -205,7 +214,7 @@ class TestSSL(unittest.TestCase):
             return server_thread
 
 
-    def xtest_simple_ssl(self):
+    def test_simple_ssl(self):
         """ Server uses its cert, client uses none.
         """
         server_port = 9001
@@ -213,7 +222,7 @@ class TestSSL(unittest.TestCase):
             client = SSLClient("https://localhost:%d/RPC2" % server_port, ca_certs)
             self.assertEqual(client.test_server(), RESULT_OK)
 
-    def xtest_client_cert(self):
+    def test_client_cert(self):
         """ Server & client use certs.
         """
         server_port = 9002
@@ -222,7 +231,7 @@ class TestSSL(unittest.TestCase):
                                client_key, client_cert)
             self.assertEqual(client.test_server(), RESULT_OK)
 
-    def xtest_client_cert_ok(self):
+    def test_client_cert_verify_ok(self):
         """ Server & client use certs. Server succesfully validates client certificate's fields.
         """
         server_port = 9003
@@ -235,7 +244,7 @@ class TestSSL(unittest.TestCase):
                                client_key, client_cert)
             self.assertEqual(client.test_server(), RESULT_OK)
 
-    def xtest_client_cert_failure_missing_field(self):
+    def test_client_cert_verify_failure_missing_field(self):
         """ Server & client use certs. Server fails to validate client certificate's fields
         (a field is missing).
         """
@@ -249,7 +258,7 @@ class TestSSL(unittest.TestCase):
                                client_key, client_cert)
             self.assertRaises(Exception, client.test_server)
 
-    def xtest_client_cert_failure_field_incorrect_value(self):
+    def test_client_cert_failure_field_incorrect_value(self):
         """ Server & client use certs. Server fails to validate client certificate's fields
         (all fields are in place, but commonName has an incorrect value).
         """
@@ -260,7 +269,7 @@ class TestSSL(unittest.TestCase):
                                client_key, client_cert)
             self.assertRaises(Exception, client.test_server)
 
-    def test_client_cert_failure_no_client_cert(self):
+    def test_client_cert_verify_failure_cert_optional_no_client_cert(self):
         """ Server optionally requires a client to send the certificate
         and validates its fields but client sends none.
         """
@@ -269,6 +278,14 @@ class TestSSL(unittest.TestCase):
         with TestSSL._ClientServerContextManager(server_port, ssl.CERT_OPTIONAL, verify_fields):
             client = SSLClient("https://localhost:%d/RPC2" % server_port, ca_certs)
             self.assertRaises(Exception, client.test_server)
+
+    def test_cert_required_no_client_cert(self):
+        """ Server requires a client to send the certificate but client sends none.
+        """
+        server_port = 9007
+        with TestSSL._ClientServerContextManager(server_port, ssl.CERT_REQUIRED):
+            client = SSLClient("https://localhost:%d/RPC2" % server_port, ca_certs)
+            self.assertRaises(ssl.SSLError, client.test_server)
 
 if __name__ == "__main__":
     unittest.main()

@@ -707,7 +707,8 @@ SSLServer.__init__'s default arguments::
   class SSLServer(object, SimpleXMLRPCServer):
       def __init__(self, host=None, port=None, keyfile=None, certfile=None,
                    ca_certs=None, cert_reqs=ssl.CERT_NONE, ssl_version=ssl.PROTOCOL_TLSv1,
-                   do_handshake_on_connect=True, suppress_ragged_eofs=True, ciphers=None, **kwargs):
+                   do_handshake_on_connect=True, suppress_ragged_eofs=True, ciphers=None,
+                   log_requests=True, **kwargs):
 
 * *host* - interface to listen on, e.g. "localhost",
 * *port* - port to listen on, e.g. 8000,
@@ -727,6 +728,11 @@ SSLServer.__init__'s default arguments::
 * *suppress_ragged_eofs* - `same as in Python <http://docs.python.org/library/ssl.html#ssl.wrap_socket>`_,
 * *ciphers* - `same as in Python <http://docs.python.org/library/ssl.html#ssl.wrap_socket>`_,
   the value will be silently ignored if not running Python 2.7 or newer,
+* *log_requests* - whether requests should be logged on stdout, the value is actually
+  passed directly to the request handler and that's why in current version
+  it doesn't allow for any customization such as using different logging formats. To keep
+  it compatible with Python, the value is accessible under a camelCase *.logRequests*
+  attribute of an SSLServer object,
 * *\**kwargs* - an open-ended list of keyword arguments, currently the only
   argument being recognized is *verify_fields* which must be a dictionary
   containing fields and values of the client certificate that must exist when the client's
@@ -860,6 +866,10 @@ are also logged at the ERROR level.
 When told to run at DEBUG level, in addition to information logged at the ERROR level,
 the server will also log details of each client's certificate received along with
 the IP address of a client application connecting.
+
+A server also accepts a *log_requests* boolean argument, defaulting to True,
+which is passed directly to the underlying stdlib's mechanisms. The flag tells whether
+client requests should be printed on stdout.
 
 A sample SSL XML-RPC server running with full verbosity turned on::
 
