@@ -28,5 +28,5 @@ export PATH=$M2:$JAVA_HOME/bin:$PATH
 
 cd ~/spring-python-1.2.x
 git pull
-./build.py --clean --docs-all --pydoc
+./build.py --clean --docs-sphinx --pydoc
 
