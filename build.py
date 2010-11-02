@@ -389,6 +389,7 @@ def docs_sphinx():
     os.system("make html epub")
     os.chdir(cur)
     shutil.copytree("docs/sphinx/build/html", "target/docs/sphinx")
+    shutil.copy("docs/sphinx/build/epub/SpringPython.epub", "target/docs/")
 
 def create_pydocs():
     sys.path.append(os.getcwd() + "/src")
