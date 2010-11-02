@@ -22,8 +22,8 @@ try:
 except ImportError:
     from setuptools import setup
 
-if sys.version_info < (2, 4):
-    print "Spring Python only supports Python 2.4 and higher"
+if sys.version_info < (2, 6):
+    print "Spring Python only supports Python 2.6 and higher"
     sys.exit(1)
 
 setup(name='springpython',
@@ -33,7 +33,7 @@ setup(name='springpython',
       author='Greg L. Turnquist',
       author_email='greg.turnquist at springsource dot com',
       url='http://springpython.webfactional.com',
-      platforms = ["Python >= 2.4"],
+      platforms = ["Python >= 2.6"],
       license='Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)',
       scripts=['plugins/coily'],
       packages=['springpython',

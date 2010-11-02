@@ -23,6 +23,9 @@ from springpythontest.support.testSupportClasses import RemoteService2
 from springpython.remoting.pyro import PyroDaemonHolder
 from springpython.remoting.pyro import PyroServiceExporter
 from springpython.remoting.pyro import PyroProxyFactory
+from springpython.remoting.pyro import Pyro4DaemonHolder
+from springpython.remoting.pyro import Pyro4ServiceExporter
+from springpython.remoting.pyro import Pyro4ProxyFactory
 from springpython.remoting.hessian import HessianProxyFactory
 
 class PyroRemotingTestCase(unittest.TestCase):
@@ -246,6 +249,255 @@ class PyroRemotingTestCase(unittest.TestCase):
         serviceExporter2.after_properties_set()
         clientSideProxy2 = PyroProxyFactory()
         clientSideProxy2.service_url = "PYROLOC://localhost:7000/RemoteService2"
+
+        time.sleep(0.01)
+
+        argument1 = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(remoteService1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+
+        self.assertEquals(clientSideProxy1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(clientSideProxy1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+
+        routineToRun = "testit"
+        self.assertEquals(remoteService2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(remoteService2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+        self.assertEquals(clientSideProxy2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(clientSideProxy2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+class Pyro4RemotingTestCase(unittest.TestCase):
+    def setUp(self):
+        # This is the minimum time to wait before starting a new test,
+        # allowing any previous Pyro daemon shutdowns to complete.
+        time.sleep(3.0)
+        
+    def ttestExportingAServiceThroughIoC(self):
+        import logging
+        logger = logging.getLogger("springpython.test")
+
+        logger.info("Creating appContext")
+        appContext = ApplicationContext(XMLConfig("support/remotingPyro4TestApplicationContext.xml"))
+        
+        logger.info("Fetching server 1 stuff...")
+        remoteService1 = appContext.get_object("remoteServiceServer1")
+        logger.info("remoteService1 = %s" % remoteService1)
+        serviceExporter1 = appContext.get_object("serviceExporter1")
+        clientSideProxy1 = appContext.get_object("accountServiceClient1")
+       
+        remoteService2 = appContext.get_object("remoteServiceServer2")
+        serviceExporter2 = appContext.get_object("serviceExporter2")
+        clientSideProxy2 = appContext.get_object("accountServiceClient2")
+              
+        time.sleep(10.01)
+        
+        argument1 = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(remoteService1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+        
+        self.assertEquals(clientSideProxy1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(clientSideProxy1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+
+        routineToRun = "testit"
+        self.assertEquals(remoteService2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(remoteService2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+        self.assertEquals(clientSideProxy2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(clientSideProxy2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+	serviceExporter1.__del__()
+        serviceExporter2 = None
+
+    def ttestExportingAServiceUsingNonStandardPortsWithValueElement(self):
+        appContext = ApplicationContext(XMLConfig("support/remotingPyro4TestApplicationContext.xml"))
+
+        time.sleep(0.01)
+
+        remoteService1 = appContext.get_object("remoteServiceServer1")
+        serviceExporter3 = appContext.get_object("serviceExporter3")
+        clientSideProxy3 = appContext.get_object("accountServiceClient3")
+
+        time.sleep(0.01)
+
+        argument = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(remoteService1.getMoreData(argument), "You got more remote data => %s" % argument)
+
+        self.assertEquals(clientSideProxy3.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(clientSideProxy3.getMoreData(argument), "You got more remote data => %s" % argument)
+
+    def ttestExportingAServiceUsingNonStandardPortsWithValueAttribute(self):
+        appContext = ApplicationContext(XMLConfig("support/remotingPyro4TestApplicationContext.xml"))
+
+        time.sleep(0.01)
+
+        remoteService1 = appContext.get_object("remoteServiceServer1")
+        serviceExporter4 = appContext.get_object("serviceExporter4")
+        clientSideProxy4 = appContext.get_object("accountServiceClient4")
+
+        time.sleep(0.01)
+
+        argument = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(remoteService1.getMoreData(argument), "You got more remote data => %s" % argument)
+
+        self.assertEquals(clientSideProxy4.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(clientSideProxy4.getMoreData(argument), "You got more remote data => %s" % argument)
+
+    def ttestExportingAServiceUsingNonStandardPortsWithConstructorArgsByAttribute(self):
+        appContext = ApplicationContext(XMLConfig("support/remotingPyro4TestApplicationContext.xml"))
+
+        time.sleep(0.01)
+
+        remoteService1 = appContext.get_object("remoteServiceServer1")
+        serviceExporter5 = appContext.get_object("serviceExporter5")
+        clientSideProxy5 = appContext.get_object("accountServiceClient5")
+
+        time.sleep(0.01)
+
+        argument = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(remoteService1.getMoreData(argument), "You got more remote data => %s" % argument)
+
+        self.assertEquals(clientSideProxy5.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(clientSideProxy5.getMoreData(argument), "You got more remote data => %s" % argument)
+
+
+    def ttestExportingAServiceUsingNonStandardPortsWithConstructorArgsByElement(self):
+        appContext = ApplicationContext(XMLConfig("support/remotingPyro4TestApplicationContext.xml"))
+
+        time.sleep(0.01)
+
+        remoteService1 = appContext.get_object("remoteServiceServer1")
+        serviceExporter6 = appContext.get_object("serviceExporter6")
+        clientSideProxy6 = appContext.get_object("accountServiceClient6")
+
+        time.sleep(0.01)
+
+        argument = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(remoteService1.getMoreData(argument), "You got more remote data => %s" % argument)
+
+        self.assertEquals(clientSideProxy6.getData(argument), "You got remote data => %s" % argument)
+        self.assertEquals(clientSideProxy6.getMoreData(argument), "You got more remote data => %s" % argument)
+
+    def ttestExportingAServiceThroughIoCWithoutPullingTheIntermediateComponent(self):
+        appContext = ApplicationContext(XMLConfig("support/remotingPyro4TestApplicationContext.xml"))
+        
+        remoteService1 = appContext.get_object("remoteServiceServer1")
+        clientSideProxy1 = appContext.get_object("accountServiceClient1")
+               
+        remoteService2 = appContext.get_object("remoteServiceServer2")
+        clientSideProxy2 = appContext.get_object("accountServiceClient2")
+        
+        time.sleep(0.01)
+        
+        argument1 = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(remoteService1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+        
+        self.assertEquals(clientSideProxy1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(clientSideProxy1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+
+        routineToRun = "testit"
+        self.assertEquals(remoteService2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(remoteService2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+        self.assertEquals(clientSideProxy2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(clientSideProxy2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+        del(appContext)
+                       
+    def testExportingAServiceThroughProgrammatically(self):
+        remoteService1 = RemoteService1()
+        serviceExporter1 = Pyro4ServiceExporter()
+        serviceExporter1.service_name = "RemoteService1"
+        serviceExporter1.service = remoteService1
+        serviceExporter1.after_properties_set()
+        clientSideProxy1 = Pyro4ProxyFactory()
+        clientSideProxy1.service_url = "PYRO:RemoteService1@localhost:7766"
+               
+        remoteService2 = RemoteService2()
+        serviceExporter2 = Pyro4ServiceExporter()
+        serviceExporter2.service_name = "RemoteService2"
+        serviceExporter2.service = remoteService2
+        serviceExporter2.after_properties_set()
+        clientSideProxy2 = Pyro4ProxyFactory()
+        clientSideProxy2.service_url = "PYRO:RemoteService2@localhost:7766"
+
+        time.sleep(0.01)
+        
+        argument1 = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(remoteService1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+        
+        self.assertEquals(clientSideProxy1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(clientSideProxy1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+
+        routineToRun = "testit"
+        self.assertEquals(remoteService2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(remoteService2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+        self.assertEquals(clientSideProxy2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(clientSideProxy2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+    def testExportingAServiceThroughProgrammaticallyWithNonStandardPorts(self):
+        remoteService1 = RemoteService1()
+        serviceExporter1 = Pyro4ServiceExporter()
+        serviceExporter1.service_name = "RemoteService1"
+        serviceExporter1.service = remoteService1
+        serviceExporter1.service_host = "127.0.0.1"
+        serviceExporter1.service_port = 7000
+        serviceExporter1.after_properties_set()
+        clientSideProxy1 = Pyro4ProxyFactory()
+        clientSideProxy1.service_url = "PYRO:RemoteService1@localhost:7000"
+
+        remoteService2 = RemoteService2()
+        serviceExporter2 = Pyro4ServiceExporter()
+        serviceExporter2.service_name = "RemoteService2"
+        serviceExporter2.service = remoteService2
+        serviceExporter2.service_host = "127.0.0.1"
+        serviceExporter2.service_port = 7000
+        serviceExporter2.after_properties_set()
+        clientSideProxy2 = Pyro4ProxyFactory()
+        clientSideProxy2.service_url = "PYRO:RemoteService2@localhost:7000"
+
+        time.sleep(0.01)
+
+        argument1 = ['a', 1, 'b']
+        self.assertEquals(remoteService1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(remoteService1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+
+        self.assertEquals(clientSideProxy1.getData(argument1), "You got remote data => %s" % argument1)
+        self.assertEquals(clientSideProxy1.getMoreData(argument1), "You got more remote data => %s" % argument1)
+
+        routineToRun = "testit"
+        self.assertEquals(remoteService2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(remoteService2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+        self.assertEquals(clientSideProxy2.executeOperation(routineToRun), "Operation %s has been carried out" % routineToRun)
+        self.assertEquals(clientSideProxy2.executeOtherOperation(routineToRun), "Other operation %s has been carried out" % routineToRun)
+
+    def testExportingAServiceThroughProgrammaticallyWithNonStandardPortsAndStrings(self):
+        remoteService1 = RemoteService1()
+        serviceExporter1 = Pyro4ServiceExporter()
+        serviceExporter1.service_name = "RemoteService1"
+        serviceExporter1.service = remoteService1
+        serviceExporter1.service_host = "127.0.0.1"
+        serviceExporter1.service_port = 7000
+        serviceExporter1.after_properties_set()
+        clientSideProxy1 = Pyro4ProxyFactory()
+        clientSideProxy1.service_url = "PYRO:RemoteService1@localhost:7000"
+
+        remoteService2 = RemoteService2()
+        serviceExporter2 = Pyro4ServiceExporter()
+        serviceExporter2.service_name = "RemoteService2"
+        serviceExporter2.service = remoteService2
+        serviceExporter2.service_host = "127.0.0.1"
+        serviceExporter2.service_port = 7000
+        serviceExporter2.after_properties_set()
+        clientSideProxy2 = Pyro4ProxyFactory()
+        clientSideProxy2.service_url = "PYRO:RemoteService2@localhost:7000"
 
         time.sleep(0.01)
 

@@ -14,3 +14,4 @@ from springpythontest.securityWebTestCases import *
 from springpythontest.util_test_cases import *
 from springpythontest.unicodeTestCases import *
 from springpythontest.remoting_xmlrpc import *
+from springpythontest.remotingTestCases import Pyro4RemotingTestCase

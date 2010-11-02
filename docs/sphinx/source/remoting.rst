@@ -31,6 +31,8 @@ Spring Python currently supports and requires the installation of at least one o
 
 * `Pyro <http://pyro.sourceforge.net/>`_ (Python Remote Objects) - a pure Python transport mechanism
 
+* `Pyro4 <http://www.razorvine.net/python/Pyro/>` - (Python Remote Object v.4) - an updated version of the Pyro API.
+
 * `Hessian <http://hessian.caucho.com/>`_ - support for Hessian has just started. So far, you can call
   Python-to-Java based on libraries released from Caucho.
 
@@ -366,6 +368,20 @@ all, producing some log chatter like this:
 This shows one instance of Python running the client, connecting to the instance
 of Python hosting the server module. After that, moving these scripts to other
 machines only requires changing the hostname in the XML files.
+
+New support for Pyro 4
+++++++++++++++++++++++
+
+Pyro has recently released a beta version of its overhauled API labeled *Pyro 4*. This release of Spring Python includes support for it. The only changes you will need to make are:
+
+- replace *springpython.remoting.pyro.PyroProxyFactory* with *springpython.remoting.pyro.Pyro4ProxyFactory*
+- replace *springpython.remoting.pyro.PyroServiceExporter* with *springpython.remoting.pyro.Pyro4ServiceExporter*
+- replace any URI entries of *PYROLOC:<hostname>:<port>/<service_name>* with *PYRO:<service_name>@<host>:<port>*
+
+.. note::
+
+  Pyro 4 is unstable and still in development. For proper usage, you must install at least version 4.2+.
+  Their API is also subject to change, and we will try to keep up until it stabilizes.
 
 Remoting with Hessian
 ---------------------

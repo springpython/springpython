@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects xmlns="http://www.springframework.org/springpython/schema/objects"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/springpython/schema/objects
+       		http://springpython.webfactional.com/schema/context/spring-python-context-1.0.xsd">
+            
+	<object id="remoteServiceServer1" class="springpythontest.support.testSupportClasses.RemoteService1"/>
+	
+	<object id="remoteServiceServer2" class="springpythontest.support.testSupportClasses.RemoteService2"/>
+
+	<object id="serviceExporter1" class="springpython.remoting.pyro.Pyro4ServiceExporter">
+		<property name="service_name"><value>RemoteService1</value></property>
+		<property name="service" ref="remoteServiceServer1"/>
+	</object>
+	
+	<object id="serviceExporter2" class="springpython.remoting.pyro.Pyro4ServiceExporter">
+		<property name="service_name"><value>RemoteService2</value></property>
+		<property name="service" ref="remoteServiceServer2"/>
+	</object>
+
+	<object id="serviceExporter3" class="springpython.remoting.pyro.Pyro4ServiceExporter">
+		<property name="service_name"><value>RemoteService3</value></property>
+		<property name="service" ref="remoteServiceServer1"/>
+                <property name="service_host"><value>127.0.0.1</value></property>
+                <property name="service_port"><value>7000</value></property>
+	</object>
+
+        <object id="serviceExporter4" class="springpython.remoting.pyro.Pyro4ServiceExporter">
+                <property name="service_name" value="RemoteService4"/>
+                <property name="service" ref="remoteServiceServer1"/>
+                <property name="service_host" value="127.0.0.1"/>
+                <property name="service_port" value="7000"/>
+        </object>
+
+        <object id="serviceExporter5" class="springpython.remoting.pyro.Pyro4ServiceExporter">
+                <constructor-arg name="service_name" value="RemoteService5"/>
+                <constructor-arg name="service" ref="remoteServiceServer1"/>
+                <constructor-arg name="service_host" value="127.0.0.1"/>
+                <constructor-arg name="service_port" value="7000"/>
+        </object>
+
+        <object id="serviceExporter6" class="springpython.remoting.pyro.Pyro4ServiceExporter">
+                <constructor-arg name="service_name"><value>RemoteService6</value></constructor-arg>
+                <constructor-arg name="service" ref="remoteServiceServer1"/>
+                <constructor-arg name="service_host"><value>127.0.0.1</value></constructor-arg>
+                <constructor-arg name="service_port"><value>7000</value></constructor-arg>
+        </object>
+
+	<object id="accountServiceClient1" class="springpython.remoting.pyro.Pyro4ProxyFactory">
+		<property name="service_url"><value>PYRO:RemoteService1@localhost:7766</value></property>
+	</object>
+
+	<object id="accountServiceClient2" class="springpython.remoting.pyro.Pyro4ProxyFactory">
+		<property name="service_url"><value>PYRO:RemoteService2@localhost:7766</value></property>
+	</object>
+
+	<object id="accountServiceClient3" class="springpython.remoting.pyro.Pyro4ProxyFactory">
+		<property name="service_url"><value>PYRO:RemoteService3@localhost:7000</value></property>
+	</object>
+
+        <object id="accountServiceClient4" class="springpython.remoting.pyro.Pyro4ProxyFactory">
+                <property name="service_url"><value>PYRO:RemoteService4@localhost:7000</value></property>
+        </object>
+
+        <object id="accountServiceClient5" class="springpython.remoting.pyro.Pyro4ProxyFactory">
+                <property name="service_url"><value>PYRO:RemoteService5@localhost:7000</value></property>
+        </object>
+
+        <object id="accountServiceClient6" class="springpython.remoting.pyro.Pyro4ProxyFactory">
+                <property name="service_url"><value>PYRO:RemoteService6@localhost:7000</value></property>
+        </object>
+
+</objects>
