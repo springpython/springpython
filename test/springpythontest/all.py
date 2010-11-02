@@ -8,6 +8,7 @@ from springpythontest.databaseTransactionTestCases import MySQLTransactionTestCa
 from springpythontest.databaseTransactionTestCases import PostGreSQLTransactionTestCase
 from springpythontest.databaseTransactionTestCases import SqliteTransactionTestCase
 from springpythontest.remotingTestCases import PyroRemotingTestCase
+from springpythontest.remotingTestCases import Pyro4RemotingTestCase
 from springpythontest.remotingTestCases import HessianRemotingTestCase
 from springpythontest.securityEncodingTestCases import *
 from springpythontest.securityProviderTestCases import *

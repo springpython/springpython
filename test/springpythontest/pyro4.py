@@ -1,0 +1,3 @@
+#from springpythontest.remotingTestCases import PyroRemotingTestCase
+from springpythontest.remotingTestCases import Pyro4RemotingTestCase
+

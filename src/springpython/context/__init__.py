@@ -31,7 +31,7 @@ class ApplicationContext(ObjectContainer):
         atexit.register(self.shutdown_hook)
         
         self.logger = logging.getLogger("springpython.context.ApplicationContext")
-        self.classnames_to_avoid = set(["PyroProxyFactory", "ProxyFactoryObject"])
+        self.classnames_to_avoid = set(["PyroProxyFactory", "ProxyFactoryObject", "Pyro4ProxyFactory", "Pyro4FactoryObject"])
          
         for object_def in self.object_defs.values():
             self._apply(object_def)
