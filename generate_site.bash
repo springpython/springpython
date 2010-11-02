@@ -21,10 +21,7 @@
 #       Greg Turnquist.
 ###################################################################################
 
-export JAVA_HOME=~/java
-export M2_HOME=~/apache-maven
-export M2=$M2_HOME/bin
-export PATH=$M2:$JAVA_HOME/bin:$PATH
+. sp/bin/activate
 
 cd ~/spring-python-1.2.x
 git pull
