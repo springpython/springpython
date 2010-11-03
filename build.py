@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-   Copyright 2006-2008 SpringSource (http://springsource.com), All Rights Reserved 
+   Copyright 2006-2011 SpringSource (http://springsource.com), All Rights Reserved 
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -185,7 +185,7 @@ def build(dir, version, s3bucket, filepath):
 
     patterns_to_replace = [("version", version), ("download_url", "http://s3.amazonaws.com/%s/%s-%s.tar.gz" % (s3bucket, s3key, version))]
 
-    _substitute(dir + "/build.py", dir + "/setup.py", patterns_to_replace)
+    _substitute(dir + "/setup-template.py", dir + "/setup.py", patterns_to_replace)
     
     os.chdir(dir)
     os.system("%s %s sdist" % (sys.executable, os.path.join(".", "setup.py")))
