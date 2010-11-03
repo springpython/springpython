@@ -29,5 +29,5 @@
 # On project site
 #. ~/sp/bin/activate
 
-python build.py --clean --test
+python build.py --clean --test --package --build-stamp=$1
 

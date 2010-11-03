@@ -21,9 +21,9 @@
 #       Greg Turnquist.
 ###################################################################################
 
-. sp/bin/activate
+. ~/sp/bin/activate
 
 cd ~/spring-python-1.2.x
 git pull
-python2.6 build.py --clean --docs-sphinx --pydoc
+python build.py --clean --docs-sphinx --pydoc
 
