@@ -80,12 +80,7 @@ def usage():
     print "\t\t\t\tIf this option isn't used, default will be tag will be '%s.<current time>'" % p["version"]
     print "\t--publish\t\tpublish this release to the deployment server"
     print "\t--register\t\tregister this release with http://pypi.python.org/pypi"
-    print "\t--site\t\t\tcreate the site and all its related documents"
-    print "\t--docs-html-multi\tgenerate HTML documentation, split up into separate sections"
-    print "\t--docs-html-single\tgenerate HTML documentation in a single file"
-    print "\t--docs-pdf\t\tgenerate PDF documentation"
     print "\t--docs-sphinx\t\tgenerate Sphinx documentation"
-    print "\t--docs-all\t\tgenerate all documents"
     print "\t--pydoc\t\t\tgenerate pydoc information"
     print
 
@@ -93,8 +88,7 @@ try:
     optlist, args = getopt.getopt(sys.argv[1:],
                                   "hct",
                                   ["help", "clean", "test", "suite=", "debug-level=", "coverage", "package", "build-stamp=", \
-                                   "publish", "register", \
-                                   "site", "docs-html-multi", "docs-html-single", "docs-pdf", "docs-sphinx", "docs-all", "pydoc"])
+                                   "publish", "register", "docs-sphinx", "pydoc"])
 except getopt.GetoptError:
     # print help information and exit:
     print "Invalid command found in %s" % sys.argv
@@ -114,12 +108,8 @@ build_stamp = "BUILD-%s" % datetime.now().strftime("%Y%m%d%H%M%S")
 
 def clean(dir):
     print "Removing '%s' directory" % dir
-    if os.path.exists("pom.xml"):
-       os.remove("pom.xml")
     if os.path.exists(".coverage"):
        os.remove(".coverage")
-    if os.path.exists("docs/reference/src/mangled.xml"):
-        os.remove("docs/reference/src/mangled.xml")
     if os.path.exists(dir):
         shutil.rmtree(dir, True)
     for root, dirs, files in os.walk(".", topdown=False):
@@ -314,75 +304,6 @@ def setup(root, stylesheets=True):
 def sub_version(cur, version):
     _substitute(cur + "/" + p["doc.ref.dir"] + "/src/index.xml", cur + "/" + p["doc.ref.dir"] + "/src/mangled.xml", [("version", version)])
 
-def site(version):
-    _substitute("pom-template.xml", "pom.xml", [("version", version)])
-
-    docs_all(version)
-    cur = os.path.abspath(".")
-    shutil.copy(cur + "/docs/spring.ico", p["targetDir"]+"/docs/favicon.ico")
-    os.system("mvn -Dspringpython.version=%s site" % version)
-    os.remove("pom.xml")
-    os.system("cp docs/resources/css/* target/docs/css/")
-    create_pydocs()
-
-def docs_all(version):
-    copy("xml/schema/context/", p["targetDir"] + "/docs/schema/context/", ["*.xsd"])
-
-    docs_multi(version)
-    docs_pdf(version)
-    docs_sphinx()
-
-def docs_multi(version):
-    root = p["targetDir"] + "/" + p["dist.ref.dir"] + "/html"
-    print root
-
-    setup(root)
-
-    cur = os.getcwd()
-    sub_version(cur, version)
-    os.chdir(root)
-    ref = cur + "/" + p["doc.ref.dir"]
-    os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
-        " -Xmx80M -XX:MaxPermSize=80m com.icl.saxon.StyleSheet " + \
-        ref+"/src/mangled.xml " + ref+"/styles/html_chunk.xsl")
-    os.remove(ref+"/src/mangled.xml")
-    os.chdir(cur)
-
-def docs_single(version):
-    root = p["targetDir"] + "/" + p["dist.ref.dir"] + "/html_single"
-    
-    setup(root)
-    
-    cur = os.getcwd()
-    sub_version(cur, version)
-    os.chdir(root)
-    ref = cur + "/" + p["doc.ref.dir"]
-    os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
-        " -Xmx80M -XX:MaxPermSize=80m com.icl.saxon.StyleSheet " + \
-        "-o index.html " + ref+"/src/mangled.xml " + ref+"/styles/html.xsl")
-    
-    os.remove(ref+"/src/mangled.xml")
-    os.chdir(cur)
-
-def docs_pdf(version):
-    root = p["targetDir"] + "/" + p["dist.ref.dir"] + "/pdf"
-    
-    setup(root, stylesheets=False)
-   
-    cur = os.getcwd()
-    sub_version(cur, version)
-    os.chdir(root)
-    ref = cur + "/" + p["doc.ref.dir"]
-    os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
-        " -Xmx80M -XX:MaxPermSize=80m com.icl.saxon.StyleSheet " + \
-        "-o docbook_fop.tmp " + ref+"/src/mangled.xml " + ref+"/styles/fopdf.xsl double.sided=" + p["double.sided"])
-    os.system("java -classpath " + os.path.pathsep.join(glob(ref + "/lib/*.jar")) + \
-        " -Xmx80M -XX:MaxPermSize=80m org.apache.fop.apps.Fop " + \
-        "docbook_fop.tmp springpython-reference.pdf")
-    os.remove("docbook_fop.tmp")
-    os.remove(ref+"/src/mangled.xml")
-    os.chdir(cur)
-
 def docs_sphinx():
     cur = os.getcwd()
     os.chdir("docs/sphinx")
@@ -535,21 +456,6 @@ for option in optlist:
 
     if option[0] in ("--register"):
         register()
-
-    if option[0] in ("--site"):
-        site(complete_version)
-
-    if option[0] in ("--docs-all"):
-        docs_all(complete_version)
-                
-    if option[0] in ("--docs-html-multi"):
-        docs_multi(complete_version)
-
-    if option[0] in ("--docs-html-single"):
-        docs_single(complete_version)
-
-    if option[0] in ("--docs-pdf"):
-        docs_pdf(complete_version)
 
     if option[0] in ("--docs-sphinx"):
         docs_sphinx()
