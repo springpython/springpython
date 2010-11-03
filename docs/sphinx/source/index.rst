@@ -13,6 +13,7 @@ Contents:
    :maxdepth: 10
 
    overview
+   whats-new
    objects
    aop
    dao
