@@ -309,7 +309,8 @@ def docs_sphinx():
     os.chdir("docs/sphinx")
     os.system("make clean html epub man")
     os.chdir(cur)
-    shutil.copytree("docs/sphinx/build/html", "target/docs/sphinx")
+    shutil.copytree("docs/sphinx/build/html", "target/docs/sphinx/html")
+    shutil.copytree("docs/sphinx/build/man", "target/docs/sphinx/man")
     shutil.copy("docs/sphinx/build/epub/SpringPython.epub", "target/docs/")
 
 def create_pydocs():
