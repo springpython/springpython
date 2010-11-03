@@ -396,7 +396,7 @@ def create_pydocs():
     import springpython
 
     if not os.path.exists("target/docs/pydoc"):
-        os.mkdir("target/docs/pydoc")
+        os.makedirs("target/docs/pydoc")
  
     cur = os.getcwd()
     os.chdir("target/docs/pydoc")
