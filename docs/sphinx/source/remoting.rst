@@ -204,7 +204,7 @@ To do the same configuration as shown above looks like this::
   # Call the service just you did in the original, simplified version.
   print service.get_data("Hello")
 
-Against, you can override the hostname/port values as well::
+Again, you can override the hostname/port values as well::
 
   # ...
   # Export it via Pyro using Spring Python's utility classes
@@ -369,14 +369,16 @@ This shows one instance of Python running the client, connecting to the instance
 of Python hosting the server module. After that, moving these scripts to other
 machines only requires changing the hostname in the XML files.
 
+.. _pyro4:
+
 New support for Pyro 4
 ++++++++++++++++++++++
 
 Pyro has recently released a beta version of its overhauled API labeled *Pyro 4*. This release of Spring Python includes support for it. The only changes you will need to make are:
 
-- replace *springpython.remoting.pyro.PyroProxyFactory* with *springpython.remoting.pyro.Pyro4ProxyFactory*
-- replace *springpython.remoting.pyro.PyroServiceExporter* with *springpython.remoting.pyro.Pyro4ServiceExporter*
-- replace any URI entries of *PYROLOC:<hostname>:<port>/<service_name>* with *PYRO:<service_name>@<host>:<port>*
+- replace **springpython.remoting.pyro.PyroProxyFactory** with **springpython.remoting.pyro.Pyro4ProxyFactory**
+- replace **springpython.remoting.pyro.PyroServiceExporter** with **springpython.remoting.pyro.Pyro4ServiceExporter**
+- replace any URI entries of **PYROLOC:<hostname>:<port>/<service_name>** with **PYRO:<service_name>@<host>:<port>**
 
 .. note::
 
