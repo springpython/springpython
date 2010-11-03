@@ -4,12 +4,11 @@
 <pydev_project>
 <pydev_property name="org.python.pydev.PYTHON_PROJECT_VERSION">python 2.6</pydev_property>
 <pydev_pathproperty name="org.python.pydev.PROJECT_SOURCE_PATH">
-<path>/springpython/src</path>
-<path>/springpython/samples/petclinic</path>
-<path>/springpython/samples/springirc</path>
-<path>/springpython/samples/springwiki</path>
-<path>/springpython/test</path>
-<path>/springpython/samples/basic</path>
+<path>/spring-python/src</path>
+<path>/spring-python/samples/petclinic</path>
+<path>/spring-python/samples/springirc</path>
+<path>/spring-python/samples/springwiki</path>
+<path>/spring-python/test</path>
 </pydev_pathproperty>
 <pydev_property name="org.python.pydev.PYTHON_PROJECT_INTERPRETER">sp</pydev_property>
 </pydev_project>
