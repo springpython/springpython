@@ -386,9 +386,8 @@ def docs_pdf(version):
 def docs_sphinx():
     cur = os.getcwd()
     os.chdir("docs/sphinx")
-    os.system("make clean html epub")
+    os.system("make clean html epub man")
     os.chdir(cur)
-    os.makedirs("target/docs/sphinx")
     shutil.copytree("docs/sphinx/build/html", "target/docs/sphinx")
     shutil.copy("docs/sphinx/build/epub/SpringPython.epub", "target/docs/")
 
