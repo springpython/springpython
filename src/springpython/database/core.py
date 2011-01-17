@@ -46,17 +46,15 @@ class DatabaseTemplate(object):
         self.connection_factory = connection_factory
         self.logger = logging.getLogger("springpython.database.core.DatabaseTemplate")
 
-    def __setattr__(self, name, value):
-        """When the connection factory is set, initialize a connection to the database."""
-        self.__dict__[name] = value
-        if name == "connection_factory" and value:
-            self.__db = value.getConnection()
+    def __del__(self):
+        "When this template goes out of scope, need to close the connection it formed."
+        if self.connection_factory is not None: self.connection_factory.close()
             
     def execute(self, sql_statement, args = None):
         """Issue a single SQL execute, typically a DDL statement."""
         sql_statement = self.connection_factory.convert_sql_binding(sql_statement)
 
-        cursor = self.__db.cursor()
+        cursor = self.connection_factory.getConnection().cursor()
         error = None
         rows_affected = 0
         try:
@@ -107,7 +105,7 @@ class DatabaseTemplate(object):
 
         sql_query = self.connection_factory.convert_sql_binding(sql_query)
         
-        cursor = self.__db.cursor()
+        cursor = self.connection_factory.getConnection().cursor()
         error = None
         results = None
         metadata = None

@@ -82,7 +82,6 @@ class ConnectionFactoryTestCase(MockTestCase):
 
     def testQueryingOracleWithInvalidlyFormattedArguments(self):
         sys.modules["cx_Oracle"] = self.mock()
-        sys.modules["cx_Oracle"].expects(once()).method("connect")
         
         connection_factory = factory.cxoraConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
         dt = DatabaseTemplate(connection_factory)
@@ -108,6 +107,7 @@ class ConnectionFactoryTestCase(MockTestCase):
 
         conn = self.mock()
         conn.expects(once()).method("cursor").will(return_value(cursor))
+        conn.expects(once()).method("close")
 
         sys.modules["cx_Oracle"] = self.mock()
         sys.modules["cx_Oracle"].expects(once()).method("connect").will(return_value(conn))
