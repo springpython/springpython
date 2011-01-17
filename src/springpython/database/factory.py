@@ -13,6 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.       
 """
+import logging
 import re
 import sys
 import types
@@ -32,6 +33,12 @@ class ConnectionFactory(object):
         if self.__db is None:
             self.__db = self.connect()
         return self.__db
+
+    def close(self):
+        "Need to offer API call to close the connection to the database."
+        if self.__db is not None:
+            self.__db.close()
+            self.__db = None
 
     def commit(self):
         if self.in_transaction():

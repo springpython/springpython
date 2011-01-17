@@ -192,6 +192,8 @@ class StubConnection(object):
         self.mockCursor = None
     def cursor(self):
         return self.mockCursor
+    def close(self):
+        pass
     
 class StubDBFactory(ConnectionFactory):
     def __init__(self):
@@ -199,6 +201,8 @@ class StubDBFactory(ConnectionFactory):
         self.stubConnection = StubConnection()
     def connect(self):
         return self.stubConnection
+    def close(self):
+        pass
 
 class ImpFileProps(object):
     def __init__(self, paystat_work_dir, paystat_reload_dir, paystat_archive_dir, oid):
