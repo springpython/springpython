@@ -132,11 +132,7 @@ class ConnectionFactoryTestCase(MockTestCase):
         del(sys.modules["cx_Oracle"])
 
     def testInsertingIntoOracleWithInvalidlyFormattedArguments(self):
-        cursor = self.mock()
-        conn = self.mock()
-
         sys.modules["cx_Oracle"] = self.mock()
-        sys.modules["cx_Oracle"].expects(once()).method("connect").will(return_value(conn))
 
         connection_factory = factory.cxoraConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
         dt = DatabaseTemplate(connection_factory)
@@ -148,16 +144,24 @@ class ConnectionFactoryTestCase(MockTestCase):
         del(sys.modules["cx_Oracle"])
 
     def testInsertingIntoOracleWithInvalidlyFormattedArgumentsWithUpdateApi(self):
-        cursor = self.mock()
-        conn = self.mock()
-
         sys.modules["cx_Oracle"] = self.mock()
-        sys.modules["cx_Oracle"].expects(once()).method("connect").will(return_value(conn))
 
         connection_factory = factory.cxoraConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
         dt = DatabaseTemplate(connection_factory)
 
         self.assertRaises(InvalidArgumentType, dt.update,
+            "INSERT INTO T_UNIT (F_UNIT_PK, F_UNIT_ID, F_NAME) VALUES (?, ?, ?)",
+            (1,1,1))
+
+        del(sys.modules["cx_Oracle"])
+
+    def testInsertingIntoOracleWithInvalidlyFormattedArgumentsWithInsertApi(self):
+        sys.modules["cx_Oracle"] = self.mock()
+
+        connection_factory = factory.cxoraConnectionFactory(username="foo", password="bar", hostname="localhost", db="mock")
+        dt = DatabaseTemplate(connection_factory)
+
+        self.assertRaises(InvalidArgumentType, dt.insert_and_return_id,
             "INSERT INTO T_UNIT (F_UNIT_PK, F_UNIT_ID, F_NAME) VALUES (?, ?, ?)",
             (1,1,1))
 
