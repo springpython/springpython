@@ -52,6 +52,10 @@ class DatabaseTemplate(object):
             
     def _execute(self, sql_statement, args = None):
         """Issue a single SQL execute, typically a DDL statement."""
+
+        if args and type(args) not in self.connection_factory.acceptable_types:
+            raise InvalidArgumentType(type(args), self.connection_factory.acceptable_types)
+
         sql_statement = self.connection_factory.convert_sql_binding(sql_statement)
 
         cursor = self.connection_factory.getConnection().cursor()
