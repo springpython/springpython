@@ -50,7 +50,7 @@ class DatabaseTemplate(object):
         "When this template goes out of scope, need to close the connection it formed."
         if self.connection_factory is not None: self.connection_factory.close()
             
-    def execute(self, sql_statement, args = None):
+    def _execute(self, sql_statement, args = None):
         """Issue a single SQL execute, typically a DDL statement."""
         sql_statement = self.connection_factory.convert_sql_binding(sql_statement)
 
@@ -62,9 +62,11 @@ class DatabaseTemplate(object):
                 if args:
                     cursor.execute(sql_statement, args)
                     rows_affected = cursor.rowcount
+                    lastrowid = cursor.lastrowid
                 else:
                     cursor.execute(sql_statement)
                     rows_affected = cursor.rowcount
+                    lastrowid = cursor.lastrowid
             except Exception, e:
                 self.logger.debug("execute.execute: Trapped %s while trying to execute '%s'" % (e, sql_statement))
                 error = e
@@ -77,7 +79,15 @@ class DatabaseTemplate(object):
         if error:
             raise DataAccessException(error)
         
-        return rows_affected
+        return {"rows_affected":rows_affected, "lastrowid":lastrowid}
+
+    def execute(self, sql_statement, args = None):
+        """Execute a single SQL statement, and return the number of rows affected."""
+        return self._execute(sql_statement, args)["rows_affected"]
+
+    def insert_and_return_id(self, sql_statement, args = None):
+        """Execute a single INSERT statement, and return the PK of the new row."""
+        return self._execute(sql_statement, args)["lastrowid"]
     
     def query(self, sql_query, args = None, rowhandler = None):
         """Execute a query given static SQL, reading the ResultSet on a per-row basis with a RowMapper.
