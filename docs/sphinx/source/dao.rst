@@ -213,6 +213,7 @@ then you will find this template has a familiar feel.
 
 =================================================================  ================================================================================================
 execute(sql_statement, args = None)                                execute any statement, return number of rows affected
+insert_and_return_id(sql_statement, args = None)                   insert, return id of new row inserted
 query(sql_query, args = None, rowhandler = None                    query, return list converted by rowhandler
 query_for_list(sql_query, args = None)                             query, return list of DB-API tuplesTrue
 query_for_int(sql_query, args = None)                              query for a single column of a single row, and return an integer (throws exception otherwise)
@@ -221,7 +222,9 @@ query_for_object(sql_query, args = None, required_type = None)     query for a s
 update(sql_statement, args = None)                                 update the database, return number of rows updated
 =================================================================  ================================================================================================
 
-*Inserts* are implemented through the execute() function, just like in JdbcTemplate.
+*Inserts* have classically been implemented through the **execute()** function, just like in JdbcTemplate. In Spring Python 1.2, we added **insert_and_return_id()**
+to give the option of returning the id of the newly created row. It has the same signature as **execute()**. This is very useful when you plan to insert one row in one table, and then insert
+several rows in another table that reference the first row created.
 
 Notes on using SQLServerConnectionFactory
 +++++++++++++++++++++++++++++++++++++++++

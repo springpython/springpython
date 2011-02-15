@@ -64,6 +64,13 @@ class AbstractTransactionTestCase(unittest.TestCase):
         name = self.dt.query_for_object("SELECT name FROM animal WHERE name = 'black mamba'", required_type=types.StringType)
         self.assertEquals(name, "black mamba")
 
+    def testInsertingRowsIntoTheDatabaseWithInsertApi(self):
+        id = self.dt.insert_and_return_id("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
+        self.assertEquals(id, 1)
+
+        name = self.dt.query_for_object("SELECT name FROM animal WHERE name = 'black mamba'", required_type=types.StringType)
+        self.assertEquals(name, "black mamba")
+
     def testInsertingTwoRowsWithoutaTransactionButManuallyCommitted(self):
         self.dt.execute("INSERT INTO animal (name) VALUES (?)", ('black mamba',))
         self.dt.execute("INSERT INTO animal (name) VALUES (?)", ('copperhead',))

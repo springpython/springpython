@@ -332,6 +332,18 @@ class DatabaseTemplateMockTestCase(MockTestCase):
 
         name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'kill_bill_viper'", required_type=types.StringType)
         self.assertEquals(name, "black mamba")
+
+    def testProgrammaticStaticInsertWithInsertApi(self):
+        self.mock.expects(once()).method("execute").id("#1")
+        self.mock.expects(once()).method("execute").id("#2").after("#1")
+        self.mock.expects(once()).method("fetchall").will(return_value([("black mamba",)])).id("#3").after("#2")
+        self.mock.lastrowid = 42 
+
+        id = self.databaseTemplate.insert_and_return_id("INSERT INTO animal (name, category, population) VALUES ('black mamba', 'kill_bill_viper', 1)")
+        self.assertEquals(id, 42)
+
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'kill_bill_viper'", required_type=types.StringType)
+        self.assertEquals(name, "black mamba")
         
     def testProgrammaticInsertWithBoundVariables(self):
         self.mock.expects(once()).method("execute").id("#1")
@@ -350,6 +362,27 @@ class DatabaseTemplateMockTestCase(MockTestCase):
 
         rows = self.databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES (%s, %s, %s)", ('cottonmouth', 'kill_bill_viper', 1))
         self.assertEquals(rows, 1)
+
+        name = self.databaseTemplate.query_for_object("select name from animal where name = 'cottonmouth'", required_type=types.StringType)
+        self.assertEquals(name, "cottonmouth")
+
+    def testProgrammaticInsertWithBoundVariablesWithInsertApi(self):
+        self.mock.expects(once()).method("execute").id("#1")
+        self.mock.expects(once()).method("execute").id("#2").after("#1")
+        self.mock.expects(once()).method("fetchall").will(return_value([("black mamba",)])).id("#3").after("#2")
+        self.mock.expects(once()).method("execute").id("#4").after("#3")
+        self.mock.expects(once()).method("execute").id("#5").after("#4")
+        self.mock.expects(once()).method("fetchall").will(return_value([("cottonmouth",)])).id("#6").after("#5")
+        self.mock.lastrowid = 42
+
+        id = self.databaseTemplate.insert_and_return_id ("INSERT INTO animal (name, category, population) VALUES (?, ?, ?)", ('black mamba', 'kill_bill_viper', 1))
+        self.assertEquals(id, 42)
+
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'kill_bill_viper'", required_type=types.StringType)
+        self.assertEquals(name, "black mamba")
+
+        id = self.databaseTemplate.insert_and_return_id("INSERT INTO animal (name, category, population) VALUES (%s, %s, %s)", ('cottonmouth', 'kill_bill_viper', 1))
+        self.assertEquals(id, 42)
 
         name = self.databaseTemplate.query_for_object("select name from animal where name = 'cottonmouth'", required_type=types.StringType)
         self.assertEquals(name, "cottonmouth")
@@ -522,6 +555,14 @@ class AbstractDatabaseTemplateTestCase(unittest.TestCase):
 
         name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'kill_bill_viper'", required_type=types.StringType)
         self.assertEquals(name, "black mamba")
+
+    def testProgrammaticStaticInsertWithInsertApi(self):
+        self.databaseTemplate.execute("DELETE FROM animal")
+        id = self.databaseTemplate.insert_and_return_id("INSERT INTO animal (name, category, population) VALUES ('black mamba', 'kill_bill_viper', 1)")
+        self.assertEquals(id, 1)
+
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'kill_bill_viper'", required_type=types.StringType)
+        self.assertEquals(name, "black mamba")
         
     def testProgrammaticInsertWithBoundVariables(self):
         self.databaseTemplate.execute("DELETE FROM animal")
@@ -533,6 +574,20 @@ class AbstractDatabaseTemplateTestCase(unittest.TestCase):
 
         rows = self.databaseTemplate.execute("INSERT INTO animal (name, category, population) VALUES (%s, %s, %s)", ('cottonmouth', 'kill_bill_viper', 1))
         self.assertEquals(rows, 1)
+
+        name = self.databaseTemplate.query_for_object("select name from animal where name = 'cottonmouth'", required_type=types.StringType)
+        self.assertEquals(name, "cottonmouth")
+
+    def testProgrammaticInsertWithBoundVariablesWithInsertApi(self):
+        self.databaseTemplate.execute("DELETE FROM animal")
+        id = self.databaseTemplate.insert_and_return_id("INSERT INTO animal (name, category, population) VALUES (?, ?, ?)", ('black mamba', 'kill_bill_viper', 1))
+        self.assertEquals(id, 1)
+
+        name = self.databaseTemplate.query_for_object("SELECT name FROM animal WHERE category = 'kill_bill_viper'", required_type=types.StringType)
+        self.assertEquals(name, "black mamba")
+
+        id = self.databaseTemplate.insert_and_return_id("INSERT INTO animal (name, category, population) VALUES (%s, %s, %s)", ('cottonmouth', 'kill_bill_viper', 1))
+        self.assertEquals(id, 2)
 
         name = self.databaseTemplate.query_for_object("select name from animal where name = 'cottonmouth'", required_type=types.StringType)
         self.assertEquals(name, "cottonmouth")
