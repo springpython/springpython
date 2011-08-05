@@ -124,6 +124,15 @@
    	<section id="overview-support">
   		<title>Support</title>
   		
+		<section id="overview-support-book">
+			<title>Spring Python 1.1 book</title>
+
+			<para>You can order either a printed or electronic version of the <ulink url="https://www.packtpub.com/create-powerful-versatile-spring-python-1-1-applications/book">Spring Python 1.1 book</ulink>
+			written by project creator Greg Turnquist. This contains a lot of code samples, diagrams, 
+			and descriptions of the concepts behind Spring Python. This book was completed right as 
+			Spring Python 1.1 was released, and 1.2.x was started, so it contains up-to-date information on the project.</para>
+
+		</section>
 		<section id="overview-support-forums">
 			<title>Forums and Email</title>
 	
@@ -171,11 +180,57 @@ svn co https://src.springframework.org/svn/se-springpython-py/trunk/springpython
 		
 		</para>
 		
-		<para>That will create a new <emphasis>springpython</emphasis> folder. This includes both the source code and
+		<para>That will create a new <emphasis role="bold">springpython</emphasis> folder. This includes both the source code and
 		the demo applications (PetClinic and SpringWiki).</para>
 		
 		<para>You can browse the code at <ulink url="https://fisheye.springframework.org/browse/se-springpython-py"/>.</para>
   	</section>
+
+	<section id="overview-installation">
+		<title>Installation</title>
+
+		<para>This section is focused on helping you set up Spring Python.</para>
+
+		<orderedlist numeration="arabic">
+			<listitem>Go to <ulink url="http://s3browse.com/explore/dist.springframework.org/release/EXT/se-springpython-py/">Spring's download site for Spring Python</ulink>.</listitem>
+			<listitem>Click on Spring Python.</listitem>
+			<listitem>Download <emphasis role="bold">springpython-[release].tar.gz</emphasis> to get the core library.</listitem>
+			<listitem>Unpack the tarball, and go to the directory containing setup.py. (NOTE: This has been tested on Mac OSX 10.5/10.6, and Ubuntu Linux 9.04+)</listitem>
+			<listitem>Type <emphasis role="bold">python setup.py install</emphasis> to install Spring Python. (NOTE: You may need administrative power to do this!)</listitem>
+  		</orderedlist>
+
+		<para>This installs the core library of Spring Python. Version 1.1 supports Python 2.4+ (but not Python 3). To use other features like CherryPy and Pyro, you need to execute some of the following extra steps.</para>
+
+		<orderedlist numeration="arabic">
+			<listitem>Go to <ulink url="http://pypi.python.org/pypi/setuptools">setuptools</ulink> and follow the steps for your platform to install setuptools.</listitem>
+			<listitem>Install CherryPy for web app development by typing <emphasis role="bold">easy_install cherrypy</emphasis>. This should install CherryPy 3.2.</listitem>
+			<listitem>Install Pyro for RPC functionality by typing <emphasis role="bold">easy_install pyro</emphasis>. This should install Pyro (not Pyro 3).</listitem>
+			<listitem>Install PyYAML if you want the YAML-based IoC configuratin options by typing <emphasis role="bold">easy_install pyyaml</emphasis>.</listitem>
+			<listitem>Install MySQLdb by typing <emphasis role="bold">easy_install mysql-python</emphasis>.</listitem>
+			<listitem>Install PySqlite by typing <emphasis role="bold">easy_install pysqlite</emphasis>.</listitem>
+			<listitem>Install ElementTree if you are using a version of Python that doesn't incluee it by default  by typing <emphasis role="bold">easy_install elementtree</emphasis>.</listitem>
+		</orderedlist>
+
+		<para>You may not need all of these libraries. Determine what you need and then install it.</para>
+
+		<para>Another feature which is very useful, is to install everything (including Spring Python) inside a virtual environment. You can read
+		<ulink url="http://iamzed.com/2009/05/07/a-primer-on-virtualenv/">A Primer on virtualenv</ulink> to get an introduction to virtualenv. After
+		installing easy_install, you simply type <emphasis role="bold">easy_install virtualenv</emphasis> to install this tool. From there, you can create an virtual
+		installation by typing <emphasis role="bold">virtualenv --no-site-packages name_of_your_folder</emphasis>. On UNIX systems, To activate it, type 
+		<emphasis role="bold">. name_of_your_folder/bin/activate</emphasis>. The virtualenv will manipulate your path settings and point you to a different location of the python
+		executable, a different easy_install and pip, and a different PYTHON_PATH. Essentially, python setup.py foobar will install into this folder
+		you just created instead of the system version. For isolation, this is a highly recommended way to install everything.</para>
+
+		<note>
+			<title>Using easy_install and pip vs. OS package installation tools</title>
+
+			<para>A lot of operating systems, like Ubuntu Linux, offer the same python libraries through tools like RPM, APT, etc.
+			Due to personal experience, it is recommended to NOT use these when it comes to using Spring Python. Using OS package management
+                   	can result in library upgrades when performing system upgrades. Using virtualenv is the best way to control the version of
+			library installed and also shield your system from system upgrades.</para>
+		</note>
+		
+	</section>
   	
   	<section id="overview-license">
   		<title>Licensing</title>
@@ -233,7 +288,7 @@ svn co https://src.springframework.org/svn/se-springpython-py/trunk/springpython
 					url="http://lists.springsource.com/listmanager/listinfo/springpython-users">
 					springpython-developer</ulink> mailing list. That way, you'll get notified about
 					big items as well be on the inside for important developments that may or may
-					not get published to the web site. <emphasis>NOTE: Use the springsource list, NOT the
+					not get published to the web site. <emphasis role="bold">NOTE: Use the springsource list, NOT the
 					sourceforge one.</emphasis></para>
 				</listitem>
 				<listitem>
