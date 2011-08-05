@@ -154,7 +154,7 @@ This section is focused on helping you set up Spring Python.
 #. Unpack the tarball, and go to the directory containing setup.py. (NOTE: This has been tested on Mac OSX 10.5/10.6, and Ubuntu Linux 9.04+)
 #. Type **python setup.py install** to install Spring Python. (NOTE: You may need administrative power to do this!)
 
-This installs the core library of Spring Python. Version 1.2 supports Python 2.6+ (but not Python 3).
+This installs the core library of Spring Python. Version 1.3 supports Python 2.6+ (but not Python 3).
 
 To use other features like CherryPy and Pyro, you need to execute some of the following extra steps.
 
