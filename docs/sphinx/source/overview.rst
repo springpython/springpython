@@ -143,6 +143,42 @@ experiment and develop patches.
 
 You can browse the code at https://fisheye.springsource.org/browse/se-springpython-py.
 
+Installation
+++++++++++++
+
+This section is focused on helping you set up Spring Python.
+
+#. Go to `Spring's download site for Spring Python <http://www.springsource.com/download/community?project=Spring%20Python>`_.
+#. Click on **Spring Python**.
+#. Download **springpython-[release].tar.gz** to get the core library.
+#. Unpack the tarball, and go to the directory containing setup.py. (NOTE: This has been tested on Mac OSX 10.5/10.6, and Ubuntu Linux 9.04+)
+#. Type **python setup.py install** to install Spring Python. (NOTE: You may need administrative power to do this!)
+
+This installs the core library of Spring Python. Version 1.2 supports Python 2.6+ (but not Python 3).
+
+To use other features like CherryPy and Pyro, you need to execute some of the following extra steps.
+
+#. Go to setuptools and follow the steps for your platform to install setuptools.
+#. Install CherryPy for web app development by typing **easy_install cherrypy**. This should install CherryPy 3.2.
+#. Install Pyro for RPC functionality by typing **easy_install pyro**. This should install Pyro (not Pyro 3).
+#. Install PyYAML if you want the YAML-based IoC configuratin options by typing **easy_install pyyaml**.
+#. Install MySQLdb by typing **easy_install mysql-python**.
+#. Install PySqlite by typing **easy_install pysqlite**.
+#. Install ElementTree if you are using a version of Python that doesn't incluee it by default by typing **easy_install elementtree**.
+
+You may not need all of these libraries. Determine what you need and then install it.
+
+Another feature which is very useful, is to install everything (including Spring Python) inside a virtual environment. You can read A Primer on virtualenv to get an introduction to virtualenv. After installing easy_install, you simply type **easy_install virtualenv** to install this tool. From there, you can create an virtual installation by typing **virtualenv --no-site-packages name_of_your_folder**. On UNIX systems, to activate it, type **. name_of_your_folder/bin/activate**. The virtualenv will manipulate your path settings and point you to a different location of the python executable, a different easy_install and pip, and a different PYTHON_PATH. Essentially, python setup.py foobar will install into this folder you just created instead of the system version. For isolation, this is a highly recommended way to install everything.
+
+.. note::
+
+  **Using easy_install and pip vs. OS package installation tools**
+
+  A lot of operating systems, like Ubuntu Linux, offer the same python libraries through tools like 
+  RPM, APT, etc. Due to personal experience, it is recommended to NOT use these when it comes to using 
+  Spring Python. Using OS package management can result in library upgrades when performing system upgrades. 
+  Using virtualenv is the best way to control the version of library installed and also shield your system from system upgrades.
+
 
 Licensing
 +++++++++
