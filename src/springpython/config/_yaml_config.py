@@ -398,10 +398,8 @@ class YamlConfig(Config):
                 return self._convert_dict(p, comp["object"], name)
         elif isinstance(p, list):
             return self._convert_list(p, comp["object"], name)
-        elif isinstance(p, unicode):
-            return ValueDef(name, unicode(p))
         else:
-            return ValueDef(name, str(p))
+            return ValueDef(name, p)
         return None
 
         if hasattr(p, "ref"):
