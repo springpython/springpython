@@ -17,6 +17,7 @@ import re
 import types
 import inspect
 import logging
+import collections
 
 from _config_base import *
 from springpython.context import scope
@@ -247,7 +248,7 @@ class YamlConfig(Config):
         if "properties" in obj:
             self.logger.debug("%sproperties:" % ("\t"*(level+1)))
             for prop in obj["properties"].keys():
-                if "object" in obj["properties"][prop]:
+                if isinstance(obj["properties"][prop], collections.Iterable) and "object" in obj["properties"][prop]:
                     self.logger.debug("%s%s = ..." % ("\t"*(level+2), prop))
                     self._print_obj(obj["properties"][prop], level+3)
                 else:
