@@ -69,20 +69,9 @@ class YamlConfig(Config):
             abstract_objects = {}
             for object in doc["objects"]:
                 if "abstract" in object:
-                    abstract_objects[object["object"]] = object
+                    self.abstract_objects[object["object"]] = object
 
             for object in doc["objects"]:
-                if not "class" in object and not "parent" in object:
-                    self._map_custom_class(object, yaml_mappings)
-
-                elif "parent" in object:
-                    # Children are added to self.objects during the children->abstract parents traversal.
-                    pos_constr = self._get_pos_constr(object)
-                    named_constr = self._get_named_constr(object)
-                    props = self._get_props(object)
-                    self._traverse_parents(object, object, pos_constr, named_constr, props, abstract_objects)
-                    continue
-
                 self._print_obj(object)
                 self.objects.append(self._convert_object(object))
 
@@ -105,10 +94,10 @@ class YamlConfig(Config):
         else:
             self.logger.warning("No matching type found for object %s" % obj)
 
-    def _traverse_parents(self, leaf, child, pos_constr,
-                            named_constr, props, abstract_objects):
+    def _convert_child_object(self, leaf, child, pos_constr,
+                              named_constr, props):
 
-        parent = abstract_objects[child["parent"]]
+        parent = self.abstract_objects[child["parent"]]
 
         # At this point we only build up the lists of parameters but we don't create
         # the object yet because the current parent object may still have its
@@ -148,10 +137,11 @@ class YamlConfig(Config):
                 props.append(parent_prop)
 
         if "parent" in parent:
-            self._traverse_parents(leaf, parent, pos_constr, named_constr, props, abstract_objects)
+            # Continue traversing up the parent objects
+            return self._convert_child_object(leaf, parent, pos_constr, named_constr, props)
         else:
             # Now we know we can create an object out of all the accumulated values.
-
+            
             # The object's class is its topmost parent's class.
             class_ = parent["class"]
             id, factory, lazy_init, abstract, parent, scope_ = self._get_basic_object_data(leaf, class_)
@@ -159,9 +149,7 @@ class YamlConfig(Config):
             c = self._create_object(id, factory, lazy_init, abstract, parent,
                            scope_, pos_constr, named_constr, props)
 
-            self.objects.append(c)
-
-        return parent
+            return c
 
     def _get_pos_constr(self, object):
         """ Returns a list of all positional constructor arguments of an object.
@@ -225,20 +213,25 @@ class YamlConfig(Config):
                 object["object"] = prefix + "." + object["object"]
             else:
                 object["object"] = prefix + ".<anonymous>"
-
-        id, factory, lazy_init, abstract, parent, scope_ = self._get_basic_object_data(object, object.get("class"))
-
+        
+        if not "class" in object and "parent" not in object:
+            self._map_custom_class(object, yaml_mappings)
+        
         pos_constr = self._get_pos_constr(object)
         named_constr = self._get_named_constr(object)
         props = self._get_props(object)
+        
+        if "parent" in object:
+            return self._convert_child_object(object, object, pos_constr, named_constr, props)
+        else:
+            id, factory, lazy_init, abstract, parent, scope_ = self._get_basic_object_data(object, object.get("class"))
 
-        return self._create_object(id, factory, lazy_init, abstract, parent,
-            scope_, pos_constr, named_constr, props)
+            return self._create_object(id, factory, lazy_init, abstract, parent,
+                                       scope_, pos_constr, named_constr, props)
 
     def _print_obj(self, obj, level=0):
         self.logger.debug("%sobject = %s" % ("\t"*level, obj["object"]))
-        self.logger.debug("%sobject id = %s" % ("\t"*level, obj["object"]))
-        self.logger.debug("%sclass = %s" % ("\t"*(level+1), obj["class"]))
+        self.logger.debug("%sclass = %s" % ("\t"*(level+1), obj.get("class")))
 
         if "scope" in obj:
             self.logger.debug("%sscope = %s" % ("\t"*(level+1), obj["scope"]))
