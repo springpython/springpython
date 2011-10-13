@@ -66,7 +66,7 @@ class YamlConfig(Config):
             # A dictionary of abstract objects, keyed by their IDs, used in
             # traversing the hierarchies of parents; built upfront here for
             # convenience.
-            abstract_objects = {}
+            self.abstract_objects = {}
             for object in doc["objects"]:
                 if "abstract" in object:
                     self.abstract_objects[object["object"]] = object
