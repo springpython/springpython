@@ -84,7 +84,7 @@ First, let's send a message using nothing but pure Python code::
     queue1 = "TEST.1"
 
     # The connection factory we're going to use.
-    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port, needs_mcd=False)
 
     # Every JmsTemplate uses a connection factory for actually communicating with a JMS provider.
     jms_template = JmsTemplate(factory)
@@ -110,6 +110,7 @@ be saved in::
               channel: SVRCONN.1
               host: 192.168.1.121
               listener_port: "1434"
+              needs_mcd: False
 
         - object: MyTemplate
           class: springpython.jms.core.JmsTemplate
@@ -162,7 +163,7 @@ examples do, they are repeated here for the sake of completness::
     queue1 = "TEST.1"
 
     # The connection factory we're going to use.
-    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port, needs_mcd=False)
 
     # Every JmsTemplate uses a connection factory for actually communicating with a JMS provider.
     jms_template = JmsTemplate(factory)
@@ -189,6 +190,7 @@ that was used in the sending example::
               channel: SVRCONN.1
               host: 192.168.1.121
               listener_port: "1434"
+              needs_mcd: False
 
         - object: MyTemplate
           class: springpython.jms.core.JmsTemplate
@@ -233,6 +235,7 @@ fact of providing the configuration allows for receiving the messages::
               channel: SVRCONN.1
               host: 192.168.1.121
               listener_port: "1434"
+              needs_mcd: False
 
         - object: message_handler
           class: app.MyMessageHandler
@@ -406,6 +409,14 @@ of default values used::
 |                              | client-repo.sth, then ssl_key_repository must be set  |
 |                              | to "/var/mqm/security/client-repo".                   |
 +------------------------------+-------------------------------------------------------+
+| **needs_mcd**                | default: True                                         |
+|                              +                                                       +
+|                              | Whether to add the *mcd* JMS folder to outgoing       |
+|                              | messages. This defaults to True for                   |
+|                              | backward-compatibility reasons but should be always   |
+|                              | set to False if working with WebSphere MQ 7.0         |
+|                              | or newer.                                             |
++------------------------------+-------------------------------------------------------+
 
 Here's an example of programatically creating a
 :ref:`WebSphereMQConnectionFactory <jms-webspheremqconnectionfactory>` object::
@@ -417,7 +428,7 @@ Here's an example of programatically creating a
     host = "192.168.1.121"
     listener_port = "1434"
 
-    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port, needs_mcd=False)
 
     # ... use factory here.
 
@@ -437,6 +448,7 @@ inside of an IoC container::
               channel: SVRCONN.1
               host: 192.168.1.121
               listener_port: "1434"
+              needs_mcd: False
 
 All cached queues will not be closed by a factory until after its .destroy will
 have been called which will happen automatically if you're using an IoC container.
@@ -491,7 +503,7 @@ Here's how a JmsTemplate may be instantiated using Python code::
     host = "192.168.1.121"
     listener_port = "1434"
 
-    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port, needs_mcd=False)
     jms_template = JmsTemplate(factory)
 
     # Always destroy the factory when not using IoC
@@ -509,6 +521,7 @@ An example of using YamlConfig to configure a JmsTemplate::
               channel: SVRCONN.1
               host: 192.168.1.121
               listener_port: "1434"
+              needs_mcd: False
 
         - object: jms_template
           class: springpython.jms.core.JmsTemplate
@@ -613,7 +626,7 @@ for encoding into UTF-8::
     queue1 = "TEST.1"
 
     # The connection factory we're going to use.
-    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port, needs_mcd=False)
 
     # Every JmsTemplate uses a connection factory for actually communicating with a JMS provider.
     jms_template = JmsTemplate(factory)
@@ -679,7 +692,7 @@ destination can be specified for an outgoing message::
     queue1 = "TEST.1"
 
     # The connection factory we're going to use.
-    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port, needs_mcd=False)
 
     # Every JmsTemplate uses a connection factory for actually communicating with a JMS provider.
     jms_template = JmsTemplate(factory)
@@ -714,7 +727,7 @@ jms_timestamp and jms_message_id properties::
     queue1 = "TEST.1"
 
     # The connection factory we're going to use.
-    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port, needs_mcd=False)
 
     # Every JmsTemplate uses a connection factory for actually communicating with a JMS provider.
     jms_template = JmsTemplate(factory)
@@ -765,7 +778,7 @@ can explicitly specify the destination's name when you receive messages::
     queue2 = "TEST.2"
 
     # The connection factory we're going to use.
-    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port, needs_mcd=False)
 
     # Every JmsTemplate uses a connection factory for actually communicating with a JMS provider.
     jms_template = JmsTemplate(factory)
@@ -831,7 +844,7 @@ default with Spring Python::
     exchange_queue = "TEST.1"
 
     # The connection factory we're going to use.
-    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port, needs_mcd=False)
 
     requesting_side = JmsTemplate(factory)
     requesting_side.default_destination = exchange_queue
@@ -958,7 +971,7 @@ requests and responses using only one converter object::
             return invoice
 
     # The connection factory we're going to use.
-    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port)
+    factory = WebSphereMQConnectionFactory(qm_name, channel, host, listener_port, needs_mcd=False)
 
     # Our JmsTemplate.
     jms_template = JmsTemplate(factory)
@@ -1058,6 +1071,7 @@ has been set::
               channel: SVRCONN.1
               host: 192.168.1.121
               listener_port: "1434"
+              needs_mcd: False
 
         - object: message_handler
           class: app.MyMessageHandler
