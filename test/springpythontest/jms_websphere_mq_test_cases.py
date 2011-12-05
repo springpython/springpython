@@ -1683,3 +1683,14 @@ class WebSphereMQTestCase(MockTestCase):
             handler.handle("foo")
         except NotImplementedError, e:
             self.assertEquals(e.message, "Should be overridden by subclasses.")
+
+    def testNeedsMCD(self):
+        message = TextMessage(get_rand_string(12))
+        destination = get_rand_string(12)
+        now = long(time() * 1000)
+        
+        has_mcd = MQRFH2JMS(True).build_header(message, destination, CMQC, now)
+        has_no_mcd = MQRFH2JMS(False).build_header(message, destination, CMQC, now)
+        
+        self.assertTrue('mcd' in has_mcd)
+        self.assertTrue('mcd' not in has_no_mcd)

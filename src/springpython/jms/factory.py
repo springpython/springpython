@@ -99,7 +99,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
     def __init__(self, queue_manager=None, channel=None, host=None, listener_port=None,
             cache_open_send_queues=True, cache_open_receive_queues=True,
             use_shared_connections=True, dynamic_queue_template="SYSTEM.DEFAULT.MODEL.QUEUE",
-            ssl=False, ssl_cipher_spec=None, ssl_key_repository=None):
+            ssl=False, ssl_cipher_spec=None, ssl_key_repository=None, needs_mcd=True):
         self.queue_manager = queue_manager
         self.channel = channel
         self.host = host
@@ -112,6 +112,9 @@ class WebSphereMQConnectionFactory(DisposableObject):
         self.ssl = ssl
         self.ssl_cipher_spec = ssl_cipher_spec
         self.ssl_key_repository = ssl_key_repository
+        
+        # WMQ >= 7.0 must not use the mcd folder
+        self.needs_mcd = needs_mcd
 
         self.logger = logging.getLogger("springpython.jms.factory.WebSphereMQConnectionFactory")
 
@@ -269,7 +272,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
 
         # Create MQRFH2 header
         now = long(time() * 1000)
-        mqrfh2jms = MQRFH2JMS().build_header(message, destination, self.CMQC, now)
+        mqrfh2jms = MQRFH2JMS(self.needs_mcd).build_header(message, destination, self.CMQC, now)
 
         buff.write(mqrfh2jms)
         if message.text != None:
@@ -425,7 +428,7 @@ class WebSphereMQConnectionFactory(DisposableObject):
     def _build_text_message(self, md, message):
         self.logger.log(TRACE1, "Building a text message [%r], md [%r]" % (repr(message), repr(md)))
 
-        mqrfh2 = MQRFH2JMS()
+        mqrfh2 = MQRFH2JMS(self.needs_mcd)
         mqrfh2.build_folders_and_payload_from_message(message)
 
         jms_folder = mqrfh2.folders.get("jms", None)
@@ -630,7 +633,12 @@ class MQRFH2JMS(object):
     # Size of a folder header is always 4 bytes.
     FOLDER_SIZE_HEADER_LENGTH = 4
 
-    def __init__(self):
+    def __init__(self, needs_mcd=True):
+        
+        # Whether to add the mcd folder. Needs to be False for everything to
+        # work properly with WMQ >= 7.0
+        self.needs_mcd = needs_mcd
+        
         self.folders = {}
         self.payload = None
 
@@ -682,19 +690,29 @@ class MQRFH2JMS(object):
 
         folder = etree.fromstring(raw_folder)
         root_name = folder.tag
+        
+        root_names = ["jms", "usr"]
+        if self.needs_mcd:
+            root_names.append("mcd")
 
-        if root_name in("mcd", "jms", "usr"):
+        if root_name in root_names:
             self.folders[root_name] = folder
         else:
             self.logger.warn("Ignoring unrecognized JMS folder [%s]=[%s]" % (root_name, raw_folder))
 
 
     def build_header(self, message, queue_name, CMQC, now):
-        self.folders["mcd"] = _mcd
+        
+        if self.needs_mcd:
+            self.folders["mcd"] = _mcd
+            mcd = self._pad_folder(etree.tostring(self.folders["mcd"]))
+            mcd_len = len(mcd)
+        else:
+            mcd_len = 0
+            
         self.add_jms(message, queue_name, now)
         self.add_usr(message)
 
-        mcd = self._pad_folder(etree.tostring(self.folders["mcd"]))
         jms = self._pad_folder(etree.tostring(self.folders["jms"]))
 
         if "usr" in self.folders:
@@ -703,7 +721,6 @@ class MQRFH2JMS(object):
         else:
             usr_len = 0
 
-        mcd_len = len(mcd)
         jms_len = len(jms)
 
         total_header_length = 0
@@ -725,8 +742,11 @@ class MQRFH2JMS(object):
         buff.write(CMQC.MQFMT_STRING)
         buff.write(_WMQ_MQRFH_NO_FLAGS_WIRE_FORMAT)
         buff.write(_WMQ_DEFAULT_CCSID_WIRE_FORMAT)
-        buff.write(pack("!l", mcd_len))
-        buff.write(mcd)
+        
+        if self.needs_mcd:
+            buff.write(pack("!l", mcd_len))
+            buff.write(mcd)
+            
         buff.write(pack("!l", jms_len))
         buff.write(jms)
 
