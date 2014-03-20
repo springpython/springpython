@@ -25,7 +25,6 @@ import sys
 import tarfile
 import getopt
 import shutil
-import S3
 
 try:
     import hashlib
@@ -78,7 +77,6 @@ def usage():
     print "\t--package\t\tpackage everything up into a tarball for release to sourceforge in %s" % p["packageDir"]
     print "\t--build-stamp [tag]\tfor --package, this specifies a special tag, generating version tag '%s.<tag>. springpython.properties can override with build.stamp'" % p["version"]
     print "\t\t\t\tIf this option isn't used, default will be tag will be '%s.<current time>'" % p["version"]
-    print "\t--publish\t\tpublish this release to the deployment server"
     print "\t--register\t\tregister this release with http://pypi.python.org/pypi"
     print "\t--docs-sphinx\t\tgenerate Sphinx documentation"
     print "\t--pydoc\t\t\tgenerate pydoc information"
@@ -88,7 +86,7 @@ try:
     optlist, args = getopt.getopt(sys.argv[1:],
                                   "hct",
                                   ["help", "clean", "test", "suite=", "debug-level=", "coverage", "package", "build-stamp=", \
-                                   "publish", "register", "docs-sphinx", "pydoc"])
+                                   "register", "docs-sphinx", "pydoc"])
 except getopt.GetoptError:
     # print help information and exit:
     print "Invalid command found in %s" % sys.argv
@@ -183,7 +181,7 @@ def build(dir, version, s3bucket, filepath):
                        p['project.key'],
                        filename ])
 
-    patterns_to_replace = [("version", version), ("download_url", "http://s3.amazonaws.com/%s/%s-%s.tar.gz" % (s3bucket, s3key, version))]
+    patterns_to_replace = [("version", version)]
 
     _substitute(dir + "/setup-template.py", dir + "/setup.py", patterns_to_replace)
     
@@ -210,7 +208,7 @@ def package(dir, version, s3bucket, src_filename, sample_filename):
     os.chmod("src/plugins/coily", 0755)
     build("src", version, s3bucket, src_filename)
     build("samples", version, s3bucket, sample_filename)
-    os.remove("src/plugins/coily")
+    #os.remove("src/plugins/coily")
     
     for name in glob("*.tar.gz"):
         old_location = os.path.join(".", name)
@@ -228,55 +226,9 @@ def package(dir, version, s3bucket, src_filename, sample_filename):
         t.close()
     os.chdir(curdir)
 
-def publish(filepath, s3bucket, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, version):
-    filename = filepath.split("/")[-1]
-    s3key = "/".join([ p['release.type'],
-                       p['project.key'],
-                       filename ])
-
-    print "Reading in content from %s" % filepath
-    filedata = open(filepath, "rb").read()
-
-    filehash = _sha(filedata).hexdigest()
-
-    print "Preparing to upload %s to %s/%s" % (filename, s3bucket, s3key)
-
-    content_type = mimetypes.guess_type(filename)[0]
-    if content_type is None:
-        content_type = 'text/plain'
-
-    print "File appears to be %s" % content_type
-
-    print "Connecting to S3..."
-    conn = S3.AWSAuthConnection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-
-    print "Checking if bucket %s exists..." % s3bucket
-    check = conn.check_bucket_exists(s3bucket)
-    if (check.status == 200):
-        print "Uploading %s to %s/%s" % (filename, s3bucket, s3key)
-        print conn.put(
-            s3bucket,
-            s3key,
-            S3.S3Object(filedata),
-            { 'Content-Type': content_type,
-              'x-amz-acl': 'public-read', 
-              'x-amz-meta-project.name': 'Spring Python',
-              'x-amz-meta-release.type': p['release.type'],
-              'x-amz-meta-bundle.version': version,
-              'x-amz-meta-package.file.name': filename } ).message
-
-        print "Uploading SHA1 digest to %s/%s" % (s3bucket, s3key + '.sha1')
-        print conn.put(
-            s3bucket,
-            s3key + '.sha1',
-            S3.S3Object(filehash + ' ' + filename + "\n" ),
-            { 'Content-Type': content_type, 'x-amz-acl': 'public-read'}).message
-    else:
-        print "Error code %s: Unable to publish" % check.status
-
 def register():
-    os.system("cd src     ; %s setup.py register" % sys.executable)
-    os.system("cd samples ; %s setup.py register" % sys.executable)
+    os.system("cd src     ; %s setup.py register sdist upload" % sys.executable)
+    os.system("cd samples ; %s setup.py register sdist upload" % sys.executable)
 
 def copy(src, dest, patterns):
     if not os.path.exists(dest):
@@ -436,25 +388,6 @@ for option in optlist:
     if option[0] in ("--package"):
         package(p["packageDir"], complete_version, p['s3.bucket'], "springpython", "springpython-samples")
 	
-    if option[0] in ("--publish"):
-        print "Looking for local key file..."
-        load_properties(p, p["s3.key_file"])  # Saves the user from having to manually input the keys
-
-        print "Looking for user's key file, which can override local file..."
-        load_properties(p, os.path.expanduser("~") + "/" + p["s3.key_file"])  # Saves the user from having to manually input the keys
-
-        BUCKET_NAME = p["s3.bucket"]
-        if "accessKey" in p:
-            AWS_ACCESS_KEY_ID = p["accessKey"]
-        else: 
-            AWS_ACCESS_KEY_ID = raw_input("Please enter the AWS_ACCESS_KEY_ID (NOT your secret key): ")
-        if "secretKey" in p:
-            AWS_SECRET_ACCESS_KEY = p["secretKey"]
-        else:
-            AWS_SECRET_ACCESS_KEY = raw_input("Please enter AWC_SECRET_ACCESS_KEY: ")
-
-        [publish(filename, BUCKET_NAME, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, complete_version) for filename in glob("target/artifacts/*.tar.gz")]
-
     if option[0] in ("--register"):
         register()
 

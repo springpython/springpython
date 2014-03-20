@@ -23,11 +23,8 @@
 # For testing locally
 #. /Users/gturnquist/sp/bin/activate
 
-# For bamboo
-. /home/bamboo/sp/bin/activate
-
 # On project site
 #. ~/sp/bin/activate
 
-python build.py --clean --test --package --build-stamp=$1
-
+python build.py --clean --test --package
+python build.py --release
