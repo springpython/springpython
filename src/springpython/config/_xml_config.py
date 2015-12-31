@@ -135,7 +135,8 @@ class SpringJavaConfig(Config):
         if "scope" in bean.attrib:
             c.scope = scope.convert(bean.get("scope"))
         self.logger.debug("bean: %s" % bean)
-        c.pos_constr = [self._convert_prop_def(bean, constr, bean.get("id") + ".constr") for constr in bean.findall(self.NS+"constructor-arg")]
+        c.pos_constr = [self._convert_prop_def(bean, constr, bean.get("id") + ".constr.{pos}".format(i))
+                        for i, constr in enumerate(bean.findall(self.NS+"constructor-arg"))]
         self.logger.debug("Constructors = %s" % c.pos_constr)
         c.props = [self._convert_prop_def(bean, p, p.get("name")) for p in bean.findall(self.NS+"property")]
 
@@ -339,13 +340,13 @@ class XMLConfig(Config):
     def _get_pos_constr(self, object, ns):
         """ Returns a list of all positional constructor arguments of an object.
         """
-        return [self._convert_prop_def(object, constr, object.get("id") + ".constr", ns) for constr in object.findall(ns+"constructor-arg")
-                if not "name" in constr.attrib]
+        return [self._convert_prop_def(object, constr, object.get("id") + ".constr.{pos}".format(i), ns)
+                for i, constr in enumerate(object.findall(ns+"constructor-arg")) if not "name" in constr.attrib]
 
     def _get_named_constr(self, object, ns):
         """ Returns a dictionary of all named constructor arguments of an object.
         """
-        return dict([(str(constr.get("name")), self._convert_prop_def(object, constr, object.get("id") + ".constr", ns))
+        return dict([(str(constr.get("name")), self._convert_prop_def(object, constr, object.get("id") + ".constr." + constr.get("name"), ns))
                     for constr in object.findall(ns+"constructor-arg")  if "name" in constr.attrib])
 
     def _get_props(self, object, ns):
@@ -604,4 +605,3 @@ class XMLConfig(Config):
                 return self._convert_inner_object(p.get("object"), comp.get("id"), name, ns)
             else:
                 return self._convert_inner_object(p.find(ns+"object"), comp.get("id"), name, ns)
-
